@@ -1,0 +1,6 @@
+dev-server.log
+dev-server.err.log
+.env
+.next
+node_modules
+qbl-platform

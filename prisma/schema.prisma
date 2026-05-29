@@ -1,0 +1,375 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum RoleName {
+  ADMIN
+  OPS_MANAGER
+  DISPATCHER
+  COURIER
+  CLIENT
+}
+
+enum UserStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+}
+
+enum ClientSector {
+  FOOD_SUPPLIER
+  PHARMACY_CLINIC
+  RESTAURANT_CAFE
+  RETAIL
+  HOTEL_HOSPITAL
+  ECOMMERCE
+}
+
+enum CourierStatus {
+  AVAILABLE
+  ON_TASK
+  LATE
+  OFFLINE
+}
+
+enum VehicleStatus {
+  ACTIVE
+  MAINTENANCE
+  OFFLINE
+}
+
+enum OrderStatus {
+  CREATED
+  ASSIGNED
+  OUT_FOR_DELIVERY
+  ARRIVED
+  DELIVERED
+  FAILED
+}
+
+enum TemperatureStatus {
+  NORMAL
+  WARNING
+  CRITICAL
+  NOT_AVAILABLE
+}
+
+enum NotificationChannel {
+  SMS
+  WHATSAPP
+  EMAIL
+  INTERNAL
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+enum AuditAction {
+  ORDER_CREATED
+  ORDER_ASSIGNED
+  ORDER_REASSIGNED
+  STATUS_CHANGED
+  OTP_GENERATED
+  OTP_RESENT
+  OTP_VERIFIED
+  OTP_FAILED
+  OTP_MANUAL_OVERRIDE
+  LOCATION_PING
+  TEMPERATURE_READING
+  POD_CAPTURED
+}
+
+enum ProofType {
+  OTP
+  SIGNATURE
+  PHOTO
+  MANUAL_OVERRIDE
+}
+
+model Company {
+  id             String   @id @default(cuid())
+  officialName   String
+  tradeName      String
+  abbreviation   String
+  sector         String
+  headquarters   String
+  foundedYear    Int
+  website        String
+  generalEmail   String
+  salesEmail     String
+  opsEmail       String
+  billingEmail   String
+  generalManager String
+  managerEmail   String
+  address        String
+  crNumber       String
+  unifiedNumber  String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model User {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  phone        String?
+  passwordHash String
+  status       UserStatus @default(ACTIVE)
+  roles        UserRole[]
+  courier      Courier?
+  client       ClientAccount?
+  auditLogs    AuditLog[] @relation("AuditActor")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Role {
+  id    String     @id @default(cuid())
+  name  RoleName   @unique
+  users UserRole[]
+}
+
+model UserRole {
+  userId String
+  roleId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}
+
+model Customer {
+  id          String          @id @default(cuid())
+  name        String
+  phone       String
+  email       String?
+  address     String
+  latitude    Decimal         @db.Decimal(9, 6)
+  longitude   Decimal         @db.Decimal(9, 6)
+  sector      ClientSector
+  orders      DeliveryOrder[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model ClientAccount {
+  id             String          @id @default(cuid())
+  userId         String?         @unique
+  companyName    String
+  contactName    String
+  contactEmail   String
+  contactPhone   String
+  sector         ClientSector
+  slaMinutes     Int             @default(120)
+  billingEmail   String?
+  user           User?           @relation(fields: [userId], references: [id])
+  orders         DeliveryOrder[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Courier {
+  id            String          @id @default(cuid())
+  userId        String?         @unique
+  employeeCode  String          @unique
+  displayName   String
+  phone         String
+  status        CourierStatus   @default(AVAILABLE)
+  vehicleId     String?         @unique
+  user          User?           @relation(fields: [userId], references: [id])
+  vehicle       Vehicle?        @relation(fields: [vehicleId], references: [id])
+  orders        DeliveryOrder[]
+  pings         LocationPing[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Vehicle {
+  id             String               @id @default(cuid())
+  plateNumber    String               @unique
+  label          String
+  make           String
+  model          String
+  year           Int
+  coldRangeMin   Decimal              @db.Decimal(5, 2)
+  coldRangeMax   Decimal              @db.Decimal(5, 2)
+  supportsFrozen Boolean              @default(false)
+  status         VehicleStatus        @default(ACTIVE)
+  courier        Courier?
+  orders         DeliveryOrder[]
+  temperatures   TemperatureReading[]
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+}
+
+model DeliveryOrder {
+  id                 String               @id @default(cuid())
+  publicCode          String               @unique
+  reference           String               @unique
+  clientAccountId     String
+  customerId          String
+  courierId           String?
+  vehicleId           String?
+  status              OrderStatus          @default(CREATED)
+  pickupAddress       String
+  dropoffAddress      String
+  dropoffLatitude     Decimal              @db.Decimal(9, 6)
+  dropoffLongitude    Decimal              @db.Decimal(9, 6)
+  serviceType         String
+  temperatureTarget   String
+  etaMinutes          Int
+  scheduledAt         DateTime
+  assignedAt          DateTime?
+  outForDeliveryAt    DateTime?
+  arrivedAt           DateTime?
+  deliveredAt         DateTime?
+  failedAt            DateTime?
+  failureReason       String?
+  isDelayed           Boolean              @default(false)
+  requiresIntervention Boolean             @default(false)
+  clientAccount       ClientAccount        @relation(fields: [clientAccountId], references: [id])
+  customer            Customer             @relation(fields: [customerId], references: [id])
+  courier             Courier?             @relation(fields: [courierId], references: [id])
+  vehicle             Vehicle?             @relation(fields: [vehicleId], references: [id])
+  stops               DeliveryStop[]
+  trackingSessions    TrackingSession[]
+  otpCodes            OtpCode[]
+  locationPings       LocationPing[]
+  temperatureReadings TemperatureReading[]
+  notificationLogs    NotificationLog[]
+  auditLogs           AuditLog[]
+  proofOfDelivery     ProofOfDelivery?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  @@index([status, scheduledAt])
+  @@index([courierId, status])
+}
+
+model DeliveryStop {
+  id          String        @id @default(cuid())
+  orderId     String
+  sequence    Int
+  label       String
+  address     String
+  latitude    Decimal       @db.Decimal(9, 6)
+  longitude   Decimal       @db.Decimal(9, 6)
+  plannedAt   DateTime
+  completedAt DateTime?
+  order       DeliveryOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model TrackingSession {
+  id        String        @id @default(cuid())
+  orderId   String
+  tokenHash String        @unique
+  expiresAt DateTime
+  usedAfterDelivery Boolean @default(false)
+  revokedAt DateTime?
+  order     DeliveryOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+
+  @@index([orderId, expiresAt])
+}
+
+model OtpCode {
+  id             String        @id @default(cuid())
+  orderId        String
+  codeHash       String
+  attempts       Int           @default(0)
+  maxAttempts    Int           @default(5)
+  expiresAt      DateTime
+  verifiedAt     DateTime?
+  resentCount    Int           @default(0)
+  lastSentAt     DateTime?
+  order          DeliveryOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+
+  @@index([orderId, expiresAt])
+}
+
+model LocationPing {
+  id        String         @id @default(cuid())
+  courierId String
+  orderId   String?
+  latitude  Decimal        @db.Decimal(9, 6)
+  longitude Decimal        @db.Decimal(9, 6)
+  speedKph  Decimal?       @db.Decimal(6, 2)
+  heading   Int?
+  battery   Int?
+  recordedAt DateTime      @default(now())
+  courier   Courier        @relation(fields: [courierId], references: [id], onDelete: Cascade)
+  order     DeliveryOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([courierId, recordedAt])
+  @@index([orderId, recordedAt])
+}
+
+model TemperatureReading {
+  id          String            @id @default(cuid())
+  vehicleId   String
+  orderId     String?
+  celsius     Decimal           @db.Decimal(5, 2)
+  status      TemperatureStatus @default(NORMAL)
+  sensorId    String?
+  recordedAt  DateTime          @default(now())
+  vehicle     Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  order       DeliveryOrder?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([vehicleId, recordedAt])
+  @@index([orderId, recordedAt])
+}
+
+model NotificationLog {
+  id          String             @id @default(cuid())
+  orderId     String?
+  channel     NotificationChannel
+  recipient   String
+  templateKey String
+  payload     Json
+  status      NotificationStatus @default(QUEUED)
+  providerRef String?
+  sentAt      DateTime?
+  error       String?
+  order       DeliveryOrder?     @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  createdAt   DateTime           @default(now())
+}
+
+model AuditLog {
+  id        String        @id @default(cuid())
+  orderId   String?
+  actorId   String?
+  action    AuditAction
+  reason    String?
+  metadata  Json?
+  order     DeliveryOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  actor     User?          @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  createdAt DateTime       @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+model ProofOfDelivery {
+  id          String        @id @default(cuid())
+  orderId     String        @unique
+  proofType   ProofType
+  otpVerified Boolean       @default(false)
+  signatureUrl String?
+  photoUrl    String?
+  notes       String?
+  capturedAt  DateTime      @default(now())
+  order       DeliveryOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}

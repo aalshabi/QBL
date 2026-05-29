@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="QBL">
+  <rect width="192" height="192" rx="42" fill="#143D68"/>
+  <circle cx="52" cy="54" r="18" fill="#F39A1E"/>
+  <path d="M45 106h69c15 0 27 12 27 27v7H35v-24c0-6 4-10 10-10Z" fill="#fff"/>
+  <path d="M58 82h57c19 0 34 15 34 34v7H58V82Z" fill="#F39A1E"/>
+  <circle cx="66" cy="142" r="13" fill="#143D68" stroke="#fff" stroke-width="7"/>
+  <circle cx="131" cy="142" r="13" fill="#143D68" stroke="#fff" stroke-width="7"/>
+  <text x="96" y="69" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="800" fill="#fff">QBL</text>
+</svg>
