@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="QBL">
+  <defs>
+    <linearGradient id="qbl-favicon" x1="34" y1="88" x2="94" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00A7B6"></stop>
+      <stop offset="0.6" stop-color="#3FCBD6"></stop>
+      <stop offset="1" stop-color="#FFFFFF"></stop>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#0D1B3A"></rect>
+  <g transform="translate(88,82) scale(2.9)">
+    <circle cx="58" cy="60" r="40" stroke="#FFFFFF" stroke-width="18" fill="none"></circle>
+    <path d="M38 78 C58 102 86 100 108 80" stroke="#0D1B3A" stroke-width="20" stroke-linecap="round" fill="none"></path>
+    <path d="M38 78 C58 102 86 100 108 80" stroke="url(#qbl-favicon)" stroke-width="13" stroke-linecap="round" fill="none"></path>
+    <circle cx="100" cy="26" r="7.5" stroke="#00A7B6" stroke-width="6.5" fill="none"></circle>
+  </g>
+</svg>
