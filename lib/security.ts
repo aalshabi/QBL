@@ -3,8 +3,14 @@ import { jwtVerify, SignJWT } from "jose";
 
 const encoder = new TextEncoder();
 
+/** في الإنتاج السر إلزامي — fail-closed بدل توقيع بسر تطوير معروف. */
 function secretFromEnv(name: string, fallback: string) {
-  return encoder.encode(process.env[name] ?? fallback);
+  const value = process.env[name];
+  if (value) return encoder.encode(value);
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(`${name} must be set in production`);
+  }
+  return encoder.encode(fallback);
 }
 
 export async function createTrackingToken(orderId: string, expiresIn = "8h") {
