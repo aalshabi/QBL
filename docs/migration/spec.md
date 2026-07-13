@@ -148,15 +148,15 @@ Hubs: اسم الفرع، العنوان، المدينة، المسؤول. ال
 
 | المجال | الموجود في QBL | الفجوة / المطلوب |
 |---|---|---|
-| الطلب | `DeliveryOrder` (6 حالات، بدون COD) | إضافة: `codAmount, deliveryFee, paymentMethod, codStatus, barcode, shipmentType, hubId, notes, postponedAt, isFollowUp` وتوسيع `OrderStatus` (إرجاع/تبديل/تأجيل/مصدّر) |
+| الطلب | `DeliveryOrder` (6 حالات، بدون COD) | إضافة: `codAmount, deliveryFee, paymentMethod, codStatus, barcode, hubId, notes, postponedAt, isFollowUp` وتوسيع `OrderStatus` (موافقة/تأجيل/إرجاع/إلغاء) |
 | COD | لا يوجد | نماذج جديدة: `CodCollection` (عهدة سائق → استلام)، `CodSettlement` (كشف عميل: SORTED/EXPORTED/DELIVERED)، `Expense` |
 | التسعير | لا يوجد | `PriceList`/`CityPrice` (مصدر × وجهة × نوع خدمة) + تسعير لكل عميل |
-| الفروع | لا يوجد | `Hub` (فرع) + ربط المستخدم/الطلب/المركبة بالفرع |
+| الفروع | لا يوجد | `Hub` (فرع) + ربط الطلب بالفرع |
 | الشركاء | لا يوجد | `Partner` + تصدير طرود للشريك (مؤجل — أولوية منخفضة) |
-| المرجعية | `serviceType` نص حر | نماذج `ServiceType`, `PaymentMethod` مرجعية (اختياري، يمكن البدء بـ enum) |
+| المرجعية | `serviceType` نص حر | نماذج `ServiceType`, `PaymentMethod` مرجعية (بدأنا بـ enum `PaymentMethod`) |
 | المناطق | نص حر في العناوين | شجرة Region/City/Village (مؤجل — يكفي city نصي حاليًا) |
-| العملاء | `ClientAccount` (تاجر) + `Customer` (مستلم) | متوافق مفهوميًا مع المصدر (Customer=تاجر، Recipient=مستلم) — إضافة رصيد/طريقة دفع للتاجر |
-| المستخدمون | Role enum (5 أدوار) | إضافة دور `ACCOUNTANT` (اختياري) |
+| العملاء | `ClientAccount` (تاجر) + `Customer` (مستلم) | متوافق مفهوميًا مع المصدر (Customer=تاجر، Recipient=مستلم) — إضافة رصيد/طريقة دفع للتاجر لاحقًا |
+| المستخدمون | Role enum (5 أدوار) | إضافة دور `ACCOUNTANT` (اختياري لاحقًا) |
 
 **قرار الترحيل:** لا نستنسخ الـ 22 حالة حرفيًا — نحتفظ بحالات QBL ونضيف الناقص تشغيليًا: `PENDING_APPROVAL, POSTPONED, RETURNED, CANCELLED` مع خرائط عرض عربية.
 
@@ -169,6 +169,6 @@ Hubs: اسم الفرع، العنوان، المدينة، المسؤول. ال
 3. **التقارير والتحليلات** `admin/reports` — تقرير مناديب + تقرير عملاء نشطين + توزيعات حسب الحالة/المدينة.
 4. **الفوترة وتحصيل COD** `admin/cod` — عُهدات المناديب، استلام، كشوفات العملاء (فرز → تصدير → تسليم)، ملخص مالي، مصروفات.
 
-**الأساسات:** `app/(admin)/layout.tsx` (سايدبار RTL بألوان QBL) + `app/api/admin/*` (حماية بالدور ADMIN/OPS_MANAGER) + `lib/admin/*` (types + mock adapters قابلة للاستبدال بـ Prisma) + توسيع schema بـ migration (`qbl-platform` add: COD/Expense/Hub/PriceList).
+**الأساسات:** `app/(admin)/admin/layout.tsx` (سايدبار RTL بألوان QBL) + `app/api/admin/*` (حماية بالدور ADMIN/OPS_MANAGER) + `lib/admin/*` (types + mock adapters قابلة للاستبدال بـ Prisma) + توسيع schema (COD/Expense/Hub/PriceList).
 
 **خارج نطاق هذه المرحلة:** إدارة الرجيع كوحدة مستقلة، الشركاء وشبكتهم، قواعد الشحن الذكية، Webhooks، شجرة المناطق ثلاثية المستويات، أرشيف مستقل — موثقة أعلاه للمراحل القادمة.

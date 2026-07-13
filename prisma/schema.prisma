@@ -50,11 +50,44 @@ enum VehicleStatus {
 
 enum OrderStatus {
   CREATED
+  PENDING_APPROVAL
   ASSIGNED
   OUT_FOR_DELIVERY
   ARRIVED
   DELIVERED
+  POSTPONED
+  RETURNED
   FAILED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  MADA
+  VISA
+  MASTER
+  PREPAID
+}
+
+enum CodStatus {
+  WITH_COURIER
+  RECEIVED
+  SORTED
+  EXPORTED
+  SETTLED
+}
+
+enum CodSettlementStatus {
+  SORTED
+  EXPORTED
+  DELIVERED
+}
+
+enum ExpenseType {
+  DRIVER
+  HUB
+  PARTNER
+  OTHER
 }
 
 enum TemperatureStatus {
@@ -177,6 +210,7 @@ model ClientAccount {
   billingEmail   String?
   user           User?           @relation(fields: [userId], references: [id])
   orders         DeliveryOrder[]
+  codSettlements CodSettlement[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 }
@@ -193,6 +227,7 @@ model Courier {
   vehicle       Vehicle?        @relation(fields: [vehicleId], references: [id])
   orders        DeliveryOrder[]
   pings         LocationPing[]
+  codCollections CodCollection[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 }
@@ -219,11 +254,22 @@ model DeliveryOrder {
   id                 String               @id @default(cuid())
   publicCode          String               @unique
   reference           String               @unique
+  barcode             String?              @unique
   clientAccountId     String
   customerId          String
   courierId           String?
   vehicleId           String?
+  hubId               String?
   status              OrderStatus          @default(CREATED)
+  codAmount           Decimal?             @db.Decimal(10, 2)
+  deliveryFee         Decimal?             @db.Decimal(10, 2)
+  paymentMethod       PaymentMethod?
+  codStatus           CodStatus?
+  codCollectionId     String?
+  codSettlementId     String?
+  notes               String?
+  postponedAt         DateTime?
+  isFollowUp          Boolean              @default(false)
   pickupAddress       String
   dropoffAddress      String
   dropoffLatitude     Decimal              @db.Decimal(9, 6)
@@ -244,6 +290,9 @@ model DeliveryOrder {
   customer            Customer             @relation(fields: [customerId], references: [id])
   courier             Courier?             @relation(fields: [courierId], references: [id])
   vehicle             Vehicle?             @relation(fields: [vehicleId], references: [id])
+  hub                 Hub?                 @relation(fields: [hubId], references: [id])
+  codCollection       CodCollection?       @relation(fields: [codCollectionId], references: [id])
+  codSettlement       CodSettlement?       @relation(fields: [codSettlementId], references: [id])
   stops               DeliveryStop[]
   trackingSessions    TrackingSession[]
   otpCodes            OtpCode[]
@@ -257,6 +306,7 @@ model DeliveryOrder {
 
   @@index([status, scheduledAt])
   @@index([courierId, status])
+  @@index([codStatus])
 }
 
 model DeliveryStop {
@@ -360,6 +410,96 @@ model AuditLog {
   createdAt DateTime       @default(now())
 
   @@index([orderId, createdAt])
+}
+
+// ─── Admin module (migrated from LogesTechs admin-pro spec) ───
+
+model Hub {
+  id          String          @id @default(cuid())
+  name        String
+  city        String
+  address     String?
+  managerName String?
+  isActive    Boolean         @default(true)
+  orders      DeliveryOrder[]
+  expenses    Expense[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+/// عهدة تحصيل COD المستلمة من المندوب (استلام التحصيلات)
+model CodCollection {
+  id          String          @id @default(cuid())
+  courierId   String
+  totalCod    Decimal         @db.Decimal(12, 2)
+  totalFees   Decimal         @db.Decimal(12, 2)
+  ordersCount Int             @default(0)
+  receivedAt  DateTime?
+  receivedBy  String?
+  notes       String?
+  courier     Courier         @relation(fields: [courierId], references: [id])
+  orders      DeliveryOrder[]
+  createdAt   DateTime        @default(now())
+
+  @@index([courierId, receivedAt])
+}
+
+/// كشف تحصيل للعميل (مفرز -> مصدر -> مسلم)
+model CodSettlement {
+  id              String              @id @default(cuid())
+  clientAccountId String
+  status          CodSettlementStatus @default(SORTED)
+  totalCod        Decimal             @db.Decimal(12, 2)
+  totalFees       Decimal             @db.Decimal(12, 2)
+  vatAmount       Decimal             @db.Decimal(12, 2)
+  netToClient     Decimal             @db.Decimal(12, 2)
+  sortedAt        DateTime            @default(now())
+  exportedAt      DateTime?
+  deliveredAt     DateTime?
+  custodyReleased Boolean             @default(true)
+  clientAccount   ClientAccount       @relation(fields: [clientAccountId], references: [id])
+  orders          DeliveryOrder[]
+  createdAt       DateTime            @default(now())
+
+  @@index([clientAccountId, status])
+}
+
+model Expense {
+  id        String      @id @default(cuid())
+  type      ExpenseType
+  amount    Decimal     @db.Decimal(12, 2)
+  note      String?
+  courierId String?
+  hubId     String?
+  hub       Hub?        @relation(fields: [hubId], references: [id])
+  spentAt   DateTime    @default(now())
+  createdAt DateTime    @default(now())
+
+  @@index([type, spentAt])
+}
+
+/// تسعير: قائمة أسعار (افتراضية للشركة أو مخصصة لعميل)
+model PriceList {
+  id              String      @id @default(cuid())
+  name            String
+  isDefault       Boolean     @default(false)
+  clientAccountId String?     @unique
+  prices          CityPrice[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model CityPrice {
+  id              String    @id @default(cuid())
+  priceListId     String
+  serviceType     String
+  originCity      String
+  destinationCity String
+  price           Decimal   @db.Decimal(10, 2)
+  returnPrice     Decimal?  @db.Decimal(10, 2)
+  priceList       PriceList @relation(fields: [priceListId], references: [id], onDelete: Cascade)
+
+  @@unique([priceListId, serviceType, originCity, destinationCity])
 }
 
 model ProofOfDelivery {
