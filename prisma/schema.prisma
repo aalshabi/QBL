@@ -223,8 +223,10 @@ model Courier {
   phone         String
   status        CourierStatus   @default(AVAILABLE)
   vehicleId     String?         @unique
+  hubId         String?
   user          User?           @relation(fields: [userId], references: [id])
   vehicle       Vehicle?        @relation(fields: [vehicleId], references: [id])
+  hub           Hub?            @relation(fields: [hubId], references: [id])
   orders        DeliveryOrder[]
   pings         LocationPing[]
   codCollections CodCollection[]
@@ -243,6 +245,8 @@ model Vehicle {
   coldRangeMax   Decimal              @db.Decimal(5, 2)
   supportsFrozen Boolean              @default(false)
   status         VehicleStatus        @default(ACTIVE)
+  insuranceExpiry DateTime?
+  licenseExpiry  DateTime?
   courier        Courier?
   orders         DeliveryOrder[]
   temperatures   TemperatureReading[]
@@ -422,6 +426,7 @@ model Hub {
   managerName String?
   isActive    Boolean         @default(true)
   orders      DeliveryOrder[]
+  couriers    Courier[]
   expenses    Expense[]
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt

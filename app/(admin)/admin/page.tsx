@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getAdminDataSource } from "@/lib/admin/data";
 import { formatDateTime, formatNumber, formatSar } from "@/lib/admin/format";
+import { requireAdminPage } from "@/lib/admin/guard";
 import { orderStatusLabels } from "@/lib/admin/types";
 
 export default async function AdminDashboardPage() {
+  await requireAdminPage();
   const source = getAdminDataSource();
   const [dashboard, orders] = await Promise.all([
     source.getDashboard(),
