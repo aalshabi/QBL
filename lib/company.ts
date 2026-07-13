@@ -139,6 +139,8 @@ export const marketingNav = [
   { href: "/", label: "الرئيسية" },
   { href: "/about", label: "من نحن" },
   { href: "/services", label: "خدماتنا" },
+  { href: "/services/beauty-shield", label: "Beauty Shield" },
+  { href: "/cold-chain-system", label: "النظام التشغيلي" },
   { href: "/sectors", label: "القطاعات" },
   { href: "/fleet-tech", label: "التقنيات" },
   { href: "/case-studies", label: "دراسات حالة" },
