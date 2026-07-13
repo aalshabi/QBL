@@ -2,6 +2,7 @@
 // اليوم يقرأ من mock، وعند توفر قاعدة البيانات يُستبدل التنفيذ بـ Prisma
 // (lib/prisma.ts) دون تغيير الواجهات أو الصفحات.
 
+import { prismaAdminDataSource } from "@/lib/admin/prisma-source";
 import {
   adminOrders,
   codCustody,
@@ -204,7 +205,8 @@ export const mockAdminDataSource: AdminDataSource = {
   },
 };
 
-/** نقطة التبديل: أعِد هنا تنفيذ Prisma عند توفر قاعدة البيانات. */
+/** Prisma عند توفر قاعدة البيانات، وإلا mock (تطوير بلا DB / اختبارات). */
 export function getAdminDataSource(): AdminDataSource {
-  return mockAdminDataSource;
+  if (!process.env.DATABASE_URL) return mockAdminDataSource;
+  return prismaAdminDataSource;
 }

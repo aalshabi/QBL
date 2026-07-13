@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAdminDataSource } from "@/lib/admin/data";
 import { formatDate, formatNumber, formatSar } from "@/lib/admin/format";
+import { requireAdminPage } from "@/lib/admin/guard";
 import { cn } from "@/lib/utils";
 
 const courierStatusLabels: Record<string, { label: string; className: string }> = {
@@ -20,6 +21,7 @@ const vehicleStatusLabels: Record<string, { label: string; className: string }> 
 };
 
 export default async function AdminFleetPage() {
+  await requireAdminPage();
   const { couriers, vehicles } = await getAdminDataSource().getFleet();
 
   return (

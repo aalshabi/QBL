@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDataSource, type OrdersFilter } from "@/lib/admin/data";
 import { requireAdmin } from "@/lib/admin/guard";
+import { approveOrders, assignCourier, changeStatus } from "@/lib/admin/mutations";
 import type { AdminOrderStatus } from "@/lib/admin/types";
 
 export async function GET(request: NextRequest) {
@@ -19,10 +20,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ orders, total: orders.length });
 }
 
-/**
- * إجراءات جماعية على الطلبات: تعيين مندوب / تغيير حالة / موافقة.
- * mock حاليًا — يُستبدل بكتابة Prisma + AuditLog عند توفر قاعدة البيانات.
- */
+/** إجراءات جماعية على الطلبات: تعيين مندوب / تغيير حالة / موافقة — تُكتب في Prisma مع AuditLog. */
 export async function PATCH(request: NextRequest) {
   const forbidden = await requireAdmin();
   if (forbidden) return forbidden;
@@ -44,6 +42,12 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "VALIDATION", message: "حدد الحالة الجديدة" }, { status: 400 });
   }
 
-  // TODO(prisma): تنفيذ فعلي — تحديث DeliveryOrder + تسجيل AuditLog لكل طلب.
-  return NextResponse.json({ ok: true, affected: body.orderIds.length, action: body.action });
+  const affected =
+    body.action === "ASSIGN_COURIER"
+      ? await assignCourier(body.orderIds, body.courierId!)
+      : body.action === "CHANGE_STATUS"
+        ? await changeStatus(body.orderIds, body.status!)
+        : await approveOrders(body.orderIds);
+
+  return NextResponse.json({ ok: true, affected, action: body.action });
 }

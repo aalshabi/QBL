@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAdminDataSource } from "@/lib/admin/data";
 import { formatDateTime, formatNumber, formatSar } from "@/lib/admin/format";
+import { requireAdminPage } from "@/lib/admin/guard";
 
 const sectorLabels: Record<string, string> = {
   FOOD_SUPPLIER: "موردو أغذية",
@@ -15,6 +16,7 @@ const sectorLabels: Record<string, string> = {
 };
 
 export default async function AdminReportsPage() {
+  await requireAdminPage();
   const { drivers, clients, statusDistribution, cityDistribution } = await getAdminDataSource().getReports();
   const maxStatus = Math.max(...statusDistribution.map((s) => s.count), 1);
   const maxCity = Math.max(...cityDistribution.map((c) => c.count), 1);

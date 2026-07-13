@@ -172,3 +172,27 @@ Hubs: اسم الفرع، العنوان، المدينة، المسؤول. ال
 **الأساسات:** `app/(admin)/admin/layout.tsx` (سايدبار RTL بألوان QBL) + `app/api/admin/*` (حماية بالدور ADMIN/OPS_MANAGER) + `lib/admin/*` (types + mock adapters قابلة للاستبدال بـ Prisma) + توسيع schema (COD/Expense/Hub/PriceList).
 
 **خارج نطاق هذه المرحلة:** إدارة الرجيع كوحدة مستقلة، الشركاء وشبكتهم، قواعد الشحن الذكية، Webhooks، شجرة المناطق ثلاثية المستويات، أرشيف مستقل — موثقة أعلاه للمراحل القادمة.
+
+---
+
+## 6. حالة التنفيذ والقرارات التقنية
+
+### الصلاحيات (Role guard)
+الوصول للوحة مقصور على `ADMIN` و`OPS_MANAGER` عبر `lib/admin/guard.ts`:
+
+- `requireAdmin()` — يحمي `app/api/admin/*` ويعيد 403.
+- `requireAdminPage()` — يحمي `app/(admin)/admin/*` ويعيد توجيهًا (307) إلى `/`.
+
+الحارس مطبَّق في الـ layout **وفي كل صفحة على حدة**: صفحات Next.js قد تُنفَّذ بالتوازي مع الـ layout، فالاعتماد على الـ layout وحده لا يمنع تحميل البيانات. تم التحقق: `COURIER`/`CLIENT`/`DISPATCHER` → 307 بلا أي تسريب لبيانات COD أو المالية.
+
+### Migration
+`prisma/migrations/` — سلسلة من هجرتين: `20260713081050_init` (المخطط كاملًا، 23 جدولًا) ثم `20260713090000_admin_fleet_fields`. نماذج وحدة الإدارة الجديدة: `Hub`, `CodCollection`, `CodSettlement`, `Expense`, `PriceList`, `CityPrice`، و4 enums: `PaymentMethod`, `CodStatus`, `CodSettlementStatus`, `ExpenseType`.
+
+التطبيق على قاعدة بيانات جديدة: `npx prisma migrate deploy`.
+
+### طبقة البيانات
+`lib/admin/data.ts` يعرض `getAdminDataSource()` كواجهة (`getOrders`/`getFleet`/`getReports`/`getCod`/`getDashboard`). التنفيذ يتبدّل تلقائيًا: `prisma-source.ts` عند توفر `DATABASE_URL`، وإلا `mock.ts` (تطوير بلا قاعدة بيانات). الصفحات لا تعرف أيّ المصدرين يعمل.
+
+الكتابات في `lib/admin/mutations.ts` (`approveOrders`, `assignCourier`, `changeStatus`, `receiveCustody`, `sortSettlement`, `advanceSettlement`) وتُستدعى من `PATCH /api/admin/orders` و`/api/admin/cod`.
+
+> **لم يُتحقَّق منه:** مسار Prisma لم يُشغَّل مقابل قاعدة بيانات حيّة في هذه الجلسة (قاعدة البيانات المحلية متوقفة). التحقق التشغيلي تم على مسار الـ mock فقط.
