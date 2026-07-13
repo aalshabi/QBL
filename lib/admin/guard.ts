@@ -13,7 +13,7 @@ const ADMIN_ROLES: Role[] = ["ADMIN", "OPS_MANAGER"];
 export async function requireAdminPage(): Promise<void> {
   const session = await getSession();
   if (!session) {
-    redirect("/");
+    redirect("/login");
   }
   if (!ADMIN_ROLES.includes(session.role)) {
     redirect("/");

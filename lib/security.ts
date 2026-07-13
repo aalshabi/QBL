@@ -25,6 +25,27 @@ export async function verifyTrackingToken(token: string) {
   return { orderId: payload.orderId };
 }
 
+export async function createSessionToken(userId: string, role: string, expiresIn = "12h") {
+  return new SignJWT({ scope: "session", role })
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject(userId)
+    .setIssuedAt()
+    .setExpirationTime(expiresIn)
+    .sign(secretFromEnv("SESSION_SECRET", "dev-session-secret-change-me"));
+}
+
+export async function verifySessionToken(token: string): Promise<{ userId: string; role: string } | null> {
+  try {
+    const { payload } = await jwtVerify(token, secretFromEnv("SESSION_SECRET", "dev-session-secret-change-me"));
+    if (payload.scope !== "session" || typeof payload.sub !== "string" || typeof payload.role !== "string") {
+      return null;
+    }
+    return { userId: payload.sub, role: payload.role };
+  } catch {
+    return null;
+  }
+}
+
 export function generateOtpCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }

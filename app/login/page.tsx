@@ -2,13 +2,22 @@
 
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
-import { Loader2, Truck } from "lucide-react";
+import { Loader2, ShieldCheck } from "lucide-react";
+import { BrandLogo } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export default function CourierLoginPage() {
+const HOME_BY_ROLE: Record<string, string> = {
+  ADMIN: "/admin",
+  OPS_MANAGER: "/admin",
+  DISPATCHER: "/admin",
+  COURIER: "/courier",
+  CLIENT: "/",
+};
+
+export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,7 +42,7 @@ export default function CourierLoginPage() {
         return;
       }
 
-      router.push("/courier");
+      router.push(HOME_BY_ROLE[payload.role] ?? "/");
       router.refresh();
     } catch {
       setError("تعذر الاتصال بالخادم، حاول مرة أخرى");
@@ -45,29 +54,33 @@ export default function CourierLoginPage() {
   return (
     <main className="grid min-h-screen place-items-center bg-muted/50 px-4">
       <Card className="w-full max-w-sm rounded-lg">
-        <CardHeader>
-          <Truck className="h-8 w-8 text-accent" />
-          <CardTitle>دخول المندوب</CardTitle>
+        <CardHeader className="items-start gap-2">
+          <BrandLogo />
+          <CardTitle className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-accent" />
+            تسجيل الدخول
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">لوحة التحكم متاحة للمستخدمين المصرّح لهم فقط</p>
         </CardHeader>
         <CardContent>
           <form className="grid gap-4" onSubmit={handleSubmit}>
             <div className="grid gap-2">
-              <Label htmlFor="courier-email">البريد الإلكتروني</Label>
+              <Label htmlFor="email">البريد الإلكتروني</Label>
               <Input
-                id="courier-email"
+                id="email"
                 type="email"
                 dir="ltr"
                 autoComplete="username"
                 required
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="qbl-c001@qdl.sa"
+                placeholder="ops.manager@qdl.sa"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="courier-password">كلمة المرور</Label>
+              <Label htmlFor="password">كلمة المرور</Label>
               <Input
-                id="courier-password"
+                id="password"
                 type="password"
                 dir="ltr"
                 autoComplete="current-password"
