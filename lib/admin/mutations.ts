@@ -12,6 +12,7 @@ const money = (value: { toString(): string } | null) => (value == null ? 0 : Num
 /** actorId صالح فقط إن كان مستخدمًا موجودًا — جلسات التطوير ليست مستخدمين حقيقيين. */
 async function resolveActorId(): Promise<string | null> {
   const session = await getSession();
+  if (!session?.userId) return null;
   const user = await getPrisma().user.findUnique({ where: { id: session.userId }, select: { id: true } });
   return user?.id ?? null;
 }

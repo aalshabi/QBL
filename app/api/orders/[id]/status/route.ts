@@ -28,7 +28,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!body.data.manualOverride) {
       return NextResponse.json({ error: "Delivered is blocked until OTP is verified." }, { status: 409 });
     }
-    assertRole(session.role, ["ADMIN", "OPS_MANAGER"]);
+    assertRole(session?.role, ["ADMIN", "OPS_MANAGER"]);
     if (!body.data.reason || body.data.reason.length < 10) {
       return NextResponse.json({ error: "Manual override requires an audit reason." }, { status: 422 });
     }
@@ -40,7 +40,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     status: body.data.status,
     audit:
       body.data.status === "DELIVERED" && body.data.manualOverride
-        ? { action: "OTP_MANUAL_OVERRIDE", actor: session.userId, reason: body.data.reason }
-        : { action: "STATUS_CHANGED", actor: session.userId },
+        ? { action: "OTP_MANUAL_OVERRIDE", actor: session?.userId ?? "anonymous", reason: body.data.reason }
+        : { action: "STATUS_CHANGED", actor: session?.userId ?? "anonymous" },
   });
 }
