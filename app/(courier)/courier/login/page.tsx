@@ -61,7 +61,7 @@ export default function CourierLoginPage() {
                 required
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="qbl-c001@qbl.sa"
+                placeholder="qbl-c001@qdl.sa"
               />
             </div>
             <div className="grid gap-2">
