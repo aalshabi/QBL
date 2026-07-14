@@ -191,14 +191,43 @@
     color-adjust: exact;
     print-color-adjust: exact;
   }
+
+  .profile-sheet {
+    position: relative;
+  }
 }
 
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
   .no-print {
     display: none !important;
   }
 
+  html,
   body {
     background: white !important;
+  }
+
+  .profile-page {
+    background: white !important;
+  }
+
+  .profile-sheet {
+    min-height: 297mm !important;
+    break-after: page;
+    break-inside: avoid;
+    overflow: hidden;
+  }
+
+  .profile-sheet:last-child {
+    break-after: auto;
+  }
+
+  .profile-sheet > div {
+    min-height: 297mm;
   }
 }
