@@ -40,7 +40,7 @@
 انسخ `.env.example` إلى `.env` وعدّل القيم:
 
 ```bash
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/qdl?schema=public"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/qbl?schema=public"
 APP_URL="http://localhost:3000"
 TRACKING_TOKEN_SECRET="replace-with-a-long-random-tracking-secret"
 OTP_PEPPER="replace-with-a-long-random-otp-pepper"

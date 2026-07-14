@@ -48,7 +48,7 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Brand tokens used by the marketing pages merged from qdl-website (qbl.sa) */
+/* Brand tokens used by QBL marketing pages */
 @theme {
   --font-latin: "Geist", "Geist Fallback", "Segoe UI", Arial, sans-serif;
   --color-ink: #0d1b3a;
@@ -171,6 +171,10 @@
 @layer utilities {
   .ltr {
     direction: ltr;
+  }
+
+  .font-cairo {
+    font-family: "Cairo", "Segoe UI", Tahoma, Arial, sans-serif;
   }
 
   .brand-grid {

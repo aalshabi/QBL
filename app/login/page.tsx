@@ -74,7 +74,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="ops.manager@qdl.sa"
+                placeholder="ops.manager@qbl.sa"
               />
             </div>
             <div className="grid gap-2">

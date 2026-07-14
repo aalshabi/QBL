@@ -7,7 +7,7 @@ export function getPrisma() {
   if (!prisma) {
     prisma = new PrismaClient({
       adapter: new PrismaPg({
-        connectionString: process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/qdl?schema=public",
+        connectionString: process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/qbl?schema=public",
       }),
     });
   }

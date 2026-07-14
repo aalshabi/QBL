@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   ClipboardCheck,
   Droplets,
+  Download,
   FileCheck,
   FlaskConical,
   Heart,
@@ -42,6 +43,11 @@ export const metadata = {
   ],
   alternates: {
     canonical: "https://qbl.sa/services/beauty-shield",
+    languages: {
+      "ar-SA": "https://qbl.sa/services/beauty-shield",
+      en: "https://qbl.sa/en/beauty-shield",
+      "x-default": "https://qbl.sa/services/beauty-shield",
+    },
   },
   openGraph: {
     title: "QBL Beauty Shield — توصيل محمي حرارياً لمنتجات التجميل والعناية",
@@ -124,8 +130,8 @@ export default function BeautyShieldPage() {
         eyebrow="QBL Beauty Shield"
         title="توصيل منتجات التجميل والعناية بحماية من حرارة الجو"
         description="منتجات السيروم، فيتامين C، الكريمات الحساسة، والمنتجات العضوية تحتاج توصيلاً مختلفاً عن الطرود العادية. قدام بابك توفر خدمة توصيل محمي حرارياً داخل الرياض، تساعد المتاجر والعيادات على حماية جودة المنتج وتجربة العميل."
-        ctaHref="/quote?service=beauty-shield"
-        ctaLabel="اطلب تجربة 10 طلبات"
+        ctaHref="/trial"
+        ctaLabel="ابدأ تجربة Beauty Shield"
         secondaryCtaHref={whatsappHref}
         secondaryCtaLabel="تحدث مع فريق التشغيل"
         secondaryCtaExternal
@@ -268,7 +274,7 @@ export default function BeautyShieldPage() {
                   ابدأ بتجربة صغيرة
                 </h2>
                 <p className="mt-4 max-w-2xl leading-8 text-slatebrand">
-                  جرّب 10 طلبات توصيل محمي داخل الرياض، ثم قيّم الخدمة قبل الاشتراك الشهري. التجربة مناسبة للمتاجر والعيادات التي تريد اختبار الخدمة على منتجات محددة دون التزام طويل.
+                  ابدأ بنطاق محدود من طلبات التوصيل المحمي داخل الرياض، ثم قيّم السجلات والتقرير قبل اختيار نموذج التشغيل الشهري. التجربة مناسبة للمتاجر والعيادات التي تريد اختبار الخدمة على منتجات محددة دون التزام طويل.
                 </p>
                 <ul className="mt-6 grid gap-2 text-sm text-slatebrand sm:grid-cols-2">
                   {[
@@ -286,12 +292,21 @@ export default function BeautyShieldPage() {
               </div>
               <div className="flex flex-col gap-3">
                 <Link
-                  href="/quote?service=beauty-shield"
+                  href="/trial"
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-primary px-6 text-sm font-bold text-white transition-colors hover:bg-primary-800"
                 >
                   اطلب التجربة الآن
                   <ArrowLeft className="h-4 w-4" />
                 </Link>
+                <a
+                  href="/reports/beauty-shield-trial-sample.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-line bg-white px-6 text-sm font-bold text-primary transition-colors hover:bg-muted/60"
+                >
+                  شاهد نموذج التقرير
+                  <Download className="h-4 w-4 text-accent" />
+                </a>
                 <a
                   href={whatsappHref}
                   target="_blank"
