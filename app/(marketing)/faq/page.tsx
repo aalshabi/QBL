@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import PageHero from "@/components/PageHero";
+import { JsonLd } from "@/components/JsonLd";
 import { CtaBand } from "@/components/marketing/section";
+import { breadcrumbJsonLd } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
   title: "الأسئلة الشائعة عن توصيل مستحضرات التجميل المبرد — QBL",
@@ -66,6 +68,12 @@ export default function FaqPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "الرئيسية", path: "" },
+          { name: "الأسئلة الشائعة", path: "faq" },
+        ])}
+      />
       <PageHero
         eyebrow="الأسئلة الشائعة"
         title="أسئلة يطرحها علينا مدراء العلامات — بإجابات مباشرة"

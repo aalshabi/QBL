@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { CheckCircle2, XCircle } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import { CtaBand, Section } from "@/components/marketing/section";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
   title: "الجودة والاستعداد التنظيمي — QBL",
@@ -46,6 +48,12 @@ const disclaimers = [
 export default function QualityPage() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "الرئيسية", path: "" },
+          { name: "الجودة والاستعداد التنظيمي", path: "quality" },
+        ])}
+      />
       <PageHero
         eyebrow="الجودة والاستعداد التنظيمي"
         title="الجودة عندنا إجراءات مكتوبة، لا شعارات"

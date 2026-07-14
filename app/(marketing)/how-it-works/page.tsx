@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import { CtaBand, Section } from "@/components/marketing/section";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
   title: "كيف تعمل QBL — رحلة الشحنة من المستودع إلى الباب",
@@ -66,6 +68,12 @@ const limits = [
 export default function HowItWorksPage() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "الرئيسية", path: "" },
+          { name: "طريقة العمل", path: "how-it-works" },
+        ])}
+      />
       <PageHero
         eyebrow="طريقة العمل"
         title="رحلة شحنتك، خطوة بخطوة"

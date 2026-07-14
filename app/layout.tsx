@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { JsonLd } from "@/components/JsonLd";
 import { PwaRegister } from "@/components/pwa-register";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { organizationAndLocalBusinessJsonLd } from "@/lib/structured-data";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -58,6 +60,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <JsonLd data={organizationAndLocalBusinessJsonLd()} />
         <PwaRegister />
         <TooltipProvider>{children}</TooltipProvider>
       </body>

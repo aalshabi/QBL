@@ -12,7 +12,9 @@ import {
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import { CtaBand, Section } from "@/components/marketing/section";
+import { JsonLd } from "@/components/JsonLd";
 import { SITE } from "@/lib/site";
+import { breadcrumbJsonLd } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
   title: "قطاعات التجميل التي تخدمها QBL في الرياض",
@@ -67,6 +69,12 @@ const sectors: { icon: LucideIcon; title: string; desc: string }[] = [
 export default function SectorsPage() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "الرئيسية", path: "" },
+          { name: "القطاعات", path: "sectors" },
+        ])}
+      />
       <PageHero
         eyebrow="القطاعات"
         title="كل قطاع تجميلي له نموذج تشغيل مختلف — ونحن نعرف الفرق"

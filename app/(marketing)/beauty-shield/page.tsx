@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { AlertTriangle, CheckCircle2, Snowflake, Sun, Thermometer } from "lucide-react";
 import PageHero from "@/components/PageHero";
+import { JsonLd } from "@/components/JsonLd";
 import { CtaBand, Section } from "@/components/marketing/section";
+import { beautyShieldServiceJsonLd, breadcrumbJsonLd } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
   title: "حماية منتجات التجميل من حرارة السعودية — QBL Beauty Shield",
@@ -79,6 +81,13 @@ const limits = [
 export default function BeautyShieldPage() {
   return (
     <>
+      <JsonLd data={beautyShieldServiceJsonLd()} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "الرئيسية", path: "" },
+          { name: "Beauty Shield", path: "beauty-shield" },
+        ])}
+      />
       <PageHero
         eyebrow="QBL Beauty Shield"
         title="Beauty Shield — الحماية الحرارية لمنتجك خلال أخطر مرحلة"

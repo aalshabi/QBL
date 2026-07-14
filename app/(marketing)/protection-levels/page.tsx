@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Snowflake, Sun, Thermometer } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import { CtaBand, Section } from "@/components/marketing/section";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
   title: "مستويات التحكم الحراري لتوصيل مستحضرات التجميل",
@@ -58,6 +60,12 @@ const selection = [
 export default function ProtectionLevelsPage() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "الرئيسية", path: "" },
+          { name: "مستويات الحماية", path: "protection-levels" },
+        ])}
+      />
       <PageHero
         eyebrow="مستويات الحماية"
         title="ثلاثة مستويات، ومرجع واحد: تعليمات المصنّع"

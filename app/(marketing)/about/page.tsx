@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { CheckCircle2 } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import { CtaBand, Section } from "@/components/marketing/section";
+import { JsonLd } from "@/components/JsonLd";
 import { SITE } from "@/lib/site";
+import { breadcrumbJsonLd } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
   title: "من نحن — قدام بابك QBL",
@@ -34,6 +36,12 @@ const official = [
 export default function AboutPage() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "الرئيسية", path: "" },
+          { name: "من نحن", path: "about" },
+        ])}
+      />
       <PageHero
         eyebrow="من نحن"
         title="تأسسنا حول مشكلة واحدة لم يكن أحد يملكها"

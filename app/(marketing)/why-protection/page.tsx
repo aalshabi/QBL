@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Droplets, FlaskConical, Package, Palette } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import { CtaBand, Section } from "@/components/marketing/section";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
   title: "لماذا تحتاج مستحضرات التجميل حماية حرارية؟",
@@ -42,6 +44,12 @@ const matrix = [
 export default function WhyProtectionPage() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "الرئيسية", path: "" },
+          { name: "لماذا الحماية الحرارية", path: "why-protection" },
+        ])}
+      />
       <PageHero
         eyebrow="لماذا الحماية الحرارية"
         title="ليست كل منتجات التجميل طروداً عادية"
