@@ -9,13 +9,13 @@ export const company = {
   vision: "أن تكون الشركة الخيار الأول للتوصيل المبرّد آخر ميل في المملكة.",
   mission: "تمكين الشركات من تشغيل توصيل مبرّد موثوق، قابل للقياس، ومرن مع تتبع لحظي ووضوح كامل لحالة الطلب.",
   values: ["الموثوقية", "الشفافية", "السرعة", "سلامة المنتج", "خدمة العميل"],
-  website: "qdl.sa",
+  website: "qbl.sa",
   emails: {
-    general: "info@qdl.sa",
-    sales: "sales@qdl.sa",
-    ops: "ops@qdl.sa",
-    billing: "billing@qdl.sa",
-    manager: "abdullah@qdl.sa",
+    general: "info@qbl.sa",
+    sales: "sales@qbl.sa",
+    ops: "ops@qbl.sa",
+    billing: "billing@qbl.sa",
+    manager: "abdullah@qbl.sa",
   },
   generalManager: "عبدالله إسماعيل الشعبي",
   address: "الرياض، طريق أبو عبيدة عامر بن الجراح، 4480 — 14256",
@@ -68,7 +68,7 @@ export const sectors = [
 ];
 
 export const differentiators = [
-  "أسطول حديث 10-15 فان مبرّد",
+  "سعة أسطول تُحدد وتُثبت حسب نطاق العقد",
   "تتبع GPS لحظي للعمليات والعميل",
   "مراقبة درجة الحرارة والتنبيه عند الاستثناء",
   "تخطيط مسارات ذكي قابل للتوسع",
@@ -78,10 +78,10 @@ export const differentiators = [
 ];
 
 export const operatingMetrics = [
-  { label: "سعة أسطول مبدئية", value: "10-15", note: "فان مبرد قابل للتوسع حسب العقد" },
-  { label: "نطاق الأغذية الطازجة", value: "0 إلى +5", note: "مصمم لحماية الطزاجة حتى التسليم" },
-  { label: "مجمدات مختارة", value: "حتى -18", note: "حسب نوع المركبة والمسار" },
-  { label: "تحديث موقع المندوب", value: "10-15 ث", note: "عند تفعيل تتبع المندوب" },
+  { label: "سعة الأسطول", value: "حسب العقد", note: "تثبت المركبات والسعة قبل التشغيل" },
+  { label: "نطاق المنتج", value: "حسب المصنّع", note: "تعليمات الحفظ هي المرجع" },
+  { label: "مستوى الحماية", value: "حسب الفئة", note: "لا يُطبق قالب واحد على كل المنتجات" },
+  { label: "تتبع المندوب", value: "عند التفعيل", note: "وفق إعدادات حساب العميل" },
 ];
 
 export const slaHighlights = [
@@ -137,15 +137,12 @@ export const trustSignals = [
 
 export const marketingNav = [
   { href: "/", label: "الرئيسية" },
-  { href: "/about", label: "من نحن" },
-  { href: "/services", label: "خدماتنا" },
   { href: "/services/beauty-shield", label: "Beauty Shield" },
+  { href: "/why-protection", label: "مستوى الحماية" },
+  { href: "/riyadh-heat", label: "حرارة الرياض" },
   { href: "/cold-chain-system", label: "النظام التشغيلي" },
-  { href: "/sectors", label: "القطاعات" },
-  { href: "/fleet-tech", label: "التقنيات" },
-  { href: "/case-studies", label: "دراسات حالة" },
-  { href: "/sla", label: "SLA" },
-  { href: "/track", label: "تتبع" },
+  { href: "/sfda-readiness", label: "الاستعداد التنظيمي" },
+  { href: "/faq", label: "الأسئلة الشائعة" },
 ];
 
 export const statusLabels = {
