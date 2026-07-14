@@ -5,9 +5,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAdminDataSource } from "@/lib/admin/data";
 import { formatDateTime, formatNumber, formatSar, formatSarExact } from "@/lib/admin/format";
+import { requireAdminPage } from "@/lib/admin/guard";
 import { expenseTypeLabels } from "@/lib/admin/types";
 
 export default async function AdminCodPage() {
+  await requireAdminPage();
   const { custody, settlements, expenses, summary } = await getAdminDataSource().getCod();
 
   const kpis = [

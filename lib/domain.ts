@@ -6,6 +6,24 @@ export type OrderStatus =
   | "DELIVERED"
   | "FAILED";
 
+/**
+ * آلة حالات مسار الطلب — الانتقالات المسموحة فقط. DELIVERED و FAILED نهائيتان.
+ * يمنع القفزات غير المشروعة مثل CREATED → DELIVERED.
+ */
+export const ALLOWED_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
+  CREATED: ["ASSIGNED", "FAILED"],
+  ASSIGNED: ["OUT_FOR_DELIVERY", "FAILED"],
+  OUT_FOR_DELIVERY: ["ARRIVED", "FAILED"],
+  ARRIVED: ["DELIVERED", "FAILED"],
+  DELIVERED: [],
+  FAILED: [],
+};
+
+export function canTransition(from: OrderStatus, to: OrderStatus): boolean {
+  if (from === to) return true;
+  return ALLOWED_TRANSITIONS[from].includes(to);
+}
+
 export type CourierStatus = "AVAILABLE" | "ON_TASK" | "LATE" | "OFFLINE";
 export type TemperatureStatus = "NORMAL" | "WARNING" | "CRITICAL" | "NOT_AVAILABLE";
 

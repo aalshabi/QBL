@@ -3,6 +3,10 @@ import { createTrackingToken } from "@/lib/security";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
+// التوكن يُوقَّع عند كل طلب: صفحة ثابتة تخبز توكناً منتهي الصلاحية (8h) بعد البناء،
+// والتوقيع وقت البناء يصطدم بإلزامية الأسرار في الإنتاج.
+export const dynamic = "force-dynamic";
+
 export default async function TrackEntryPage() {
   const token = await createTrackingToken("order-003", "8h");
   const sampleHref = `/track/${token}`;

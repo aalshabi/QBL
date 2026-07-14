@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getSession, assertRole } from "@/lib/auth";
+import { getSession, type Role } from "@/lib/auth";
+import { canTransition } from "@/lib/domain";
 import { deliveryOrders } from "@/lib/mock-data";
+import { isOrderOtpVerified } from "@/lib/otp-store";
 
+const OVERRIDE_ROLES: Role[] = ["ADMIN", "OPS_MANAGER"];
+
+// otpVerified لم يعد يُقبل من العميل — حالة التحقق تُقرأ من الخادم حصراً.
 const schema = z.object({
   status: z.enum(["CREATED", "ASSIGNED", "OUT_FOR_DELIVERY", "ARRIVED", "DELIVERED", "FAILED"]),
-  otpVerified: z.boolean().optional(),
   manualOverride: z.boolean().optional(),
   reason: z.string().optional(),
 });
@@ -24,23 +28,38 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Order not found." }, { status: 404 });
   }
 
-  if (body.data.status === "DELIVERED" && !body.data.otpVerified) {
+  // آلة الحالات: لا قفزات غير مشروعة (مثل CREATED → DELIVERED).
+  if (!canTransition(order.status, body.data.status)) {
+    return NextResponse.json(
+      { error: `Illegal transition ${order.status} → ${body.data.status}.` },
+      { status: 409 },
+    );
+  }
+
+  // التسليم يتطلب تحققاً خادميّاً لـ OTP، أو تجاوزاً يدويّاً موثّقاً بدور إداري.
+  let overridden = false;
+  if (body.data.status === "DELIVERED" && !isOrderOtpVerified(id)) {
     if (!body.data.manualOverride) {
       return NextResponse.json({ error: "Delivered is blocked until OTP is verified." }, { status: 409 });
     }
-    assertRole(session.role, ["ADMIN", "OPS_MANAGER"]);
+    if (!session || !OVERRIDE_ROLES.includes(session.role)) {
+      return NextResponse.json(
+        { error: "Manual override requires an admin role." },
+        { status: session ? 403 : 401 },
+      );
+    }
     if (!body.data.reason || body.data.reason.length < 10) {
       return NextResponse.json({ error: "Manual override requires an audit reason." }, { status: 422 });
     }
+    overridden = true;
   }
 
   return NextResponse.json({
     ok: true,
     orderId: id,
     status: body.data.status,
-    audit:
-      body.data.status === "DELIVERED" && body.data.manualOverride
-        ? { action: "OTP_MANUAL_OVERRIDE", actor: session.userId, reason: body.data.reason }
-        : { action: "STATUS_CHANGED", actor: session.userId },
+    audit: overridden
+      ? { action: "OTP_MANUAL_OVERRIDE", actor: session?.userId ?? "anonymous", reason: body.data.reason }
+      : { action: "STATUS_CHANGED", actor: session?.userId ?? "anonymous" },
   });
 }

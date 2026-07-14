@@ -1,5 +1,6 @@
 import { OrdersView } from "@/components/admin/orders-view";
 import { getAdminDataSource } from "@/lib/admin/data";
+import { requireAdminPage } from "@/lib/admin/guard";
 import type { AdminOrderStatus } from "@/lib/admin/types";
 import { orderStatusLabels } from "@/lib/admin/types";
 import { clientAccounts, couriers } from "@/lib/mock-data";
@@ -9,6 +10,7 @@ export default async function AdminOrdersPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  await requireAdminPage();
   const params = await searchParams;
   const initialStatus =
     params.status && params.status in orderStatusLabels ? (params.status as AdminOrderStatus) : "ALL";

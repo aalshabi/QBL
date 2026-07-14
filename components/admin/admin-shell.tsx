@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import {
   Banknote,
   BarChart3,
   LayoutDashboard,
+  LogOut,
   Package,
   Search,
   Truck,
@@ -25,6 +26,13 @@ const NAV_ITEMS = [
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <div className="flex min-h-screen bg-slate-100 text-slate-900">
@@ -81,6 +89,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#00A7B6] text-sm font-bold text-white">
               م
             </div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+              title="تسجيل الخروج"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </header>
         <main className="flex-1 p-4 sm:p-6">{children}</main>

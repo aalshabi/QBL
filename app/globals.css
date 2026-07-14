@@ -48,6 +48,35 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Brand tokens used by the marketing pages merged from qdl-website (qbl.sa) */
+@theme {
+  --font-latin: "Geist", "Geist Fallback", "Segoe UI", Arial, sans-serif;
+  --color-ink: #0d1b3a;
+  --color-ink-600: #34415a;
+  --color-ink-700: #202d49;
+  --color-primary-50: #f1f5f9;
+  --color-primary-100: #e6ebf0;
+  --color-primary-200: #c8d2dc;
+  --color-primary-300: #9caaba;
+  --color-primary-400: #728195;
+  --color-primary-500: #4f5d73;
+  --color-primary-600: #34415a;
+  --color-primary-700: #202d49;
+  --color-primary-800: #152342;
+  --color-primary-900: #0d1b3a;
+  --color-accent-light: #3fcbd6;
+  --color-accent-200: #bfeaee;
+  --color-teal: #00a7b6;
+  --color-teal-light: #3fcbd6;
+  --color-teal-200: #bfeaee;
+  --color-frost: #eaf7f8;
+  --color-frost-50: #f2fbfc;
+  --color-amber: #f4a82e;
+  --color-amber-alert: #f4a82e;
+  --color-slatebrand: #3a4653;
+  --color-line: #d7dee6;
+}
+
 :root {
   --background: oklch(0.99 0.005 248);
   --foreground: oklch(0.22 0.04 253);
@@ -142,6 +171,13 @@
 @layer utilities {
   .ltr {
     direction: ltr;
+  }
+
+  .brand-grid {
+    background-image:
+      linear-gradient(rgba(13, 27, 58, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(13, 27, 58, 0.05) 1px, transparent 1px);
+    background-size: 44px 44px;
   }
 
   .map-grid {
