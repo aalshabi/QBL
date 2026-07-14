@@ -53,6 +53,7 @@ export const NAV_ITEMS = [
 
 // روابط الفوتر — تشمل صفحات المحتوى + مدخل النظام التشغيلي والتتبع (يبقى النظام كما هو).
 export const FOOTER_LINKS = [
+  { href: "/company-profile", label: "بروفايل الشركة" },
   { href: "/beauty-shield", label: "Beauty Shield" },
   { href: "/protection-levels", label: "مستويات الحماية" },
   { href: "/how-it-works", label: "طريقة العمل" },

@@ -5,6 +5,7 @@ const BASE_URL = "https://qbl.sa";
 const routes = [
   { path: "", priority: 1 },
   { path: "beauty-shield", priority: 0.9 },
+  { path: "company-profile", priority: 0.8 },
   { path: "why-protection", priority: 0.8 },
   { path: "protection-levels", priority: 0.8 },
   { path: "sectors", priority: 0.7 },
