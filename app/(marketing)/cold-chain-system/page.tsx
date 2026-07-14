@@ -108,7 +108,7 @@ export default function ColdChainSystemPage() {
         eyebrow="النظام التشغيلي"
         title="نظام تشغيلي مصمم للتوصيل المبرّد"
         description="من الاستلام إلى التسليم، كل خطوة قابلة للتتبع، وكل قراءة حرارة قابلة للتسجيل. النظام مصمم لدعم سلامة المنتج، ضبط الوقت، وإثبات التسليم — بدون ادعاءات عمليات حية لم يتم تفعيلها بعد."
-        ctaHref="/quote"
+        ctaHref="/trial"
         ctaLabel="اطلب تجربة تشغيل"
       />
 
@@ -263,7 +263,7 @@ export default function ColdChainSystemPage() {
           </div>
           <div className="flex flex-col justify-center gap-3">
             <Link
-              href="/quote"
+              href="/trial"
               className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-primary px-6 text-sm font-bold text-white transition-colors hover:bg-primary-800"
             >
               اطلب عرض تشغيل

@@ -1,7 +1,6 @@
 import "dotenv/config";
 import { PrismaClient } from "../lib/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { company } from "../lib/company";
 import { clientAccounts, couriers, customers, deliveryOrders, vehicles } from "../lib/mock-data";
 import { adminOrders } from "../lib/admin/mock";
 import { createTrackingToken, generateOtpCode, hashOtp, hashToken } from "../lib/security";
@@ -26,6 +25,28 @@ const HUBS = [
   { name: "فرع الشمال", city: "الرياض", address: "حي النرجس، طريق الملك سلمان", managerName: "هيا العنزي" },
   { name: "فرع الغرب", city: "الرياض", address: "حي حطين، طريق الملك خالد", managerName: "مشعل الغامدي" },
 ];
+
+// بيانات الشركة الرسمية لتهيئة قاعدة البيانات (البريد المعتمد: info@qbl.sa).
+const company = {
+  officialName: "شركة قدام بابك للخدمات اللوجستية",
+  tradeName: "QADDAM BABAK Logistics",
+  abbreviation: "QBL",
+  sector: "نقل مبرد لمستحضرات التجميل — Beauty Shield Last-Mile",
+  headquarters: "الرياض، السعودية",
+  foundedYear: 2024,
+  website: "qbl.sa",
+  emails: {
+    general: "info@qbl.sa",
+    sales: "info@qbl.sa",
+    ops: "info@qbl.sa",
+    billing: "info@qbl.sa",
+    manager: "info@qbl.sa",
+  },
+  generalManager: "عبدالله إسماعيل الشعبي",
+  address: "الرياض — طريق أبو عبيدة عامر بن الجراح",
+  crNumber: "1010985560",
+  unifiedNumber: "7038401902",
+};
 
 async function main() {
   await prisma.proofOfDelivery.deleteMany();

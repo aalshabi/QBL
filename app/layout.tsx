@@ -15,9 +15,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "قدام بابك | QBL Logistics",
-  description: "منصة QBL للتوصيل المبرّد آخر ميل في الرياض مع تتبع لحظي وكود استلام.",
-  applicationName: "QBL Logistics",
+  metadataBase: new URL("https://qbl.sa"),
+  title: {
+    default: "نقل مبرد لمستحضرات التجميل في الرياض — QBL",
+    template: "%s — QBL",
+  },
+  description:
+    "QBL Beauty Shield — نقل محكوم حرارياً ومبرد لمستحضرات التجميل ومنتجات العناية الحساسة، من مستودع علامتك حتى باب العميل داخل الرياض.",
+  applicationName: "QBL Beauty Shield",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [
