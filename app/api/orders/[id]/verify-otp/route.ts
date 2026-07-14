@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { deliveryOrders } from "@/lib/mock-data";
+import { verifyOrderOtp } from "@/lib/otp-store";
 
 const schema = z.object({
   otp: z.string().regex(/^\d{6}$/),
@@ -24,7 +25,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "OTP can only be verified when the order is out for delivery or arrived." }, { status: 409 });
   }
 
-  if (body.data.otp !== "123456") {
+  // التحقق عبر bcrypt ويُسجَّل خادميّاً — هو ما يقرأه مسار /status لاحقاً.
+  const verified = await verifyOrderOtp(id, body.data.otp);
+  if (!verified) {
     return NextResponse.json({ ok: false, remainingAttempts: 4, audit: "OTP_FAILED" }, { status: 400 });
   }
 

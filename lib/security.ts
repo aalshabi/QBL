@@ -3,14 +3,18 @@ import { jwtVerify, SignJWT } from "jose";
 
 const encoder = new TextEncoder();
 
-/** في الإنتاج السر إلزامي — fail-closed بدل توقيع بسر تطوير معروف. */
-function secretFromEnv(name: string, fallback: string) {
+/** في الإنتاج السر إلزامي — fail-closed بدل توقيع/تمليح بسر تطوير معروف. */
+function requireSecret(name: string, fallback: string): string {
   const value = process.env[name];
-  if (value) return encoder.encode(value);
+  if (value) return value;
   if (process.env.NODE_ENV === "production") {
     throw new Error(`${name} must be set in production`);
   }
-  return encoder.encode(fallback);
+  return fallback;
+}
+
+function secretFromEnv(name: string, fallback: string) {
+  return encoder.encode(requireSecret(name, fallback));
 }
 
 export async function createTrackingToken(orderId: string, expiresIn = "8h") {
@@ -57,12 +61,12 @@ export function generateOtpCode() {
 }
 
 export async function hashOtp(code: string) {
-  const pepper = process.env.OTP_PEPPER ?? "dev-otp-pepper-change-me";
+  const pepper = requireSecret("OTP_PEPPER", "dev-otp-pepper-change-me");
   return bcrypt.hash(`${code}:${pepper}`, 12);
 }
 
 export async function compareOtp(code: string, hash: string) {
-  const pepper = process.env.OTP_PEPPER ?? "dev-otp-pepper-change-me";
+  const pepper = requireSecret("OTP_PEPPER", "dev-otp-pepper-change-me");
   return bcrypt.compare(`${code}:${pepper}`, hash);
 }
 

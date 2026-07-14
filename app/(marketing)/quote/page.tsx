@@ -1,10 +1,6 @@
-import { BarChart3, CalendarCheck, Send, ShieldCheck } from "lucide-react";
-import { submitLead } from "@/lib/actions";
-import { Button } from "@/components/ui/button";
+import { BarChart3, CalendarCheck, ShieldCheck } from "lucide-react";
+import { QuoteForm } from "@/components/marketing/quote-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 
 export default function QuotePage() {
   return (
@@ -35,40 +31,7 @@ export default function QuotePage() {
           <CardTitle>بيانات التواصل والتشغيل</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={submitLead} className="grid gap-5">
-            <div className="grid gap-2">
-              <Label htmlFor="name">اسم المسؤول</Label>
-              <Input id="name" name="name" placeholder="مثال: مدير العمليات أو المشتريات" required />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="company">اسم الشركة</Label>
-              <Input id="company" name="company" placeholder="اسم الشركة أو العلامة التجارية" required />
-            </div>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <div className="grid gap-2">
-                <Label htmlFor="email">البريد الرسمي</Label>
-                <Input id="email" name="email" type="email" placeholder="name@company.com" required />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="phone">رقم التواصل</Label>
-                <Input id="phone" name="phone" placeholder="05xxxxxxxx" required />
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="message">ما الذي تحتاجه شركتك؟</Label>
-              <Textarea
-                id="message"
-                name="message"
-                rows={6}
-                placeholder="مثال: 80 طلب يوميًا، منتجات طازجة 0 إلى +5، تغطية شمال وشرق الرياض، نحتاج تتبع للعميل وكود استلام."
-                required
-              />
-            </div>
-            <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
-              <Send className="h-4 w-4" />
-              اطلب دراسة تشغيل وسعر
-            </Button>
-          </form>
+          <QuoteForm />
         </CardContent>
       </Card>
     </main>

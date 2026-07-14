@@ -518,3 +518,21 @@ model ProofOfDelivery {
   capturedAt  DateTime      @default(now())
   order       DeliveryOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CLOSED
+}
+
+model Lead {
+  id        String     @id @default(cuid())
+  name      String
+  company   String
+  email     String
+  phone     String
+  message   String
+  status    LeadStatus @default(NEW)
+  createdAt DateTime   @default(now())
+}
