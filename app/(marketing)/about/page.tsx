@@ -22,9 +22,10 @@ const principles = [
 ];
 
 const official = [
-  { label: "الاسم القانوني", value: "شركة قدام بابك للخدمات اللوجستية" },
+  { label: "الاسم القانوني", value: SITE.brandLong },
   { label: "السجل التجاري", value: SITE.cr },
-  { label: "المقر", value: "الرياض — طريق أبو عبيدة عامر بن الجراح" },
+  { label: "المقر", value: SITE.address },
+  { label: "العنوان الوطني المختصر", value: SITE.shortAddress },
   { label: "البريد", value: SITE.emails.info },
   { label: "الهاتف", value: SITE.phone },
   { label: "الموقع", value: SITE.domainDisplay },

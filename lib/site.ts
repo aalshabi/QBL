@@ -8,11 +8,36 @@ export const SITE = {
   domainDisplay: "QBL.SA",
   city: "الرياض",
   cr: "1010985560",
-  address: "الرياض — طريق أبو عبيدة عامر بن الجراح",
+  // العنوان الوطني الرسمي (إثبات عنوان — العنوان الوطني السعودي).
+  address: "حي السعادة، طريق أبي عبيدة عامر بن الجراح، مبنى 4480، الرياض 14256",
+  district: "حي السعادة",
+  buildingNo: "4480",
+  secondaryNo: "6809",
+  postalCode: "14256",
+  shortAddress: "RQAB4480",
   phone: "+966 55 632 0555",
   emails: {
     // بريد معتمد واحد عبر الموقع (ملحق التنفيذ).
     info: "info@qbl.sa",
+  },
+};
+
+// روابط أنظمة التشغيل الخارجية (LogesTechs) — دخول الشركاء/المتاجر وتطبيقات الجوال.
+export const PARTNER_LOGIN = {
+  admin: "https://admin-pro.logestechs.com/qbl-logistics/login",
+  merchant: "https://qbl-logistics.logestechs.com/login",
+};
+
+export const APPS = {
+  driver: {
+    ios: "https://apps.apple.com/il/app/logestechs-driver/id1547993047",
+    android: "https://play.google.com/store/apps/details?id=com.logestechs.driver",
+    huawei: "https://appgallery.huawei.com/app/C111164171",
+  },
+  customer: {
+    ios: "https://apps.apple.com/il/app/logestechs-customer/id1547994390",
+    android: "https://play.google.com/store/apps/details?id=com.logestechs.customer_multiCustomer",
+    huawei: "https://appgallery.huawei.com/app/C111182423",
   },
 };
 
