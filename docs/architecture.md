@@ -30,6 +30,8 @@ lib/
   prisma.ts
   maps/adapter.ts
   notifications/adapter.ts
+  logestechs/config.ts
+  logestechs/client.ts
 prisma/
   schema.prisma
   seed.ts
@@ -41,6 +43,7 @@ prisma/
 - OTP is generated as 6 digits and stored hashed with pepper; demo verification accepts `123456`.
 - Delivered status is blocked unless OTP is verified or an ops manager performs manual override with reason.
 - Map and notification providers are mock implementations behind adapters.
+- LogesTechs credentials are server-only environment variables; the protected admin health route returns connectivity metadata only and never returns credentials or city records.
 - Prisma 7 uses `@prisma/adapter-pg` and a generated client in `lib/generated/prisma`.
 
 ## Data Flow
