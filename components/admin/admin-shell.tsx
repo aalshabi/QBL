@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LogOut,
   Package,
+  PlugZap,
   Search,
   Truck,
 } from "lucide-react";
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { href: "/admin/fleet", label: "المناديب والأسطول", icon: Truck },
   { href: "/admin/cod", label: "الفوترة والتحصيل", icon: Banknote },
   { href: "/admin/reports", label: "التقارير والتحليلات", icon: BarChart3 },
+  { href: "/admin/integrations", label: "التكاملات والخدمات", icon: PlugZap },
 ];
 
 export function AdminShell({ children }: { children: ReactNode }) {
@@ -99,6 +101,27 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </button>
           </div>
         </header>
+        <nav className="flex gap-2 overflow-x-auto border-b bg-white px-4 py-2 lg:hidden">
+          {NAV_ITEMS.map((item) => {
+            const active =
+              item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-xs font-medium",
+                  active
+                    ? "bg-[#00A7B6]/15 text-[#0D1B3A]"
+                    : "bg-slate-50 text-slate-600 hover:bg-slate-100",
+                )}
+              >
+                <item.icon className="h-4 w-4" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
         <main className="flex-1 p-4 sm:p-6">{children}</main>
       </div>
     </div>
