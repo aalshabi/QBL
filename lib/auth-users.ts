@@ -1,5 +1,4 @@
-// التحقق من بيانات الاعتماد لمسار الدخول — Prisma عند توفر قاعدة البيانات،
-// وإلا قائمة تطوير مطابقة لبذور prisma/seed.ts (نفس منطق التبديل في lib/admin/data.ts).
+// التحقق من بيانات الاعتماد لمسار الدخول من قاعدة البيانات فقط.
 
 import { getPrisma } from "@/lib/prisma";
 import { compareOtp } from "@/lib/security";
@@ -12,24 +11,6 @@ const ROLE_PRIORITY: readonly Role[] = ["ADMIN", "OPS_MANAGER", "DISPATCHER", "C
 
 function primaryRole(roles: string[]): Role | null {
   return ROLE_PRIORITY.find((role) => roles.includes(role)) ?? null;
-}
-
-/** مستخدمو التطوير بلا قاعدة بيانات — مطابقون لحسابات seed.ts. */
-const DEV_USERS = [
-  {
-    userId: "dev-ops-manager",
-    name: "مدير عمليات QBL",
-    email: "ops.manager@qdl.sa",
-    password: "Admin123456",
-    roles: ["OPS_MANAGER"],
-  },
-] as const;
-
-async function verifyAgainstDevUsers(email: string, password: string): Promise<AuthenticatedUser | null> {
-  const user = DEV_USERS.find((candidate) => candidate.email === email);
-  if (!user || user.password !== password) return null;
-  const role = primaryRole([...user.roles]);
-  return role ? { userId: user.userId, name: user.name, role } : null;
 }
 
 async function verifyAgainstDatabase(email: string, password: string): Promise<AuthenticatedUser | null> {
@@ -51,8 +32,8 @@ async function verifyAgainstDatabase(email: string, password: string): Promise<A
   return role ? { userId: user.id, name: user.name, role } : null;
 }
 
-/** null عند أي فشل — المسار يعيد رسالة موحّدة كي لا يُكشف سبب الرفض. */
+/** null عند غياب قاعدة البيانات أو فشل التحقق — لا توجد بيانات دخول احتياطية. */
 export async function verifyCredentials(email: string, password: string): Promise<AuthenticatedUser | null> {
-  if (!process.env.DATABASE_URL) return verifyAgainstDevUsers(email, password);
+  if (!process.env.DATABASE_URL) return null;
   return verifyAgainstDatabase(email, password);
 }
