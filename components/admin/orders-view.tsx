@@ -110,7 +110,10 @@ export function OrdersView({ orders, clients, couriers, initialStatus = "ALL" }:
       try {
         const response = await fetch("/api/admin/integrations/logestechs/package-status", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-QBL-Integration-Request": "status-check-v1",
+          },
           body: JSON.stringify({ shipments }),
         });
         const data = await response.json();

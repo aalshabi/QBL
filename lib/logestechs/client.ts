@@ -3,6 +3,8 @@ import { getLogesTechsConfig } from "@/lib/logestechs/config";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 const PACKAGE_STATUS_TIMEOUT_MS = 6_000;
+const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
+const BARCODE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;
 
 function isAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === "AbortError";
@@ -47,26 +49,72 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 }
 
 function nullableNumber(value: unknown): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
+}
+
+function boundedText(value: unknown, maxLength: number): string | null {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
+  return normalized && normalized.length <= maxLength ? normalized : null;
 }
 
 function parsePackageStatus(payload: unknown, barcode: string): LogesTechsPackageStatus {
   const envelope = asRecord(payload);
   const record = asRecord(envelope?.data) ?? envelope;
-  const status = record?.status;
+  const status = boundedText(record?.status, 100);
 
-  if (!record || typeof status !== "string" || !status.trim()) {
+  if (!record || !status) {
     throw new LogesTechsApiError("INVALID_RESPONSE");
   }
 
   return {
     barcode,
-    status: status.trim(),
+    status,
     packageId: nullableNumber(record.id ?? record.packageId),
     cost: nullableNumber(record.cost),
     cod: nullableNumber(record.cod),
-    notes: typeof record.notes === "string" && record.notes.trim() ? record.notes.trim() : null,
+    notes: boundedText(record.notes, 2_000),
   };
+}
+
+async function readBoundedJson(response: Response): Promise<unknown> {
+  const contentType = response.headers?.get("content-type");
+  if (contentType && !/\bapplication\/(?:[a-z0-9.+-]*\+)?json\b/i.test(contentType)) {
+    throw new LogesTechsApiError("INVALID_RESPONSE", response.status);
+  }
+
+  const advertisedLength = Number(response.headers?.get("content-length"));
+  if (Number.isFinite(advertisedLength) && advertisedLength > MAX_RESPONSE_BYTES) {
+    throw new LogesTechsApiError("INVALID_RESPONSE", response.status);
+  }
+
+  // Response-like test doubles do not expose a stream. Real fetch responses always do,
+  // and are read incrementally so a malicious upstream cannot exhaust function memory.
+  if (!response.body) return response.json();
+
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    totalBytes += value.byteLength;
+    if (totalBytes > MAX_RESPONSE_BYTES) {
+      await reader.cancel();
+      throw new LogesTechsApiError("INVALID_RESPONSE", response.status);
+    }
+    chunks.push(value);
+  }
+
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 }
 
 async function fetchJson(
@@ -87,6 +135,8 @@ async function fetchJson(
           "company-id": companyId,
         },
         cache: "no-store",
+        credentials: "omit",
+        redirect: "error",
         signal: controller.signal,
       });
     } catch (error) {
@@ -101,7 +151,7 @@ async function fetchJson(
     }
 
     try {
-      return { payload: await response.json(), status: response.status };
+      return { payload: await readBoundedJson(response), status: response.status };
     } catch (error) {
       if (isAbortError(error)) {
         throw new LogesTechsApiError("TIMEOUT");
@@ -131,7 +181,7 @@ export async function probeLogesTechs(): Promise<LogesTechsProbeResult> {
   // تحميل الإعداد الكامل يثبت أن بيانات حساب التكامل الأربع متاحة، من دون إرسال
   // البريد أو كلمة المرور إلى endpoint المدن الذي لا يحتاجهما.
   const config = getLogesTechsConfig();
-  const url = new URL(`${config.baseUrl}/addresses/cities`);
+  const url = new URL("addresses/cities", `${config.baseUrl}/`);
   url.searchParams.set("returnAll", "true");
 
   const startedAt = Date.now();
@@ -154,12 +204,12 @@ export async function probeLogesTechs(): Promise<LogesTechsProbeResult> {
  */
 export async function getLogesTechsPackageStatus(barcode: string): Promise<LogesTechsPackageStatus> {
   const normalizedBarcode = barcode.trim();
-  if (!normalizedBarcode || normalizedBarcode.length > 100) {
+  if (!BARCODE_PATTERN.test(normalizedBarcode)) {
     throw new LogesTechsApiError("INVALID_RESPONSE");
   }
 
   const config = getLogesTechsConfig();
-  const url = new URL(`${config.baseUrl}/guests/packages/status`);
+  const url = new URL("guests/packages/status", `${config.baseUrl}/`);
   url.searchParams.set("barcode", normalizedBarcode);
 
   const response = await fetchJson(url, config.companyId, PACKAGE_STATUS_TIMEOUT_MS);

@@ -7,6 +7,8 @@ export type LogesTechsConfig = {
   password: string;
 };
 
+const PRODUCTION_HOST = "apisv2.logestechs.com";
+
 export class LogesTechsConfigurationError extends Error {
   constructor(public readonly variable: keyof NodeJS.ProcessEnv) {
     super(`Missing or invalid LogesTechs environment variable: ${variable}`);
@@ -24,9 +26,30 @@ function required(variable: keyof NodeJS.ProcessEnv, trim = true): string {
 function parseBaseUrl(value: string): string {
   try {
     const url = new URL(value);
-    if (url.protocol !== "https:") {
+    const developmentHosts =
+      process.env.NODE_ENV === "production"
+        ? []
+        : (process.env.LOGESTECHS_ALLOWED_HOSTS ?? "")
+            .split(",")
+            .map((host) => host.trim().toLowerCase())
+            .filter(Boolean);
+    const allowedHosts = new Set([PRODUCTION_HOST, ...developmentHosts]);
+    const normalizedPath = url.pathname.replace(/\/+$/, "") || "/";
+
+    if (
+      url.protocol !== "https:" ||
+      !allowedHosts.has(url.hostname.toLowerCase()) ||
+      url.username ||
+      url.password ||
+      (url.port && url.port !== "443") ||
+      url.search ||
+      url.hash ||
+      normalizedPath !== "/api"
+    ) {
       throw new LogesTechsConfigurationError("LOGESTECHS_BASE_URL");
     }
+
+    url.pathname = normalizedPath;
     return url.toString().replace(/\/$/, "");
   } catch (error) {
     if (error instanceof LogesTechsConfigurationError) throw error;

@@ -10,13 +10,15 @@ const integrationVariables = [
   "LOGESTECHS_COMPANY_ID",
   "LOGESTECHS_EMAIL",
   "LOGESTECHS_PASSWORD",
+  "LOGESTECHS_ALLOWED_HOSTS",
 ] as const;
 
 function setValidConfiguration() {
-  process.env.LOGESTECHS_BASE_URL = "https://api.example.com/";
+  process.env.LOGESTECHS_BASE_URL = "https://api.example.com/api/";
   process.env.LOGESTECHS_COMPANY_ID = "727";
   process.env.LOGESTECHS_EMAIL = "integration@example.com";
   process.env.LOGESTECHS_PASSWORD = " test-password ";
+  process.env.LOGESTECHS_ALLOWED_HOSTS = "api.example.com";
 }
 
 beforeEach(setValidConfiguration);
@@ -27,7 +29,7 @@ afterEach(() => {
 
 test("normalizes server configuration while preserving password whitespace", () => {
   assert.deepEqual(getLogesTechsConfig(), {
-    baseUrl: "https://api.example.com",
+    baseUrl: "https://api.example.com/api",
     companyId: "727",
     email: "integration@example.com",
     password: " test-password ",
@@ -45,13 +47,40 @@ test("rejects missing required variables", () => {
 });
 
 test("requires an HTTPS base URL", () => {
-  process.env.LOGESTECHS_BASE_URL = "http://api.example.com";
+  process.env.LOGESTECHS_BASE_URL = "http://api.example.com/api";
 
   assert.throws(
     getLogesTechsConfig,
     (error: unknown) =>
       error instanceof LogesTechsConfigurationError && error.variable === "LOGESTECHS_BASE_URL",
   );
+});
+
+test("rejects an HTTPS host outside the explicit allowlist", () => {
+  process.env.LOGESTECHS_BASE_URL = "https://attacker.example.net/api";
+
+  assert.throws(
+    getLogesTechsConfig,
+    (error: unknown) =>
+      error instanceof LogesTechsConfigurationError && error.variable === "LOGESTECHS_BASE_URL",
+  );
+});
+
+test("rejects embedded credentials, query strings, fragments, and nonstandard ports", () => {
+  for (const baseUrl of [
+    "https://user:pass@api.example.com/api",
+    "https://api.example.com/api?redirect=https://example.net",
+    "https://api.example.com/api#fragment",
+    "https://api.example.com:8443/api",
+  ]) {
+    process.env.LOGESTECHS_BASE_URL = baseUrl;
+    assert.throws(getLogesTechsConfig, LogesTechsConfigurationError);
+  }
+});
+
+test("pins the integration to the documented API base path", () => {
+  process.env.LOGESTECHS_BASE_URL = "https://api.example.com/internal";
+  assert.throws(getLogesTechsConfig, LogesTechsConfigurationError);
 });
 
 test("requires a numeric company id", () => {
