@@ -1,0 +1,18 @@
+<svg width="270" height="150" viewBox="0 0 270 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="qbl-tail-wordmark" x1="34" y1="96" x2="108" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00A7B6"/>
+      <stop offset="0.55" stop-color="#3FCBD6"/>
+      <stop offset="1" stop-color="#0D1B3A"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <circle cx="56" cy="62" r="42" stroke="#0D1B3A" stroke-width="22"/>
+    <path d="M34 80 C56 108 88 106 112 82" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round"/>
+    <path d="M34 80 C56 108 88 106 112 82" stroke="url(#qbl-tail-wordmark)" stroke-width="15" stroke-linecap="round"/>
+    <circle cx="103" cy="24" r="9.5" stroke="#00A7B6" stroke-width="7.5"/>
+  </g>
+  <text x="116" y="99" fill="#0D1B3A" font-family="Montserrat, Arial, sans-serif" font-size="78" font-weight="800" letter-spacing="1">BL</text>
+  <text x="135" y="130" fill="#0D1B3A" text-anchor="middle" direction="rtl" font-family="Tajawal, Arial, sans-serif" font-size="20" font-weight="700">قدام بابك</text>
+  <rect x="119" y="141" width="32" height="3" rx="1.5" fill="#00A7B6"/>
+</svg>

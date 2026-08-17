@@ -1,0 +1,13 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="qbl-tail" x1="34" y1="96" x2="108" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00A7B6"/>
+      <stop offset="0.55" stop-color="#3FCBD6"/>
+      <stop offset="1" stop-color="#0D1B3A"/>
+    </linearGradient>
+  </defs>
+  <circle cx="56" cy="62" r="42" stroke="#0D1B3A" stroke-width="22"/>
+  <path d="M34 80 C56 108 88 106 112 82" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round"/>
+  <path d="M34 80 C56 108 88 106 112 82" stroke="url(#qbl-tail)" stroke-width="15" stroke-linecap="round"/>
+  <circle cx="103" cy="24" r="9.5" stroke="#00A7B6" stroke-width="7.5"/>
+</svg>

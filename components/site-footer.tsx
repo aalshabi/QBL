@@ -7,7 +7,7 @@ export function SiteFooter() {
     <footer className="border-t bg-primary text-primary-foreground">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
         <div className="space-y-4">
-          <BrandLogo className="[&_*]:text-white" />
+          <BrandLogo inverse />
           <p className="max-w-xl text-sm leading-7 text-white/78">{company.promise}</p>
           <p className="text-xs text-white/60">السجل التجاري: {company.crNumber} · الرقم الموحد: {company.unifiedNumber}</p>
         </div>
