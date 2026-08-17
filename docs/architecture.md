@@ -44,6 +44,7 @@ prisma/
 - Delivered status is blocked unless OTP is verified or an ops manager performs manual override with reason.
 - Map and notification providers are mock implementations behind adapters.
 - LogesTechs credentials are server-only environment variables; the protected admin health route returns connectivity metadata only and never returns credentials or city records.
+- LogesTechs package-status checks are admin-only and read-only. They run in bounded batches, map only documented statuses, and leave unknown statuses unmapped rather than guessing or mutating orders.
 - Prisma 7 uses `@prisma/adapter-pg` and a generated client in `lib/generated/prisma`.
 
 ## Data Flow

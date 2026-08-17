@@ -19,6 +19,15 @@ type Props = {
   initialStatus?: AdminOrderStatus | "ALL";
 };
 
+type LogesTechsStatusResult = {
+  ok: boolean;
+  barcode: string;
+  externalStatus?: string;
+  suggestedStatus?: AdminOrderStatus | null;
+  matchesCurrent?: boolean | null;
+  error?: string;
+};
+
 export function OrdersView({ orders, clients, couriers, initialStatus = "ALL" }: Props) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<AdminOrderStatus | "ALL">(initialStatus);
@@ -27,6 +36,7 @@ export function OrdersView({ orders, clients, couriers, initialStatus = "ALL" }:
   const [bulkCourier, setBulkCourier] = useState("");
   const [bulkStatus, setBulkStatus] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [logesTechsStatuses, setLogesTechsStatuses] = useState<Record<string, LogesTechsStatusResult>>({});
   const [pending, startTransition] = useTransition();
 
   const rows = useMemo(
@@ -79,6 +89,49 @@ export function OrdersView({ orders, clients, couriers, initialStatus = "ALL" }:
           : data.message ?? "تعذر تنفيذ الإجراء",
       );
       if (res.ok) setSelected(new Set());
+    });
+  };
+
+  const checkLogesTechsStatuses = () => {
+    const shipments = rows
+      .filter((order) => selected.has(order.id) && order.barcode)
+      .map((order) => ({ barcode: order.barcode, currentStatus: order.status }));
+
+    if (!shipments.length) {
+      setMessage("حدد طلبًا واحدًا على الأقل يحتوي على باركود");
+      return;
+    }
+    if (shipments.length > 20) {
+      setMessage("يمكن فحص 20 شحنة كحد أقصى في المرة الواحدة");
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        const response = await fetch("/api/admin/integrations/logestechs/package-status", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-QBL-Integration-Request": "status-check-v1",
+          },
+          body: JSON.stringify({ shipments }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          setMessage(data.message ?? "تعذر فحص حالات LogesTechs");
+          return;
+        }
+
+        const nextStatuses = Object.fromEntries(
+          (data.results as LogesTechsStatusResult[]).map((result) => [result.barcode, result]),
+        );
+        setLogesTechsStatuses((current) => ({ ...current, ...nextStatuses }));
+        setMessage(
+          `تم الفحص فقط دون تعديل: ${data.summary.succeeded} ناجحة، ${data.summary.mismatched} مختلفة، ${data.summary.failed} متعذرة`,
+        );
+      } catch {
+        setMessage("تعذر الاتصال بمسار فحص LogesTechs. حاول مرة أخرى.");
+      }
     });
   };
 
@@ -165,6 +218,15 @@ export function OrdersView({ orders, clients, couriers, initialStatus = "ALL" }:
             <CheckCircle2 className="me-1 h-4 w-4" />
             موافقة على الطلبات
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={pending || !selected.size}
+            onClick={checkLogesTechsStatuses}
+          >
+            <RefreshCw className={`me-1 h-4 w-4 ${pending ? "animate-spin" : ""}`} />
+            فحص LogesTechs
+          </Button>
           {message && <span className="text-sm text-[#00A7B6]">{message}</span>}
         </CardContent>
       </Card>
@@ -188,6 +250,7 @@ export function OrdersView({ orders, clients, couriers, initialStatus = "ALL" }:
                 <TableHead className="text-start">المستلم</TableHead>
                 <TableHead className="text-start">المندوب</TableHead>
                 <TableHead className="text-start">الحالة</TableHead>
+                <TableHead className="text-start">LogesTechs</TableHead>
                 <TableHead className="text-start">COD</TableHead>
                 <TableHead className="text-start">أجرة التوصيل</TableHead>
                 <TableHead className="text-start">طريقة الدفع</TableHead>
@@ -222,6 +285,28 @@ export function OrdersView({ orders, clients, couriers, initialStatus = "ALL" }:
                   <TableCell>
                     <AdminOrderStatusBadge status={order.status} />
                   </TableCell>
+                  <TableCell className="max-w-52 text-xs">
+                    {(() => {
+                      const external = logesTechsStatuses[order.barcode];
+                      if (!external) return <span className="text-slate-400">لم يُفحص</span>;
+                      if (!external.ok) return <span className="text-rose-600">تعذر الفحص</span>;
+                      return (
+                        <div>
+                          <p className="break-all font-mono text-[11px] text-slate-600">
+                            {external.externalStatus}
+                          </p>
+                          {external.suggestedStatus ? (
+                            <p className={external.matchesCurrent ? "text-emerald-600" : "text-amber-600"}>
+                              {external.matchesCurrent ? "مطابقة" : "مختلفة"} —{" "}
+                              {orderStatusLabels[external.suggestedStatus]}
+                            </p>
+                          ) : (
+                            <p className="text-slate-400">حالة غير مربوطة بعد</p>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </TableCell>
                   <TableCell className="font-semibold">{formatSar(order.codAmount)}</TableCell>
                   <TableCell>{formatSar(order.deliveryFee)}</TableCell>
                   <TableCell className="text-sm">{paymentMethodLabels[order.paymentMethod]}</TableCell>
@@ -235,7 +320,7 @@ export function OrdersView({ orders, clients, couriers, initialStatus = "ALL" }:
               ))}
               {rows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={11} className="py-10 text-center text-slate-400">
+                  <TableCell colSpan={12} className="py-10 text-center text-slate-400">
                     لا توجد طلبات مطابقة للفلاتر الحالية
                   </TableCell>
                 </TableRow>

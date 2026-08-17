@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
-import { getSession, type Role } from "@/lib/auth";
+import { getSession, type Role, type Session } from "@/lib/auth";
 
 const ADMIN_ROLES: Role[] = ["ADMIN", "OPS_MANAGER"];
 
@@ -25,18 +25,33 @@ export async function requireAdminPage(): Promise<void> {
  * يعيد null عند السماح، أو 401 بلا جلسة، أو 403 لجلسة بدور غير إداري.
  */
 export async function requireAdmin(): Promise<NextResponse | null> {
+  const authorization = await authorizeAdmin();
+  return authorization.ok ? null : authorization.response;
+}
+
+export type AdminAuthorization =
+  | { ok: true; session: Session }
+  | { ok: false; response: NextResponse };
+
+export async function authorizeAdmin(): Promise<AdminAuthorization> {
   const session = await getSession();
   if (!session) {
-    return NextResponse.json(
-      { error: "UNAUTHENTICATED", message: "يلزم تسجيل الدخول للوصول إلى هذه الواجهة" },
-      { status: 401 },
-    );
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "UNAUTHENTICATED", message: "يلزم تسجيل الدخول للوصول إلى هذه الواجهة" },
+        { status: 401 },
+      ),
+    };
   }
   if (!ADMIN_ROLES.includes(session.role)) {
-    return NextResponse.json(
-      { error: "FORBIDDEN", message: "هذه الواجهة متاحة لأدوار الإدارة فقط" },
-      { status: 403 },
-    );
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "FORBIDDEN", message: "هذه الواجهة متاحة لأدوار الإدارة فقط" },
+        { status: 403 },
+      ),
+    };
   }
-  return null;
+  return { ok: true, session };
 }

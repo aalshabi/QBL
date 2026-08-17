@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
-import { LogesTechsApiError, probeLogesTechs } from "@/lib/logestechs/client";
+import {
+  getLogesTechsPackageStatus,
+  LogesTechsApiError,
+  probeLogesTechs,
+} from "@/lib/logestechs/client";
 
 const originalFetch = globalThis.fetch;
 const integrationVariables = [
@@ -8,13 +12,15 @@ const integrationVariables = [
   "LOGESTECHS_COMPANY_ID",
   "LOGESTECHS_EMAIL",
   "LOGESTECHS_PASSWORD",
+  "LOGESTECHS_ALLOWED_HOSTS",
 ] as const;
 
 function setValidConfiguration() {
-  process.env.LOGESTECHS_BASE_URL = "https://api.example.com/";
+  process.env.LOGESTECHS_BASE_URL = "https://api.example.com/api/";
   process.env.LOGESTECHS_COMPANY_ID = "727";
   process.env.LOGESTECHS_EMAIL = "integration@example.com";
   process.env.LOGESTECHS_PASSWORD = "test-password";
+  process.env.LOGESTECHS_ALLOWED_HOSTS = "api.example.com";
 }
 
 function stubFetch(response: Partial<Response>) {
@@ -49,7 +55,7 @@ test("summarizes a successful cities response without exposing its records", asy
 
   const result = await probeLogesTechs();
 
-  assert.equal(requestedUrl, "https://api.example.com/addresses/cities?returnAll=true");
+  assert.equal(requestedUrl, "https://api.example.com/api/addresses/cities?returnAll=true");
   assert.equal(new Headers(requestedInit?.headers).get("company-id"), "727");
   assert.deepEqual(result.response, { shape: "object", itemCount: 2 });
   assert.equal(result.upstreamStatus, 200);
@@ -124,6 +130,89 @@ test("reports non-successful upstream status codes", async () => {
 
 test("rejects primitive JSON payloads", async () => {
   stubFetch({ ok: true, status: 200, json: async () => "unexpected" });
+
+  await assert.rejects(
+    probeLogesTechs(),
+    (error: unknown) => error instanceof LogesTechsApiError && error.code === "INVALID_RESPONSE",
+  );
+});
+
+test("retrieves and normalizes a package status by barcode", async () => {
+  let requestedUrl = "";
+  let requestedInit: RequestInit | undefined;
+  globalThis.fetch = (async (input, init) => {
+    requestedUrl = input.toString();
+    requestedInit = init;
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        data: {
+          id: 7624,
+          cost: 77,
+          cod: 20,
+          status: "DELIVERED_TO_RECIPIENT",
+          notes: "  delivered  ",
+        },
+      }),
+    } as Response;
+  }) as typeof fetch;
+
+  const result = await getLogesTechsPackageStatus(" KSA100422577363 ");
+
+  assert.equal(requestedUrl, "https://api.example.com/api/guests/packages/status?barcode=KSA100422577363");
+  assert.equal(new Headers(requestedInit?.headers).get("company-id"), "727");
+  assert.equal(requestedInit?.redirect, "error");
+  assert.equal(requestedInit?.credentials, "omit");
+  assert.deepEqual(result, {
+    barcode: "KSA100422577363",
+    status: "DELIVERED_TO_RECIPIENT",
+    packageId: 7624,
+    cost: 77,
+    cod: 20,
+    notes: "delivered",
+  });
+});
+
+test("rejects a package status response without a status code", async () => {
+  stubFetch({ ok: true, status: 200, json: async () => ({ id: 7624 }) });
+
+  await assert.rejects(
+    getLogesTechsPackageStatus("KSA100422577363"),
+    (error: unknown) => error instanceof LogesTechsApiError && error.code === "INVALID_RESPONSE",
+  );
+});
+
+test("rejects unsafe barcode characters before making an upstream request", async () => {
+  let called = false;
+  globalThis.fetch = (async () => {
+    called = true;
+    return new Response("{}");
+  }) as typeof fetch;
+
+  await assert.rejects(
+    getLogesTechsPackageStatus("../../secret"),
+    (error: unknown) => error instanceof LogesTechsApiError && error.code === "INVALID_RESPONSE",
+  );
+  assert.equal(called, false);
+});
+
+test("rejects an oversized upstream response even when content-length is absent", async () => {
+  const payload = JSON.stringify({ data: { status: "A".repeat(2 * 1024 * 1024) } });
+  globalThis.fetch = (async () =>
+    new Response(payload, { headers: { "content-type": "application/json" } })) as typeof fetch;
+
+  await assert.rejects(
+    probeLogesTechs(),
+    (error: unknown) => error instanceof LogesTechsApiError && error.code === "INVALID_RESPONSE",
+  );
+});
+
+test("rejects a non-JSON upstream content type", async () => {
+  globalThis.fetch = (async () =>
+    new Response("<html>unexpected</html>", {
+      headers: { "content-type": "text/html" },
+    })) as typeof fetch;
 
   await assert.rejects(
     probeLogesTechs(),
