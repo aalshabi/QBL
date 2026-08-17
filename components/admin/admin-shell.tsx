@@ -41,7 +41,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       {/* الشريط الجانبي */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-[#0D1B3A] text-white lg:flex">
         <div className="flex items-center gap-3 border-b border-white/10 px-5 py-4">
-          <BrandLogo />
+          <BrandLogo inverse size="sm" />
           <div>
             <p className="text-sm font-bold">قدام بابك QBL</p>
             <p className="text-xs text-white/60">لوحة التحكم الإدارية</p>

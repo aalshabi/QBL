@@ -1,16 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="192" height="192" role="img" aria-label="QBL">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
   <defs>
-    <linearGradient id="qbl-icon-192" x1="34" y1="88" x2="94" y2="80" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#00A7B6"></stop>
-      <stop offset="0.6" stop-color="#3FCBD6"></stop>
-      <stop offset="1" stop-color="#FFFFFF"></stop>
+    <linearGradient id="qbl-flow-192" x1="67.2" y1="128" x2="179.2" y2="179.2" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00A7B6"/>
+      <stop offset="0.62" stop-color="#008EA1"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
     </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="112" fill="#0D1B3A"></rect>
-  <g transform="translate(88,82) scale(2.9)">
-    <circle cx="58" cy="60" r="40" stroke="#FFFFFF" stroke-width="18" fill="none"></circle>
-    <path d="M38 78 C58 102 86 100 108 80" stroke="#0D1B3A" stroke-width="20" stroke-linecap="round" fill="none"></path>
-    <path d="M38 78 C58 102 86 100 108 80" stroke="url(#qbl-icon-192)" stroke-width="13" stroke-linecap="round" fill="none"></path>
-    <circle cx="100" cy="26" r="7.5" stroke="#00A7B6" stroke-width="6.5" fill="none"></circle>
-  </g>
+  <rect width="192" height="192" rx="42" fill="#0D1B3A"/>
+  <path d="M97.6 21.6C55.2 21.6 20.8 56 20.8 98.4s34.4 76.8 76.8 76.8c29.4 0 54.9-16.5 67.8-40.8" fill="none" stroke="#FFFFFF" stroke-width="25.6" stroke-linecap="round"/>
+  <path d="M61.6 132c28.8-18.9 56.6-13.8 78.9 14.1l21.3 26.1h20" fill="none" stroke="#0D1B3A" stroke-width="35.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M61.4 131.8c25.8-16.3 50.2-12.6 70.1 11.2l24 28.5h26.6v12.3h-35l-26.7-32.2c-13.9-16.8-31.5-21-52-11.7l-6.9-8.2Z" fill="url(#qbl-flow-192)"/>
+  <circle cx="160" cy="37.6" r="13.6" fill="#00A7B6"/>
+  <circle cx="160" cy="37.6" r="5.4" fill="#0D1B3A"/>
 </svg>

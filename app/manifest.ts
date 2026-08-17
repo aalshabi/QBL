@@ -9,25 +9,15 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     display_override: ["window-controls-overlay", "standalone", "browser"],
-    background_color: "#f8fafc",
+    background_color: "#FFFFFF",
     theme_color: "#0D1B3A",
     orientation: "portrait",
     dir: "rtl",
     lang: "ar-SA",
     categories: ["business", "productivity", "navigation"],
     icons: [
-      {
-        src: "/icons/icon-192.svg",
-        sizes: "192x192",
-        type: "image/svg+xml",
-        purpose: "any",
-      },
-      {
-        src: "/icons/icon-512.svg",
-        sizes: "512x512",
-        type: "image/svg+xml",
-        purpose: "maskable",
-      },
+      { src: "/icons/icon-192.svg", sizes: "192x192", type: "image/svg+xml", purpose: "any" },
+      { src: "/icons/icon-512.svg", sizes: "512x512", type: "image/svg+xml", purpose: "maskable" },
     ],
     shortcuts: [
       {
