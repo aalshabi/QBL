@@ -1,0 +1,19 @@
+import type { AdminOrderStatus } from "@/lib/admin/types";
+
+const STATUS_MAP: Record<string, AdminOrderStatus> = {
+  PENDING_CUSTOMER_CARE_APPROVAL: "PENDING_APPROVAL",
+  ASSIGNED_TO_DRIVER_AND_PENDING_APPROVAL: "ASSIGNED",
+  ACCEPTED_BY_DRIVER_AND_PENDING_PICKUP: "ASSIGNED",
+  SCANNED_BY_DRIVER_AND_IN_CAR: "OUT_FOR_DELIVERY",
+  OUT_FOR_DELIVERY: "OUT_FOR_DELIVERY",
+  DELIVERED_TO_RECIPIENT: "DELIVERED",
+  POSTPONED_DELIVERY: "POSTPONED",
+  RETURNED_BY_RECIPIENT: "RETURNED",
+  DELIVERED_TO_SENDER: "RETURNED",
+  FAILED: "FAILED",
+  CANCELLED: "CANCELLED",
+};
+
+export function mapLogesTechsStatus(status: string): AdminOrderStatus | null {
+  return STATUS_MAP[status.trim().toUpperCase()] ?? null;
+}

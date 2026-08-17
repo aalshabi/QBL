@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
-    "test": "node --conditions=react-server --import tsx --test --test-concurrency=1 tests/auth-users.test.ts tests/logestechs-client.test.ts tests/logestechs-config.test.ts",
+    "test": "node --conditions=react-server --import tsx --test --test-concurrency=1 tests/auth-users.test.ts tests/logestechs-client.test.ts tests/logestechs-config.test.ts tests/logestechs-status-map.test.ts",
     "lint": "eslint",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

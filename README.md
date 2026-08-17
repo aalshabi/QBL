@@ -86,6 +86,8 @@ npm run dev
 - `POST /api/courier/location`: courier location ping.
 - `GET /api/ops/stream`: SSE operations updates.
 - `POST /api/quote`: quote lead mock endpoint.
+- `GET /api/admin/integrations/logestechs/health`: فحص اتصال LogesTechs للإدارة فقط.
+- `POST /api/admin/integrations/logestechs/package-status`: معاينة حالات حتى 20 شحنة من LogesTechs دون تعديل البيانات المحلية.
 
 ## ما يحتاج مفاتيح API حقيقية
 

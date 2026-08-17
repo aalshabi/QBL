@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
-import { LogesTechsApiError, probeLogesTechs } from "@/lib/logestechs/client";
+import {
+  getLogesTechsPackageStatus,
+  LogesTechsApiError,
+  probeLogesTechs,
+} from "@/lib/logestechs/client";
 
 const originalFetch = globalThis.fetch;
 const integrationVariables = [
@@ -127,6 +131,50 @@ test("rejects primitive JSON payloads", async () => {
 
   await assert.rejects(
     probeLogesTechs(),
+    (error: unknown) => error instanceof LogesTechsApiError && error.code === "INVALID_RESPONSE",
+  );
+});
+
+test("retrieves and normalizes a package status by barcode", async () => {
+  let requestedUrl = "";
+  let requestedInit: RequestInit | undefined;
+  globalThis.fetch = (async (input, init) => {
+    requestedUrl = input.toString();
+    requestedInit = init;
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        data: {
+          id: 7624,
+          cost: 77,
+          cod: 20,
+          status: "DELIVERED_TO_RECIPIENT",
+          notes: "  delivered  ",
+        },
+      }),
+    } as Response;
+  }) as typeof fetch;
+
+  const result = await getLogesTechsPackageStatus(" KSA100422577363 ");
+
+  assert.equal(requestedUrl, "https://api.example.com/guests/packages/status?barcode=KSA100422577363");
+  assert.equal(new Headers(requestedInit?.headers).get("company-id"), "727");
+  assert.deepEqual(result, {
+    barcode: "KSA100422577363",
+    status: "DELIVERED_TO_RECIPIENT",
+    packageId: 7624,
+    cost: 77,
+    cod: 20,
+    notes: "delivered",
+  });
+});
+
+test("rejects a package status response without a status code", async () => {
+  stubFetch({ ok: true, status: 200, json: async () => ({ id: 7624 }) });
+
+  await assert.rejects(
+    getLogesTechsPackageStatus("KSA100422577363"),
     (error: unknown) => error instanceof LogesTechsApiError && error.code === "INVALID_RESPONSE",
   );
 });

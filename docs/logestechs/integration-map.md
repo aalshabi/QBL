@@ -7,8 +7,9 @@
 
 - وصل رد جزئي بوثيقتي API وWebhook، وتم إنشاء حساب عميل مخصص للتكامل بنجاح.
 - الحالة: `INTEGRATION ACCOUNT CREATED - READ-ONLY API PROBE PASSED`.
-- حُفظت بيانات الحساب كمتغيرات Vercel حساسة ضمن Preview فقط، ولم تُثبت في Git. نجح اختبار `GET /addresses/cities?returnAll=true` بحالة HTTP 200.
+- حُفظت بيانات الحساب كمتغيرات Vercel حساسة ضمن Preview وProduction، ولم تُثبت في Git. نجح اختبار `GET /addresses/cities?returnAll=true` بحالة HTTP 200.
 - أضيف مسار إداري محمي في QBL: `GET /api/admin/integrations/logestechs/health` لفحص الإعداد والاتصال دون كشف الأسرار أو إعادة بيانات المدن.
+- أضيف فحص إداري يدوي للطلبات المحددة عبر `POST /api/admin/integrations/logestechs/package-status`. الفحص يقرأ حالة كل Barcode على دفعات محدودة ويعرض المقارنة فقط، ولا يغيّر حالة الطلب المحلية.
 
 عند وصول الرد، يجب حفظ الوثائق دون Credentials، ثم التحقق من: بيئة الـSandbox، Base URL، إصدار API، Pagination، Stable IDs، Status dictionary، Webhook event IDs، Idempotency، Timestamp ordering، Error model وData retention.
 
