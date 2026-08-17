@@ -3,6 +3,10 @@ import { getLogesTechsConfig } from "@/lib/logestechs/config";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === "AbortError";
+}
+
 export class LogesTechsApiError extends Error {
   constructor(
     public readonly code: "TIMEOUT" | "NETWORK" | "UPSTREAM_STATUS" | "INVALID_RESPONSE",
@@ -64,7 +68,7 @@ export async function probeLogesTechs(): Promise<LogesTechsProbeResult> {
         signal: controller.signal,
       });
     } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
+      if (isAbortError(error)) {
         throw new LogesTechsApiError("TIMEOUT");
       }
       throw new LogesTechsApiError("NETWORK");
@@ -74,7 +78,10 @@ export async function probeLogesTechs(): Promise<LogesTechsProbeResult> {
       throw new LogesTechsApiError("UPSTREAM_STATUS", response.status);
     }
 
-    const payload = await response.json().catch(() => {
+    const payload = await response.json().catch((error: unknown) => {
+      if (isAbortError(error)) {
+        throw new LogesTechsApiError("TIMEOUT");
+      }
       throw new LogesTechsApiError("INVALID_RESPONSE", response.status);
     });
 
