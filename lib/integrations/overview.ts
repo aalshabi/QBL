@@ -47,10 +47,16 @@ export function getIntegrationServices(): IntegrationService[] {
       description: "تحويل العناوين المختصرة إلى نتائج مكانية دقيقة لاستخدامها في تخطيط المسارات.",
       state: googleMapsConfigured ? "configured" : "not_configured",
       stateLabel: googleMapsConfigured ? "مهيأ على هذا النشر" : "غير مهيأ على هذا النشر",
-      mode: "Places Text Search (New)",
-      capabilities: ["البحث بالعنوان المختصر", "إرجاع العنوان المنسق", "الإحداثيات ورابط Google Maps"],
+      mode: "Places Text Search (New) · Server only",
+      capabilities: [
+        "فحص حي لـText Search وPlace Details",
+        "تنقية بيانات العميل قبل الإرسال",
+        "بوابة الرياض والمراجعة اليدوية",
+        "تصدير الإحداثيات المؤكدة لمحسن المسارات",
+        "حدود طلبات وسجلات تشغيل بلا بيانات عملاء",
+      ],
       boundary: googleMapsConfigured
-        ? "المفتاح محفوظ كمتغير خادم ولا يظهر في المتصفح."
+        ? "المفتاح محفوظ كمتغير خادم ولا يظهر في المتصفح؛ النتائج غير الدقيقة لا تمر إلى التخطيط."
         : "تم اختبار الخدمة سابقًا، لكن مفتاحها غير موجود حاليًا في بيئة QBL على Vercel.",
     },
     {

@@ -88,11 +88,13 @@ npm run dev
 - `POST /api/quote`: quote lead mock endpoint.
 - `GET /api/admin/integrations/logestechs/health`: فحص اتصال LogesTechs للإدارة فقط.
 - `POST /api/admin/integrations/logestechs/package-status`: معاينة حالات حتى 20 شحنة من LogesTechs دون تعديل البيانات المحلية.
+- `GET /api/admin/integrations/google-maps/health`: فحص حي وآمن لـPlaces Text Search وPlace Details للإدارة فقط.
+- `POST /api/admin/integrations/google-maps/resolve`: فحص حتى 20 عنوانًا تشغيليًا بعد إزالة بيانات العميل، مع رفض المواقع غير الموثوقة أو خارج الرياض.
 
 ## ما يحتاج مفاتيح API حقيقية
 
 - SMS/WhatsApp provider في `lib/notifications/adapter.ts`.
-- Google Maps أو Mapbox في `lib/maps/adapter.ts` و `components/maps/mock-map.tsx`.
+- Browser map يبقى في `https://www.qbl.sa/route-optimizer` لأن مفتاح المتصفح مقيد إلى نطاق QBL؛ لوحة الإدارة تستخدم مفتاح الخادم مع Places API (New) فقط.
 - Auth provider/session hardening بدل cookie dev في `lib/auth.ts`.
 - Object storage لإثبات التسليم بالصور والتواقيع.
 
@@ -120,6 +122,7 @@ npm run dev
 - التتبع: `components/tracking/tracking-view.tsx`
 - المندوب: `components/courier/courier-app.tsx`
 - التكاملات: `lib/maps/adapter.ts`, `lib/notifications/adapter.ts`
+- Google Maps الخادمي: `lib/google-maps/client.ts` ومسارات `app/api/admin/integrations/google-maps/`.
 
 ## Future Improvements
 

@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   CircleAlert,
   Database,
+  ExternalLink,
   MapPinned,
   RefreshCw,
   ShieldCheck,
@@ -34,13 +35,20 @@ type HealthState =
   | { state: "healthy"; latencyMs: number; checkedAt: string }
   | { state: "failed"; message: string };
 
-export function IntegrationsView({ services }: { services: IntegrationService[] }) {
-  const [health, setHealth] = useState<HealthState>({ state: "idle" });
+type HealthService = "logestechs" | "google-maps";
 
-  async function checkLogesTechs() {
-    setHealth({ state: "checking" });
+const initialHealth: Record<HealthService, HealthState> = {
+  logestechs: { state: "idle" },
+  "google-maps": { state: "idle" },
+};
+
+export function IntegrationsView({ services }: { services: IntegrationService[] }) {
+  const [healthByService, setHealthByService] = useState(initialHealth);
+
+  async function checkIntegration(service: HealthService) {
+    setHealthByService((current) => ({ ...current, [service]: { state: "checking" } }));
     try {
-      const response = await fetch("/api/admin/integrations/logestechs/health", {
+      const response = await fetch(`/api/admin/integrations/${service}/health`, {
         cache: "no-store",
       });
       const data = (await response.json()) as {
@@ -49,12 +57,21 @@ export function IntegrationsView({ services }: { services: IntegrationService[] 
         message?: string;
       };
       if (!response.ok || typeof data.latencyMs !== "number" || !data.checkedAt) {
-        setHealth({ state: "failed", message: data.message ?? "تعذر فحص الاتصال" });
+        setHealthByService((current) => ({
+          ...current,
+          [service]: { state: "failed", message: data.message ?? "تعذر فحص الاتصال" },
+        }));
         return;
       }
-      setHealth({ state: "healthy", latencyMs: data.latencyMs, checkedAt: data.checkedAt });
+      setHealthByService((current) => ({
+        ...current,
+        [service]: { state: "healthy", latencyMs: data.latencyMs!, checkedAt: data.checkedAt! },
+      }));
     } catch {
-      setHealth({ state: "failed", message: "تعذر الوصول إلى مسار فحص الاتصال" });
+      setHealthByService((current) => ({
+        ...current,
+        [service]: { state: "failed", message: "تعذر الوصول إلى مسار فحص الاتصال" },
+      }));
     }
   }
 
@@ -63,6 +80,13 @@ export function IntegrationsView({ services }: { services: IntegrationService[] 
       {services.map((service) => {
         const Icon = serviceIcons[service.id];
         const isLogesTechs = service.id === "logestechs";
+        const isGoogleMaps = service.id === "google-maps";
+        const healthService: HealthService | null = isLogesTechs
+          ? "logestechs"
+          : isGoogleMaps
+            ? "google-maps"
+            : null;
+        const health = healthService ? healthByService[healthService] : null;
         return (
           <Card key={service.id} className="border-0 bg-white shadow-sm ring-1 ring-slate-200">
             <CardHeader className="border-b border-slate-100 pb-4">
@@ -100,29 +124,46 @@ export function IntegrationsView({ services }: { services: IntegrationService[] 
                 <span>{service.boundary}</span>
               </div>
 
-              {isLogesTechs ? (
+              {healthService && health ? (
                 <div className="space-y-2 border-t border-slate-100 pt-4">
                   <Button
                     type="button"
                     variant="outline"
                     className="w-full"
                     disabled={service.state !== "configured" || health.state === "checking"}
-                    onClick={checkLogesTechs}
+                    onClick={() => checkIntegration(healthService)}
                   >
                     <RefreshCw className={cn("h-4 w-4", health.state === "checking" && "animate-spin")} />
-                    {health.state === "checking" ? "جارٍ فحص الاتصال" : "فحص الاتصال الآن"}
+                    {health.state === "checking"
+                      ? "جارٍ فحص الاتصال"
+                      : isGoogleMaps
+                        ? "فحص Google Maps الآن"
+                        : "فحص الاتصال الآن"}
                   </Button>
                   {health.state === "healthy" ? (
-                    <p className="flex items-center gap-2 text-xs text-emerald-700">
-                      <CheckCircle2 className="h-4 w-4" />
-                      متصل — زمن الاستجابة {health.latencyMs} مللي ثانية
-                    </p>
+                    <div className="space-y-1 text-xs text-emerald-700">
+                      <p className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4" />
+                        متصل — زمن الاستجابة {health.latencyMs} مللي ثانية
+                      </p>
+                      <p className="text-slate-500">
+                        آخر فحص: {new Intl.DateTimeFormat("ar-SA", { hour: "2-digit", minute: "2-digit" }).format(new Date(health.checkedAt))}
+                      </p>
+                    </div>
                   ) : null}
                   {health.state === "failed" ? (
                     <p className="flex items-center gap-2 text-xs text-rose-700">
                       <CircleAlert className="h-4 w-4" />
                       {health.message}
                     </p>
+                  ) : null}
+                  {isGoogleMaps ? (
+                    <Button asChild type="button" variant="secondary" className="w-full">
+                      <a href="https://www.qbl.sa/route-optimizer/login">
+                        <ExternalLink className="h-4 w-4" />
+                        فتح تأكيد المواقع ومحسن المسارات
+                      </a>
+                    </Button>
                   ) : null}
                 </div>
               ) : null}
