@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { CheckCircle2, Flag, RefreshCw, UserCheck } from "lucide-react";
+import { CheckCircle2, Download, ExternalLink, Flag, MapPinned, RefreshCw, UserCheck } from "lucide-react";
 import { AdminOrderStatusBadge, CodStatusBadge } from "@/components/admin/admin-status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatDateTime, formatSar } from "@/lib/admin/format";
 import type { AdminOrder, AdminOrderStatus } from "@/lib/admin/types";
 import { orderStatusLabels, paymentMethodLabels } from "@/lib/admin/types";
+import { buildVerifiedRouteCsv, RouteExportBlockedError } from "@/lib/google-maps/route-export";
 
 type Props = {
   orders: AdminOrder[];
@@ -28,6 +29,24 @@ type LogesTechsStatusResult = {
   error?: string;
 };
 
+type GoogleLocationResult = {
+  ok: boolean;
+  id: string;
+  status?: "VERIFIED" | "NEEDS_REVIEW";
+  latitude?: number;
+  longitude?: number;
+  formattedAddress?: string;
+  googleMapsUrl?: string;
+  reviewReason?: "OUTSIDE_RIYADH" | "PARTIAL_ADDRESS" | "RIYADH_NOT_CONFIRMED" | null;
+  error?: string;
+};
+
+const reviewReasonLabels: Record<NonNullable<GoogleLocationResult["reviewReason"]>, string> = {
+  OUTSIDE_RIYADH: "خارج نطاق الرياض",
+  PARTIAL_ADDRESS: "العنوان غير دقيق",
+  RIYADH_NOT_CONFIRMED: "الرياض غير مؤكدة",
+};
+
 export function OrdersView({ orders, clients, couriers, initialStatus = "ALL" }: Props) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<AdminOrderStatus | "ALL">(initialStatus);
@@ -37,6 +56,7 @@ export function OrdersView({ orders, clients, couriers, initialStatus = "ALL" }:
   const [bulkStatus, setBulkStatus] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [logesTechsStatuses, setLogesTechsStatuses] = useState<Record<string, LogesTechsStatusResult>>({});
+  const [googleLocations, setGoogleLocations] = useState<Record<string, GoogleLocationResult>>({});
   const [pending, startTransition] = useTransition();
 
   const rows = useMemo(
@@ -135,6 +155,93 @@ export function OrdersView({ orders, clients, couriers, initialStatus = "ALL" }:
     });
   };
 
+  const checkGoogleLocations = () => {
+    const locations = rows
+      .filter((order) => selected.has(order.id) && order.customerArea.trim())
+      .map((order) => ({ id: order.id, address: order.customerArea }));
+
+    if (!locations.length) {
+      setMessage("حدد طلبًا واحدًا على الأقل يحتوي على عنوان");
+      return;
+    }
+    if (locations.length > 20) {
+      setMessage("يمكن فحص 20 موقعًا كحد أقصى في المرة الواحدة");
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        const response = await fetch("/api/admin/integrations/google-maps/resolve", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-QBL-Integration-Request": "location-check-v1",
+          },
+          // لا تُرسل أسماء العملاء أو الهواتف أو أرقام الشحن إلى Google.
+          body: JSON.stringify({ locations }),
+        });
+        const data = await response.json();
+        if (!response.ok && !Array.isArray(data.results)) {
+          setMessage(data.message ?? "تعذر فحص المواقع عبر Google Maps");
+          return;
+        }
+
+        const results = (data.results ?? []) as GoogleLocationResult[];
+        setGoogleLocations((current) => ({
+          ...current,
+          ...Object.fromEntries(results.map((result) => [result.id, result])),
+        }));
+        setMessage(
+          `فحص المواقع: ${data.summary?.verified ?? 0} مؤكدة، ${data.summary?.needsReview ?? 0} للمراجعة، ${data.summary?.failed ?? 0} متعذرة`,
+        );
+      } catch {
+        setMessage("تعذر الاتصال بمسار فحص Google Maps. حاول مرة أخرى.");
+      }
+    });
+  };
+
+  const downloadVerifiedRouteFile = () => {
+    const selectedOrders = rows.filter((order) => selected.has(order.id));
+    if (!selectedOrders.length) {
+      setMessage("حدد طلبًا واحدًا على الأقل");
+      return;
+    }
+
+    let csv: string;
+    try {
+      csv = buildVerifiedRouteCsv(
+        selectedOrders.map((order) => ({
+          tracking: order.barcode || order.publicCode,
+          address: order.customerArea,
+          location: googleLocations[order.id]?.ok
+            ? {
+                ok: true,
+                status: googleLocations[order.id].status ?? "NEEDS_REVIEW",
+                latitude: googleLocations[order.id].latitude,
+                longitude: googleLocations[order.id].longitude,
+                formattedAddress: googleLocations[order.id].formattedAddress,
+              }
+            : googleLocations[order.id]
+              ? { ok: false }
+              : undefined,
+        })),
+      );
+    } catch (error) {
+      const blockedCount = error instanceof RouteExportBlockedError ? error.blockedCount : selectedOrders.length;
+      setMessage(`لا يمكن إنشاء ملف المسارات: ${blockedCount} موقع لم يُؤكد بعد`);
+      return;
+    }
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `qbl-verified-routes-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setMessage("تم تنزيل ملف المواقع المؤكدة، وهو جاهز للرفع في محسن المسارات");
+  };
+
   return (
     <div className="space-y-4">
       {/* فلاتر */}
@@ -227,6 +334,30 @@ export function OrdersView({ orders, clients, couriers, initialStatus = "ALL" }:
             <RefreshCw className={`me-1 h-4 w-4 ${pending ? "animate-spin" : ""}`} />
             فحص LogesTechs
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={pending || !selected.size}
+            onClick={checkGoogleLocations}
+          >
+            <MapPinned className={`me-1 h-4 w-4 ${pending ? "animate-pulse" : ""}`} />
+            تأكيد المواقع
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={pending || !selected.size}
+            onClick={downloadVerifiedRouteFile}
+          >
+            <Download className="me-1 h-4 w-4" />
+            تنزيل ملف المسارات
+          </Button>
+          <Button asChild size="sm" variant="secondary">
+            <a href="https://www.qbl.sa/route-optimizer/login">
+              <ExternalLink className="me-1 h-4 w-4" />
+              فتح محسن المسارات
+            </a>
+          </Button>
           {message && <span className="text-sm text-[#00A7B6]">{message}</span>}
         </CardContent>
       </Card>
@@ -251,6 +382,7 @@ export function OrdersView({ orders, clients, couriers, initialStatus = "ALL" }:
                 <TableHead className="text-start">المندوب</TableHead>
                 <TableHead className="text-start">الحالة</TableHead>
                 <TableHead className="text-start">LogesTechs</TableHead>
+                <TableHead className="text-start">Google Maps</TableHead>
                 <TableHead className="text-start">COD</TableHead>
                 <TableHead className="text-start">أجرة التوصيل</TableHead>
                 <TableHead className="text-start">طريقة الدفع</TableHead>
@@ -307,6 +439,35 @@ export function OrdersView({ orders, clients, couriers, initialStatus = "ALL" }:
                       );
                     })()}
                   </TableCell>
+                  <TableCell className="max-w-52 text-xs">
+                    {(() => {
+                      const location = googleLocations[order.id];
+                      if (!location) return <span className="text-slate-400">لم يُفحص</span>;
+                      if (!location.ok) return <span className="text-rose-600">تعذر الفحص</span>;
+                      const verified = location.status === "VERIFIED";
+                      return (
+                        <div className="space-y-1">
+                          <p className={verified ? "text-emerald-600" : "text-amber-600"}>
+                            {verified
+                              ? "موقع مؤكد"
+                              : location.reviewReason
+                                ? reviewReasonLabels[location.reviewReason]
+                                : "يحتاج مراجعة"}
+                          </p>
+                          {location.googleMapsUrl ? (
+                            <a
+                              href={location.googleMapsUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-[#00A7B6] hover:underline"
+                            >
+                              عرض النقطة <ExternalLink className="h-3 w-3" />
+                            </a>
+                          ) : null}
+                        </div>
+                      );
+                    })()}
+                  </TableCell>
                   <TableCell className="font-semibold">{formatSar(order.codAmount)}</TableCell>
                   <TableCell>{formatSar(order.deliveryFee)}</TableCell>
                   <TableCell className="text-sm">{paymentMethodLabels[order.paymentMethod]}</TableCell>
@@ -320,7 +481,7 @@ export function OrdersView({ orders, clients, couriers, initialStatus = "ALL" }:
               ))}
               {rows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={12} className="py-10 text-center text-slate-400">
+                  <TableCell colSpan={13} className="py-10 text-center text-slate-400">
                     لا توجد طلبات مطابقة للفلاتر الحالية
                   </TableCell>
                 </TableRow>
