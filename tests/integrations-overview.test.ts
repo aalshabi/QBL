@@ -9,6 +9,7 @@ const variables = [
   "LOGESTECHS_COMPANY_ID",
   "LOGESTECHS_EMAIL",
   "LOGESTECHS_PASSWORD",
+  "LOGESTECHS_WEBHOOK_API_KEY",
 ] as const;
 
 const originalValues = Object.fromEntries(
@@ -22,6 +23,7 @@ beforeEach(() => {
   process.env.LOGESTECHS_COMPANY_ID = "727";
   process.env.LOGESTECHS_EMAIL = "integration@example.com";
   process.env.LOGESTECHS_PASSWORD = "test-password";
+  process.env.LOGESTECHS_WEBHOOK_API_KEY = "webhook-test-secret-at-least-32-characters";
 });
 
 afterEach(() => {
@@ -44,12 +46,18 @@ test("reports configured integrations without exposing secret values", () => {
   );
   assert.equal(JSON.stringify(services).includes("maps-test-key"), false);
   assert.equal(JSON.stringify(services).includes("test-password"), false);
+  assert.equal(JSON.stringify(services).includes("webhook-test-secret"), false);
+  assert.equal(
+    services.find((service) => service.id === "logestechs")?.stateLabel,
+    "مهيأ — قراءة + Webhooks",
+  );
 });
 
 test("shows missing and invalid service configuration honestly", () => {
   delete process.env.GOOGLE_MAPS_API_KEY;
   delete process.env.DATABASE_URL;
   process.env.LOGESTECHS_BASE_URL = "https://example.invalid/api";
+  delete process.env.LOGESTECHS_WEBHOOK_API_KEY;
 
   const services = getIntegrationServices();
   assert.equal(services.find((service) => service.id === "logestechs")?.state, "needs_attention");

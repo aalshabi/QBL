@@ -15,12 +15,19 @@ export type IntegrationService = {
   boundary: string;
 };
 
-function logesTechsState(): Pick<IntegrationService, "state" | "stateLabel"> {
+function logesTechsState(): Pick<IntegrationService, "state" | "stateLabel"> & {
+  webhookConfigured: boolean;
+} {
+  const webhookConfigured = (process.env.LOGESTECHS_WEBHOOK_API_KEY?.trim().length ?? 0) >= 32;
   try {
     getLogesTechsConfig();
-    return { state: "configured", stateLabel: "مهيأ — قراءة فقط" };
+    return {
+      state: "configured",
+      stateLabel: webhookConfigured ? "مهيأ — قراءة + Webhooks" : "مهيأ — قراءة فقط",
+      webhookConfigured,
+    };
   } catch {
-    return { state: "needs_attention", stateLabel: "يحتاج مراجعة الإعداد" };
+    return { state: "needs_attention", stateLabel: "يحتاج مراجعة الإعداد", webhookConfigured };
   }
 }
 
@@ -34,11 +41,22 @@ export function getIntegrationServices(): IntegrationService[] {
       id: "logestechs",
       name: "LogesTechs",
       category: "الشحن والتتبع",
-      description: "قراءة حالة الشحنات ومقارنتها بحالة الطلب داخل QBL دون تعديل المصدر.",
-      ...logesTechs,
+      description: logesTechs.webhookConfigured
+        ? "قراءة حالة الشحنات واستقبال تحديثات الحالة الموثقة داخل QBL دون تعديل المصدر."
+        : "قراءة حالة الشحنات ومقارنتها بحالة الطلب داخل QBL دون تعديل المصدر.",
+      state: logesTechs.state,
+      stateLabel: logesTechs.stateLabel,
       mode: "REST API · Server to Server",
-      capabilities: ["فحص اتصال الخدمة", "قراءة حالة الشحنة بالباركود", "مطابقة الحالات دون تحديث تلقائي"],
-      boundary: "الإنشاء والإلغاء والتعيين والـWebhooks محظورة حتى اعتماد Sandbox والتوقيع.",
+      capabilities: [
+        "فحص اتصال الخدمة",
+        "قراءة حالة الشحنة بالباركود",
+        ...(logesTechs.webhookConfigured
+          ? ["استقبال POST موثق بـX-API-Key", "منع التكرار والتراجع غير الصحيح للحالات"]
+          : ["مطابقة الحالات دون تحديث تلقائي"]),
+      ],
+      boundary: logesTechs.webhookConfigured
+        ? "سر Webhook محفوظ على الخادم؛ لا تُحفظ الرسالة الخام أو بيانات السائق، والحالات غير المعروفة أو القديمة لا تعدّل الطلب."
+        : "استقبال Webhooks معطل بأمان حتى إضافة السر الإنتاجي وتسجيل الرابط لدى المزود؛ الإنشاء والإلغاء والتعيين تظل محظورة.",
     },
     {
       id: "google-maps",

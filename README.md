@@ -88,6 +88,7 @@ npm run dev
 - `POST /api/quote`: quote lead mock endpoint.
 - `GET /api/admin/integrations/logestechs/health`: فحص اتصال LogesTechs للإدارة فقط.
 - `POST /api/admin/integrations/logestechs/package-status`: معاينة حالات حتى 20 شحنة من LogesTechs دون تعديل البيانات المحلية.
+- `POST /api/webhooks/logestechs/status`: استقبال تحديثات حالة LogesTechs الموثقة بترويسة `X-API-Key` مع منع التكرار والتراجع غير الصحيح للحالات.
 - `GET /api/admin/integrations/google-maps/health`: فحص حي وآمن لـPlaces Text Search وPlace Details للإدارة فقط.
 - `POST /api/admin/integrations/google-maps/resolve`: فحص حتى 20 عنوانًا تشغيليًا بعد إزالة بيانات العميل، مع رفض المواقع غير الموثوقة أو خارج الرياض.
 

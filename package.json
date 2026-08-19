@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
-    "test": "node --conditions=react-server --import tsx --test --test-concurrency=1 tests/auth-users.test.ts tests/integrations-overview.test.ts tests/logestechs-client.test.ts tests/logestechs-config.test.ts tests/logestechs-request-security.test.ts tests/logestechs-status-map.test.ts tests/google-maps-client.test.ts tests/google-maps-request-security.test.ts tests/google-maps-boundaries.test.ts tests/google-maps-route-export.test.ts",
+    "test": "node --conditions=react-server --import tsx --test --test-concurrency=1 tests/auth-users.test.ts tests/integrations-overview.test.ts tests/logestechs-client.test.ts tests/logestechs-config.test.ts tests/logestechs-request-security.test.ts tests/logestechs-status-map.test.ts tests/logestechs-webhook.test.ts tests/google-maps-client.test.ts tests/google-maps-request-security.test.ts tests/google-maps-boundaries.test.ts tests/google-maps-route-export.test.ts",
     "lint": "eslint",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
