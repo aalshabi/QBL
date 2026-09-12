@@ -1,8 +1,10 @@
+import { assertDemoDataAllowed } from '@/lib/runtime-mode';
 import { couriers, customers, deliveryOrders } from "@/lib/mock-data";
 import { verifyTrackingToken } from "@/lib/security";
 import type { TrackingSnapshot } from "@/lib/domain";
 
 export async function getPublicTrackingSnapshot(token: string): Promise<TrackingSnapshot | null> {
+  assertDemoDataAllowed();
   try {
     const { orderId } = await verifyTrackingToken(token);
     const order = deliveryOrders.find((item) => item.id === orderId);

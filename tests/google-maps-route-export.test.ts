@@ -38,3 +38,6 @@ test("fails closed when any selected location still needs review", () => {
     (error: unknown) => error instanceof RouteExportBlockedError && error.blockedCount === 1,
   );
 });
+
+test('rejects non-finite and out-of-coverage coordinates even with VERIFIED status',()=>{for(const [latitude,longitude] of [[NaN,46.7],[24.7,Infinity],[21.4,39.2]])assert.throws(()=>buildVerifiedRouteCsv([{tracking:'ISOLATED',address:'Original Address',location:{ok:true,status:'VERIFIED',latitude,longitude}}]),RouteExportBlockedError);});
+test('preserves the supplied operational address when exporting',()=>{const csv=buildVerifiedRouteCsv([{tracking:'ISOLATED',address:'Original Address',location:{ok:true,status:'VERIFIED',latitude:24.7,longitude:46.7,formattedAddress:'Different Address'}}]);assert.ok(csv.includes('Original Address'));assert.ok(!csv.includes('Different Address'));});

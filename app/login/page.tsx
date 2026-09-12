@@ -11,8 +11,8 @@ import { Label } from "@/components/ui/label";
 
 const HOME_BY_ROLE: Record<string, string> = {
   ADMIN: "/admin",
-  OPS_MANAGER: "/admin",
-  DISPATCHER: "/admin",
+  OPS_MANAGER: "/ops/cases",
+  DISPATCHER: "/ops/cases",
   COURIER: "/courier",
   CLIENT: "/",
 };

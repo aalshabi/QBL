@@ -12,9 +12,19 @@ export type AdminOrderStatus =
   | "FAILED"
   | "CANCELLED";
 
-export type AdminPaymentMethod = "CASH" | "MADA" | "VISA" | "MASTER" | "PREPAID";
+export type AdminPaymentMethod =
+  | "CASH"
+  | "MADA"
+  | "VISA"
+  | "MASTER"
+  | "PREPAID";
 
-export type AdminCodStatus = "WITH_COURIER" | "RECEIVED" | "SORTED" | "EXPORTED" | "SETTLED";
+export type AdminCodStatus =
+  | "WITH_COURIER"
+  | "RECEIVED"
+  | "SORTED"
+  | "EXPORTED"
+  | "SETTLED";
 
 export type CodSettlementStatus = "SORTED" | "EXPORTED" | "DELIVERED";
 
@@ -110,11 +120,11 @@ export type ExpenseRow = {
 export type FinancialSummary = {
   deliveredCodSum: number;
   deliveryFeesSum: number;
-  returnedFeesSum: number;
+  returnedFeesSum: number | null;
   expensesSum: number;
   expensesByType: Record<ExpenseType, number>;
-  vatSum: number;
-  netProfit: number;
+  vatSum: number | null;
+  netProfit: number | null;
   dueToClients: number;
   codWithCouriers: number;
 };
@@ -144,7 +154,11 @@ export type ClientReportRow = {
 };
 
 export type StatusDistribution = { status: AdminOrderStatus; count: number };
-export type CityDistribution = { area: string; count: number; delivered: number };
+export type CityDistribution = {
+  area: string;
+  count: number;
+  delivered: number;
+};
 
 export type AdminDashboard = {
   cards: StatusDistribution[];

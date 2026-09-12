@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
+  { href: "/ops/cases", label: "حالات التشغيل والعملاء", icon: Package },
   { href: "/admin", label: "الملخص", icon: LayoutDashboard },
   { href: "/admin/orders", label: "إدارة الطلبات", icon: Package },
   { href: "/admin/fleet", label: "المناديب والأسطول", icon: Truck },

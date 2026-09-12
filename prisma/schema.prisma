@@ -155,18 +155,20 @@ model Company {
 }
 
 model User {
-  id           String     @id @default(cuid())
+  ownedCases   OperationalCase[] @relation("CaseOwner")
+  backupCases  OperationalCase[] @relation("CaseBackup")
+  id           String            @id @default(cuid())
   name         String
-  email        String     @unique
+  email        String            @unique
   phone        String?
   passwordHash String
-  status       UserStatus @default(ACTIVE)
+  status       UserStatus        @default(ACTIVE)
   roles        UserRole[]
   courier      Courier?
   client       ClientAccount?
-  auditLogs    AuditLog[] @relation("AuditActor")
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  auditLogs    AuditLog[]        @relation("AuditActor")
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
 }
 
 model Role {
@@ -178,135 +180,138 @@ model Role {
 model UserRole {
   userId String
   roleId String
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@id([userId, roleId])
 }
 
 model Customer {
-  id          String          @id @default(cuid())
-  name        String
-  phone       String
-  email       String?
-  address     String
-  latitude    Decimal         @db.Decimal(9, 6)
-  longitude   Decimal         @db.Decimal(9, 6)
-  sector      ClientSector
-  orders      DeliveryOrder[]
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id        String          @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  address   String
+  latitude  Decimal         @db.Decimal(9, 6)
+  longitude Decimal         @db.Decimal(9, 6)
+  sector    ClientSector
+  orders    DeliveryOrder[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 }
 
 model ClientAccount {
-  id             String          @id @default(cuid())
-  userId         String?         @unique
+  cases          OperationalCase[]
+  id             String            @id @default(cuid())
+  userId         String?           @unique
   companyName    String
   contactName    String
   contactEmail   String
   contactPhone   String
   sector         ClientSector
-  slaMinutes     Int             @default(120)
+  slaMinutes     Int               @default(120)
   billingEmail   String?
-  user           User?           @relation(fields: [userId], references: [id])
+  user           User?             @relation(fields: [userId], references: [id])
   orders         DeliveryOrder[]
   codSettlements CodSettlement[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+model Courier {
+  id             String          @id @default(cuid())
+  userId         String?         @unique
+  employeeCode   String          @unique
+  displayName    String
+  phone          String
+  status         CourierStatus   @default(AVAILABLE)
+  vehicleId      String?         @unique
+  hubId          String?
+  user           User?           @relation(fields: [userId], references: [id])
+  vehicle        Vehicle?        @relation(fields: [vehicleId], references: [id])
+  hub            Hub?            @relation(fields: [hubId], references: [id])
+  orders         DeliveryOrder[]
+  pings          LocationPing[]
+  codCollections CodCollection[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 }
 
-model Courier {
-  id            String          @id @default(cuid())
-  userId        String?         @unique
-  employeeCode  String          @unique
-  displayName   String
-  phone         String
-  status        CourierStatus   @default(AVAILABLE)
-  vehicleId     String?         @unique
-  hubId         String?
-  user          User?           @relation(fields: [userId], references: [id])
-  vehicle       Vehicle?        @relation(fields: [vehicleId], references: [id])
-  hub           Hub?            @relation(fields: [hubId], references: [id])
-  orders        DeliveryOrder[]
-  pings         LocationPing[]
-  codCollections CodCollection[]
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-}
-
 model Vehicle {
-  id             String               @id @default(cuid())
-  plateNumber    String               @unique
-  label          String
-  make           String
-  model          String
-  year           Int
-  coldRangeMin   Decimal              @db.Decimal(5, 2)
-  coldRangeMax   Decimal              @db.Decimal(5, 2)
-  supportsFrozen Boolean              @default(false)
-  status         VehicleStatus        @default(ACTIVE)
+  id              String               @id @default(cuid())
+  plateNumber     String               @unique
+  label           String
+  make            String
+  model           String
+  year            Int
+  coldRangeMin    Decimal              @db.Decimal(5, 2)
+  coldRangeMax    Decimal              @db.Decimal(5, 2)
+  supportsFrozen  Boolean              @default(false)
+  status          VehicleStatus        @default(ACTIVE)
   insuranceExpiry DateTime?
-  licenseExpiry  DateTime?
-  courier        Courier?
-  orders         DeliveryOrder[]
-  temperatures   TemperatureReading[]
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  licenseExpiry   DateTime?
+  courier         Courier?
+  orders          DeliveryOrder[]
+  temperatures    TemperatureReading[]
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 }
 
 model DeliveryOrder {
-  id                 String               @id @default(cuid())
-  publicCode          String               @unique
-  reference           String               @unique
-  barcode             String?              @unique
-  clientAccountId     String
-  customerId          String
-  courierId           String?
-  vehicleId           String?
-  hubId               String?
-  status              OrderStatus          @default(CREATED)
-  codAmount           Decimal?             @db.Decimal(10, 2)
-  deliveryFee         Decimal?             @db.Decimal(10, 2)
-  paymentMethod       PaymentMethod?
-  codStatus           CodStatus?
-  codCollectionId     String?
-  codSettlementId     String?
-  notes               String?
-  postponedAt         DateTime?
-  isFollowUp          Boolean              @default(false)
-  pickupAddress       String
-  dropoffAddress      String
-  dropoffLatitude     Decimal              @db.Decimal(9, 6)
-  dropoffLongitude    Decimal              @db.Decimal(9, 6)
-  serviceType         String
-  temperatureTarget   String
-  etaMinutes          Int
-  scheduledAt         DateTime
-  assignedAt          DateTime?
-  outForDeliveryAt    DateTime?
-  arrivedAt           DateTime?
-  deliveredAt         DateTime?
-  failedAt            DateTime?
-  failureReason       String?
-  isDelayed           Boolean              @default(false)
-  requiresIntervention Boolean             @default(false)
-  clientAccount       ClientAccount        @relation(fields: [clientAccountId], references: [id])
-  customer            Customer             @relation(fields: [customerId], references: [id])
-  courier             Courier?             @relation(fields: [courierId], references: [id])
-  vehicle             Vehicle?             @relation(fields: [vehicleId], references: [id])
-  hub                 Hub?                 @relation(fields: [hubId], references: [id])
-  codCollection       CodCollection?       @relation(fields: [codCollectionId], references: [id])
-  codSettlement       CodSettlement?       @relation(fields: [codSettlementId], references: [id])
-  stops               DeliveryStop[]
-  trackingSessions    TrackingSession[]
-  otpCodes            OtpCode[]
-  locationPings       LocationPing[]
-  temperatureReadings TemperatureReading[]
-  notificationLogs    NotificationLog[]
-  auditLogs           AuditLog[]
-  proofOfDelivery     ProofOfDelivery?
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
+  cases                OperationalCase[]
+  id                   String               @id @default(cuid())
+  publicCode           String               @unique
+  reference            String               @unique
+  barcode              String?              @unique
+  clientAccountId      String
+  customerId           String
+  courierId            String?
+  vehicleId            String?
+  hubId                String?
+  status               OrderStatus          @default(CREATED)
+  codAmount            Decimal?             @db.Decimal(10, 2)
+  deliveryFee          Decimal?             @db.Decimal(10, 2)
+  paymentMethod        PaymentMethod?
+  codStatus            CodStatus?
+  codCollectionId      String?
+  codSettlementId      String?
+  notes                String?
+  postponedAt          DateTime?
+  isFollowUp           Boolean              @default(false)
+  pickupAddress        String
+  dropoffAddress       String
+  dropoffLatitude      Decimal              @db.Decimal(9, 6)
+  dropoffLongitude     Decimal              @db.Decimal(9, 6)
+  serviceType          String
+  temperatureTarget    String
+  etaMinutes           Int
+  scheduledAt          DateTime
+  assignedAt           DateTime?
+  outForDeliveryAt     DateTime?
+  arrivedAt            DateTime?
+  deliveredAt          DateTime?
+  failedAt             DateTime?
+  logestechsOccurredAt DateTime?
+  failureReason        String?
+  isDelayed            Boolean              @default(false)
+  requiresIntervention Boolean              @default(false)
+  clientAccount        ClientAccount        @relation(fields: [clientAccountId], references: [id])
+  customer             Customer             @relation(fields: [customerId], references: [id])
+  courier              Courier?             @relation(fields: [courierId], references: [id])
+  vehicle              Vehicle?             @relation(fields: [vehicleId], references: [id])
+  hub                  Hub?                 @relation(fields: [hubId], references: [id])
+  codCollection        CodCollection?       @relation(fields: [codCollectionId], references: [id])
+  codSettlement        CodSettlement?       @relation(fields: [codSettlementId], references: [id])
+  stops                DeliveryStop[]
+  trackingSessions     TrackingSession[]
+  otpCodes             OtpCode[]
+  locationPings        LocationPing[]
+  temperatureReadings  TemperatureReading[]
+  notificationLogs     NotificationLog[]
+  auditLogs            AuditLog[]
+  proofOfDelivery      ProofOfDelivery?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
 
   @@index([status, scheduledAt])
   @@index([courierId, status])
@@ -327,83 +332,83 @@ model DeliveryStop {
 }
 
 model TrackingSession {
-  id        String        @id @default(cuid())
-  orderId   String
-  tokenHash String        @unique
-  expiresAt DateTime
-  usedAfterDelivery Boolean @default(false)
-  revokedAt DateTime?
-  order     DeliveryOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  createdAt DateTime      @default(now())
+  id                String        @id @default(cuid())
+  orderId           String
+  tokenHash         String        @unique
+  expiresAt         DateTime
+  usedAfterDelivery Boolean       @default(false)
+  revokedAt         DateTime?
+  order             DeliveryOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt         DateTime      @default(now())
 
   @@index([orderId, expiresAt])
 }
 
 model OtpCode {
-  id             String        @id @default(cuid())
-  orderId        String
-  codeHash       String
-  attempts       Int           @default(0)
-  maxAttempts    Int           @default(5)
-  expiresAt      DateTime
-  verifiedAt     DateTime?
-  resentCount    Int           @default(0)
-  lastSentAt     DateTime?
-  order          DeliveryOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  createdAt      DateTime      @default(now())
+  id          String        @id @default(cuid())
+  orderId     String
+  codeHash    String
+  attempts    Int           @default(0)
+  maxAttempts Int           @default(5)
+  expiresAt   DateTime
+  verifiedAt  DateTime?
+  resentCount Int           @default(0)
+  lastSentAt  DateTime?
+  order       DeliveryOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
 
   @@index([orderId, expiresAt])
 }
 
 model LocationPing {
-  id        String         @id @default(cuid())
-  courierId String
-  orderId   String?
-  latitude  Decimal        @db.Decimal(9, 6)
-  longitude Decimal        @db.Decimal(9, 6)
-  speedKph  Decimal?       @db.Decimal(6, 2)
-  heading   Int?
-  battery   Int?
-  recordedAt DateTime      @default(now())
-  courier   Courier        @relation(fields: [courierId], references: [id], onDelete: Cascade)
-  order     DeliveryOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  id         String         @id @default(cuid())
+  courierId  String
+  orderId    String?
+  latitude   Decimal        @db.Decimal(9, 6)
+  longitude  Decimal        @db.Decimal(9, 6)
+  speedKph   Decimal?       @db.Decimal(6, 2)
+  heading    Int?
+  battery    Int?
+  recordedAt DateTime       @default(now())
+  courier    Courier        @relation(fields: [courierId], references: [id], onDelete: Cascade)
+  order      DeliveryOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@index([courierId, recordedAt])
   @@index([orderId, recordedAt])
 }
 
 model TemperatureReading {
-  id          String            @id @default(cuid())
-  vehicleId   String
-  orderId     String?
-  celsius     Decimal           @db.Decimal(5, 2)
-  status      TemperatureStatus @default(NORMAL)
-  sensorId    String?
-  recordedAt  DateTime          @default(now())
-  vehicle     Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
-  order       DeliveryOrder?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  id         String            @id @default(cuid())
+  vehicleId  String
+  orderId    String?
+  celsius    Decimal           @db.Decimal(5, 2)
+  status     TemperatureStatus @default(NORMAL)
+  sensorId   String?
+  recordedAt DateTime          @default(now())
+  vehicle    Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  order      DeliveryOrder?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@index([vehicleId, recordedAt])
   @@index([orderId, recordedAt])
 }
 
 model NotificationLog {
-  id          String             @id @default(cuid())
+  id          String              @id @default(cuid())
   orderId     String?
   channel     NotificationChannel
   recipient   String
   templateKey String
   payload     Json
-  status      NotificationStatus @default(QUEUED)
+  status      NotificationStatus  @default(QUEUED)
   providerRef String?
   sentAt      DateTime?
   error       String?
-  order       DeliveryOrder?     @relation(fields: [orderId], references: [id], onDelete: SetNull)
-  createdAt   DateTime           @default(now())
+  order       DeliveryOrder?      @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  createdAt   DateTime            @default(now())
 }
 
 model AuditLog {
-  id        String        @id @default(cuid())
+  id        String         @id @default(cuid())
   orderId   String?
   actorId   String?
   action    AuditAction
@@ -508,15 +513,15 @@ model CityPrice {
 }
 
 model ProofOfDelivery {
-  id          String        @id @default(cuid())
-  orderId     String        @unique
-  proofType   ProofType
-  otpVerified Boolean       @default(false)
+  id           String        @id @default(cuid())
+  orderId      String        @unique
+  proofType    ProofType
+  otpVerified  Boolean       @default(false)
   signatureUrl String?
-  photoUrl    String?
-  notes       String?
-  capturedAt  DateTime      @default(now())
-  order       DeliveryOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  photoUrl     String?
+  notes        String?
+  capturedAt   DateTime      @default(now())
+  order        DeliveryOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 enum LeadStatus {
@@ -535,4 +540,125 @@ model Lead {
   message   String
   status    LeadStatus @default(NEW)
   createdAt DateTime   @default(now())
+}
+
+// Durable normalized inbox. No provider customer/driver payload is retained.
+model LogesTechsEvent {
+  id              String    @id
+  kind            String
+  barcode         String
+  externalStatus  String
+  packageId       String?
+  invoiceNumber   String?
+  eventOccurredAt DateTime?
+  eventReceivedAt DateTime  @default(now())
+  state           String    @default("PENDING")
+  outcome         String?
+  orderId         String?
+  attempts        Int       @default(0)
+  nextAttemptAt   DateTime  @default(now())
+  lastAttemptAt   DateTime?
+  processedAt     DateTime?
+  lastError       String?
+
+  @@index([state, nextAttemptAt])
+  @@index([barcode, eventOccurredAt])
+}
+
+model IntegrationJobRun {
+  name            String    @id
+  lastStartedAt   DateTime
+  lastSucceededAt DateTime?
+  lastError       String?
+  processedCount  Int       @default(0)
+}
+
+model OperationalCase {
+  owner                        User              @relation("CaseOwner", fields: [ownerId], references: [id])
+  backupOwner                  User              @relation("CaseBackup", fields: [backupOwnerId], references: [id])
+  clientAccount                ClientAccount     @relation(fields: [clientAccountId], references: [id])
+  order                        DeliveryOrder?    @relation(fields: [orderId], references: [id])
+  reopenedFrom                 OperationalCase?  @relation("CaseReopen", fields: [reopenedFromCaseId], references: [id])
+  reopenedCases                OperationalCase[] @relation("CaseReopen")
+  id                           String            @id @default(cuid())
+  orderId                      String?
+  clientAccountId              String
+  caseType                     String
+  priority                     String
+  ownerId                      String
+  backupOwnerId                String
+  status                       String            @default("NEW")
+  createdAt                    DateTime          @default(now())
+  ackDueAt                     DateTime
+  resolutionDueAt              DateTime
+  lastActionAt                 DateTime          @default(now())
+  resolution                   String?
+  evidence                     Json              @default("[]")
+  requiresCustomerConfirmation Boolean           @default(false)
+  customerConfirmedAt          DateTime?
+  closedAt                     DateTime?
+  detectionKey                 String?           @unique
+  escalationLevel              Int               @default(0)
+  escalatedToUserId            String?
+  reopenedFromCaseId           String?
+  version                      Int               @default(0)
+
+  @@index([status, resolutionDueAt])
+  @@index([clientAccountId, status])
+}
+
+model ShipmentReconciliation {
+  id               String   @id @default(cuid())
+  clientAccountId  String
+  source           String
+  sourceCapturedAt DateTime
+  windowStart      DateTime
+  windowEnd        DateTime
+  expectedCount    Int
+  receivedCount    Int
+  matchedCount     Int
+  missingIds       Json
+  duplicateIds     Json
+  unexpectedIds    Json
+  complete         Boolean
+  sourceHash       String
+  createdBy        String
+  createdAt        DateTime @default(now())
+
+  @@index([clientAccountId, createdAt])
+}
+
+model OperationsPolicy {
+  id                      String   @id @default(cuid())
+  clientAccountId         String   @unique
+  ownerId                 String
+  backupOwnerId           String
+  firstEscalationOwnerId  String
+  secondEscalationOwnerId String
+  ackMinutes              Int
+  resolutionMinutes       Int
+  stalledMinutes          Int
+  noUpdateMinutes         Int
+  riskMinutes             Int
+  driverCapacity          Int?
+  updatedBy               String
+  updatedAt               DateTime @updatedAt
+}
+
+model DeliveryCommitment {
+  id              String   @id @default(cuid())
+  orderId         String
+  clientAccountId String
+  ownerId         String
+  windowStart     DateTime
+  windowEnd       DateTime
+  planReference   String
+  feasibility     String   @default("NEEDS_REVIEW")
+  status          String   @default("PLANNED")
+  result          String?
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status, windowEnd])
 }

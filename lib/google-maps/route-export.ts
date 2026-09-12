@@ -1,3 +1,5 @@
+import { isWithinRiyadh } from './coverage';
+
 export type RouteExportRow = {
   tracking: string;
   address: string;
@@ -21,7 +23,8 @@ export class RouteExportBlockedError extends Error {
 }
 
 function csvCell(value: string | number): string {
-  const text = String(value);
+  const raw = String(value);
+  const text = typeof value === 'string' && /^[=+@\-\t\r]/.test(raw) ? "'" + raw : raw;
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
@@ -32,7 +35,8 @@ export function buildVerifiedRouteCsv(rows: RouteExportRow[]): string {
       !location?.ok ||
       location.status !== "VERIFIED" ||
       typeof location.latitude !== "number" ||
-      typeof location.longitude !== "number",
+      typeof location.longitude !== "number" ||
+      !isWithinRiyadh(location.latitude, location.longitude),
   ).length;
 
   if (blockedCount) throw new RouteExportBlockedError(blockedCount);
@@ -43,7 +47,7 @@ export function buildVerifiedRouteCsv(rows: RouteExportRow[]): string {
     }
     return [
       tracking,
-      location.formattedAddress ?? address,
+      address,
       location.latitude!,
       location.longitude!,
     ]

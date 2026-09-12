@@ -1,6 +1,2 @@
-import { OpsDashboard } from "@/components/ops/ops-dashboard";
-import { couriers, deliveryOrders } from "@/lib/mock-data";
-
-export default function OpsPage() {
-  return <OpsDashboard couriers={couriers} orders={deliveryOrders} />;
-}
+import { redirect } from 'next/navigation';
+export default function OpsPage(){redirect('/ops/cases')}

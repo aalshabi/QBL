@@ -1,10 +1,21 @@
 import { AdminOrderStatusBadge } from "@/components/admin/admin-status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAdminDataSource } from "@/lib/admin/data";
 import { formatDateTime, formatNumber, formatSar } from "@/lib/admin/format";
 import { requireAdminPage } from "@/lib/admin/guard";
+
+import { getSession } from "@/lib/auth";
+import { managementSnapshot } from "@/lib/operations/management";
+import { ManagementSummary } from "@/components/operations/management-summary";
 
 const sectorLabels: Record<string, string> = {
   FOOD_SUPPLIER: "موردو أغذية",
@@ -15,19 +26,42 @@ const sectorLabels: Record<string, string> = {
   ECOMMERCE: "تجارة إلكترونية",
 };
 
-export default async function AdminReportsPage() {
+export default async function AdminReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ date?: string }>;
+}) {
   await requireAdminPage();
-  const { drivers, clients, statusDistribution, cityDistribution } = await getAdminDataSource().getReports();
+  const { drivers, clients, statusDistribution, cityDistribution } =
+    await getAdminDataSource().getReports();
+  const snapshot = await managementSnapshot(
+    (await searchParams).date,
+    await getSession(),
+  );
   const maxStatus = Math.max(...statusDistribution.map((s) => s.count), 1);
   const maxCity = Math.max(...cityDistribution.map((c) => c.count), 1);
 
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold text-[#0D1B3A]">التقارير والتحليلات</h1>
-        <p className="text-sm text-slate-500">أداء المناديب، نشاط العملاء، وتوزيعات الطلبات</p>
+        <h1 className="text-2xl font-bold text-[#0D1B3A]">
+          التقارير والتحليلات
+        </h1>
+        <p className="text-sm text-slate-500">
+          أداء المناديب، نشاط العملاء، وتوزيعات الطلبات
+        </p>
       </div>
 
+      <p className="rounded border border-amber-300 bg-amber-50 p-3 text-sm">
+        هذه التقارير تعتمد على الشحنات المسجلة في QBL فقط؛ لم تثبت شمول جميع
+        شحنات المصدر. التحصيلات وأجور التوصيل لا تمثل الربح، ولا تتضمن هذه
+        الشاشة مطابقة فواتير دفترة أو التكاليف الكاملة.
+      </p>
+      <ManagementSummary snapshot={snapshot} />
+      <p className="text-sm text-slate-500">
+        التفاصيل التالية تشمل جميع السجلات والفترات؛ اختيار التاريخ أعلاه يخص
+        ملخص المتابعة فقط.
+      </p>
       <Tabs defaultValue="drivers">
         <TabsList>
           <TabsTrigger value="drivers">تقرير المناديب</TabsTrigger>
@@ -54,11 +88,19 @@ export default async function AdminReportsPage() {
                 <TableBody>
                   {drivers.map((row) => (
                     <TableRow key={row.courierId}>
-                      <TableCell className="font-medium">{row.courierName}</TableCell>
+                      <TableCell className="font-medium">
+                        {row.courierName}
+                      </TableCell>
                       <TableCell>{formatNumber(row.totalOrders)}</TableCell>
-                      <TableCell className="text-emerald-700">{formatNumber(row.delivered)}</TableCell>
-                      <TableCell className="text-rose-700">{formatNumber(row.returned)}</TableCell>
-                      <TableCell className="text-amber-700">{formatNumber(row.postponed)}</TableCell>
+                      <TableCell className="text-emerald-700">
+                        {formatNumber(row.delivered)}
+                      </TableCell>
+                      <TableCell className="text-rose-700">
+                        {formatNumber(row.returned)}
+                      </TableCell>
+                      <TableCell className="text-amber-700">
+                        {formatNumber(row.postponed)}
+                      </TableCell>
                       <TableCell>{formatNumber(row.inProgress)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -71,7 +113,9 @@ export default async function AdminReportsPage() {
                           <span className="text-xs">{row.successRate}٪</span>
                         </div>
                       </TableCell>
-                      <TableCell className="font-semibold">{formatSar(row.codCollected)}</TableCell>
+                      <TableCell className="font-semibold">
+                        {formatSar(row.codCollected)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -99,12 +143,22 @@ export default async function AdminReportsPage() {
                 <TableBody>
                   {clients.map((row) => (
                     <TableRow key={row.clientAccountId}>
-                      <TableCell className="max-w-52 truncate font-medium">{row.clientName}</TableCell>
-                      <TableCell className="text-sm">{sectorLabels[row.sector] ?? row.sector}</TableCell>
+                      <TableCell className="max-w-52 truncate font-medium">
+                        {row.clientName}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {sectorLabels[row.sector] ?? row.sector}
+                      </TableCell>
                       <TableCell>{formatNumber(row.totalOrders)}</TableCell>
-                      <TableCell className="text-emerald-700">{formatNumber(row.delivered)}</TableCell>
-                      <TableCell className="text-rose-700">{formatNumber(row.returned)}</TableCell>
-                      <TableCell className="font-semibold">{formatSar(row.codTotal)}</TableCell>
+                      <TableCell className="text-emerald-700">
+                        {formatNumber(row.delivered)}
+                      </TableCell>
+                      <TableCell className="text-rose-700">
+                        {formatNumber(row.returned)}
+                      </TableCell>
+                      <TableCell className="font-semibold">
+                        {formatSar(row.codTotal)}
+                      </TableCell>
                       <TableCell>{formatSar(row.feesTotal)}</TableCell>
                       <TableCell className="whitespace-nowrap text-xs text-slate-500">
                         {formatDateTime(row.lastOrderAt)}
@@ -135,7 +189,9 @@ export default async function AdminReportsPage() {
                         style={{ width: `${(row.count / maxStatus) * 100}%` }}
                       />
                     </div>
-                    <span className="w-8 text-end text-sm font-semibold">{formatNumber(row.count)}</span>
+                    <span className="w-8 text-end text-sm font-semibold">
+                      {formatNumber(row.count)}
+                    </span>
                   </div>
                 ))}
               </CardContent>
@@ -143,12 +199,16 @@ export default async function AdminReportsPage() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">أعلى الأحياء (وجهات التوصيل)</CardTitle>
+                <CardTitle className="text-base">
+                  أعلى الأحياء (وجهات التوصيل)
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {cityDistribution.map((row) => (
                   <div key={row.area} className="flex items-center gap-3">
-                    <span className="w-40 shrink-0 truncate text-sm">{row.area}</span>
+                    <span className="w-40 shrink-0 truncate text-sm">
+                      {row.area}
+                    </span>
                     <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200">
                       <div
                         className="h-full rounded-full bg-[#00A7B6]"

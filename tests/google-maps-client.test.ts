@@ -140,3 +140,13 @@ test("sanitizer rejects empty and oversized operational addresses", () => {
   assert.equal(sanitizeOperationalAddress("x"), "");
   assert.equal(sanitizeOperationalAddress("a".repeat(501)), "");
 });
+
+test('does not verify a different building merely because it is inside Riyadh',async()=>{stubSuccessfulPlaces(24.7,46.7,'9999 شارع مختلف، الرياض');const result=await verifyOperationalAddress('2706 شارع القصر، الرياض');assert.equal(result.status,'NEEDS_REVIEW');assert.equal(result.reviewReason,'ADDRESS_MISMATCH');});
+
+test('removes formatted and Arabic-digit phone numbers before Google requests',async()=>{
+ for(const phone of ['+966 50 123 4567','050-123-4567','011 234 5678','٠٥٠١٢٣٤٥٦٧']){
+  const calls=stubSuccessfulPlaces();await verifyOperationalAddress('RAJB2706، '+phone);
+  const query=JSON.parse(String(calls[0].init?.body)).textQuery;
+  assert.ok(!query.includes('123'));assert.ok(!query.includes('٠٥٠'));
+ }
+});

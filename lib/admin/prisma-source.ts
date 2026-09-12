@@ -19,12 +19,13 @@ import type {
   FleetVehicle,
   StatusDistribution,
 } from "@/lib/admin/types";
-import { VAT_RATE } from "@/lib/admin/types";
 
 type Decimalish = { toString(): string } | null | undefined;
 
-const money = (value: Decimalish) => (value == null ? 0 : Number(value.toString()));
-const iso = (value: Date | null | undefined) => (value ? value.toISOString() : null);
+const money = (value: Decimalish) =>
+  value == null ? 0 : Number(value.toString());
+const iso = (value: Date | null | undefined) =>
+  value ? value.toISOString() : null;
 const round2 = (value: number) => Math.round(value * 100) / 100;
 const maskPhone = (phone: string) => `05******${phone.slice(-2)}`;
 
@@ -41,7 +42,11 @@ const ALL_STATUSES: AdminOrderStatus[] = [
   "CANCELLED",
 ];
 
-const IN_PROGRESS: AdminOrderStatus[] = ["ASSIGNED", "OUT_FOR_DELIVERY", "ARRIVED"];
+const IN_PROGRESS: AdminOrderStatus[] = [
+  "ASSIGNED",
+  "OUT_FOR_DELIVERY",
+  "ARRIVED",
+];
 
 /** الأعمدة التي يحتاجها جدول الطلبات وكل التقارير — استعلام واحد يُعاد استخدامه. */
 const orderSelect = {
@@ -124,13 +129,14 @@ function toAdminOrder(row: OrderRow): AdminOrder {
   };
 }
 
-async function loadOrders(filter?: OrdersFilter): Promise<AdminOrder[]> {
-  const prisma = getPrisma();
+async function loadOrders(filter?: OrdersFilter, prisma: Pick<ReturnType<typeof getPrisma>, "deliveryOrder"> = getPrisma()): Promise<AdminOrder[]> {
   const query = filter?.query?.trim();
 
   const rows = await prisma.deliveryOrder.findMany({
     where: {
-      ...(filter?.status && filter.status !== "ALL" ? { status: filter.status } : {}),
+      ...(filter?.status && filter.status !== "ALL"
+        ? { status: filter.status }
+        : {}),
       ...(filter?.clientAccountId && filter.clientAccountId !== "ALL"
         ? { clientAccountId: filter.clientAccountId }
         : {}),
@@ -141,9 +147,27 @@ async function loadOrders(filter?: OrdersFilter): Promise<AdminOrder[]> {
               { publicCode: { contains: query, mode: "insensitive" as const } },
               { reference: { contains: query, mode: "insensitive" as const } },
               { barcode: { contains: query, mode: "insensitive" as const } },
-              { clientAccount: { companyName: { contains: query, mode: "insensitive" as const } } },
-              { customer: { name: { contains: query, mode: "insensitive" as const } } },
-              { courier: { displayName: { contains: query, mode: "insensitive" as const } } },
+              {
+                clientAccount: {
+                  companyName: {
+                    contains: query,
+                    mode: "insensitive" as const,
+                  },
+                },
+              },
+              {
+                customer: {
+                  name: { contains: query, mode: "insensitive" as const },
+                },
+              },
+              {
+                courier: {
+                  displayName: {
+                    contains: query,
+                    mode: "insensitive" as const,
+                  },
+                },
+              },
             ],
           }
         : {}),
@@ -163,7 +187,9 @@ export const prismaAdminDataSource: AdminDataSource = {
   async getDashboard() {
     const orders = await loadOrders();
     const delivered = orders.filter((order) => order.status === "DELIVERED");
-    const couriers = await getPrisma().courier.findMany({ select: { status: true } });
+    const couriers = await getPrisma().courier.findMany({
+      select: { status: true },
+    });
 
     return {
       cards: ALL_STATUSES.map((status) => ({
@@ -171,49 +197,63 @@ export const prismaAdminDataSource: AdminDataSource = {
         count: orders.filter((order) => order.status === status).length,
       })),
       followUpCount: orders.filter((order) => order.isFollowUp).length,
-      pendingApprovalCount: orders.filter((order) => order.status === "PENDING_APPROVAL").length,
-      activeCouriers: couriers.filter((courier) => courier.status !== "OFFLINE").length,
+      pendingApprovalCount: orders.filter(
+        (order) => order.status === "PENDING_APPROVAL",
+      ).length,
+      activeCouriers: couriers.filter((courier) => courier.status !== "OFFLINE")
+        .length,
       totalCouriers: couriers.length,
-      todayDeliveredCod: delivered.reduce((sum, order) => sum + order.codAmount, 0),
+      todayDeliveredCod: delivered.reduce(
+        (sum, order) => sum + order.codAmount,
+        0,
+      ),
       todayFees: delivered.reduce((sum, order) => sum + order.deliveryFee, 0),
     };
   },
 
   async getFleet() {
     const prisma = getPrisma();
-    const [courierRows, vehicleRows, orders] = await Promise.all([
-      prisma.courier.findMany({
-        select: {
-          id: true,
-          employeeCode: true,
-          displayName: true,
-          phone: true,
-          status: true,
-          hub: { select: { name: true } },
-          vehicle: { select: { label: true } },
-          pings: { select: { recordedAt: true }, orderBy: { recordedAt: "desc" }, take: 1 },
-        },
-        orderBy: { employeeCode: "asc" },
-      }),
-      prisma.vehicle.findMany({
-        select: {
-          id: true,
-          plateNumber: true,
-          label: true,
-          make: true,
-          model: true,
-          coldRangeMin: true,
-          coldRangeMax: true,
-          supportsFrozen: true,
-          status: true,
-          insuranceExpiry: true,
-          licenseExpiry: true,
-          courier: { select: { id: true, displayName: true } },
-        },
-        orderBy: { plateNumber: "asc" },
-      }),
-      loadOrders(),
-    ]);
+    const [courierRows, vehicleRows, orders] = await prisma.$transaction(
+      async (tx) => {
+        const courierRows = await tx.courier.findMany({
+          select: {
+            id: true,
+            employeeCode: true,
+            displayName: true,
+            phone: true,
+            status: true,
+            hub: { select: { name: true } },
+            vehicle: { select: { label: true } },
+            pings: {
+              select: { recordedAt: true },
+              orderBy: { recordedAt: "desc" },
+              take: 1,
+            },
+          },
+          orderBy: { employeeCode: "asc" },
+        });
+        const vehicleRows = await tx.vehicle.findMany({
+          select: {
+            id: true,
+            plateNumber: true,
+            label: true,
+            make: true,
+            model: true,
+            coldRangeMin: true,
+            coldRangeMax: true,
+            supportsFrozen: true,
+            status: true,
+            insuranceExpiry: true,
+            licenseExpiry: true,
+            courier: { select: { id: true, displayName: true } },
+          },
+          orderBy: { plateNumber: "asc" },
+        });
+        const orders = await loadOrders(undefined, tx);
+        return [courierRows, vehicleRows, orders] as const;
+      },
+      { isolationLevel: "RepeatableRead" },
+    );
 
     const couriers: FleetCourier[] = courierRows.map((courier) => {
       const mine = orders.filter((order) => order.courierId === courier.id);
@@ -226,13 +266,18 @@ export const prismaAdminDataSource: AdminDataSource = {
         status: courier.status as FleetCourier["status"],
         hubName: courier.hub?.name ?? "—",
         vehicleLabel: courier.vehicle?.label ?? "—",
-        assignedOrders: mine.filter((order) => IN_PROGRESS.includes(order.status)).length,
+        assignedOrders: mine.filter((order) =>
+          IN_PROGRESS.includes(order.status),
+        ).length,
         deliveredToday: delivered.length,
-        successRate: mine.length ? Math.round((delivered.length / mine.length) * 100) : 0,
+        successRate: mine.length
+          ? Math.round((delivered.length / mine.length) * 100)
+          : 0,
         codCustody: delivered
           .filter((order) => order.codStatus === "WITH_COURIER")
           .reduce((sum, order) => sum + order.codAmount, 0),
-        lastPingAt: iso(courier.pings[0]?.recordedAt) ?? new Date().toISOString(),
+        lastPingAt:
+          iso(courier.pings[0]?.recordedAt) ?? new Date().toISOString(),
       };
     });
 
@@ -247,7 +292,9 @@ export const prismaAdminDataSource: AdminDataSource = {
       status: vehicle.status as FleetVehicle["status"],
       courierName: vehicle.courier?.displayName ?? null,
       loadedOrders: orders.filter(
-        (order) => order.courierId === vehicle.courier?.id && order.status === "OUT_FOR_DELIVERY",
+        (order) =>
+          order.courierId === vehicle.courier?.id &&
+          order.status === "OUT_FOR_DELIVERY",
       ).length,
       insuranceExpiry: iso(vehicle.insuranceExpiry) ?? "",
       licenseExpiry: iso(vehicle.licenseExpiry) ?? "",
@@ -258,39 +305,50 @@ export const prismaAdminDataSource: AdminDataSource = {
 
   async getCod() {
     const prisma = getPrisma();
-    const [collections, settlementRows, expenseRows, orders] = await Promise.all([
-      prisma.codCollection.findMany({
-        select: {
-          courierId: true,
-          ordersCount: true,
-          totalCod: true,
-          totalFees: true,
-          courier: { select: { displayName: true } },
+    const [collections, settlementRows, expenseRows, orders] =
+      await prisma.$transaction(
+        async (tx) => {
+          const collections = await tx.codCollection.findMany({
+            select: {
+              courierId: true,
+              ordersCount: true,
+              totalCod: true,
+              totalFees: true,
+              courier: { select: { displayName: true } },
+            },
+          });
+          const settlementRows = await tx.codSettlement.findMany({
+            select: {
+              id: true,
+              clientAccountId: true,
+              status: true,
+              totalCod: true,
+              totalFees: true,
+              vatAmount: true,
+              netToClient: true,
+              sortedAt: true,
+              exportedAt: true,
+              deliveredAt: true,
+              clientAccount: { select: { companyName: true } },
+              _count: { select: { orders: true } },
+            },
+            orderBy: { sortedAt: "desc" },
+          });
+          const expenseRows = await tx.expense.findMany({
+            select: {
+              id: true,
+              type: true,
+              amount: true,
+              note: true,
+              spentAt: true,
+            },
+            orderBy: { spentAt: "desc" },
+          });
+          const orders = await loadOrders(undefined, tx);
+          return [collections, settlementRows, expenseRows, orders] as const;
         },
-      }),
-      prisma.codSettlement.findMany({
-        select: {
-          id: true,
-          clientAccountId: true,
-          status: true,
-          totalCod: true,
-          totalFees: true,
-          vatAmount: true,
-          netToClient: true,
-          sortedAt: true,
-          exportedAt: true,
-          deliveredAt: true,
-          clientAccount: { select: { companyName: true } },
-          _count: { select: { orders: true } },
-        },
-        orderBy: { sortedAt: "desc" },
-      }),
-      prisma.expense.findMany({
-        select: { id: true, type: true, amount: true, note: true, spentAt: true },
-        orderBy: { spentAt: "desc" },
-      }),
-      loadOrders(),
-    ]);
+        { isolationLevel: "RepeatableRead" },
+      );
 
     const custody: CodCustodyRow[] = collections
       .map((collection) => ({
@@ -302,20 +360,22 @@ export const prismaAdminDataSource: AdminDataSource = {
       }))
       .filter((row) => row.ordersCount > 0);
 
-    const settlements: CodSettlementRow[] = settlementRows.map((settlement) => ({
-      id: settlement.id,
-      clientAccountId: settlement.clientAccountId,
-      clientName: settlement.clientAccount.companyName,
-      status: settlement.status as CodSettlementRow["status"],
-      ordersCount: settlement._count.orders,
-      totalCod: money(settlement.totalCod),
-      totalFees: money(settlement.totalFees),
-      vatAmount: money(settlement.vatAmount),
-      netToClient: money(settlement.netToClient),
-      sortedAt: settlement.sortedAt.toISOString(),
-      exportedAt: iso(settlement.exportedAt),
-      deliveredAt: iso(settlement.deliveredAt),
-    }));
+    const settlements: CodSettlementRow[] = settlementRows.map(
+      (settlement) => ({
+        id: settlement.id,
+        clientAccountId: settlement.clientAccountId,
+        clientName: settlement.clientAccount.companyName,
+        status: settlement.status as CodSettlementRow["status"],
+        ordersCount: settlement._count.orders,
+        totalCod: money(settlement.totalCod),
+        totalFees: money(settlement.totalFees),
+        vatAmount: money(settlement.vatAmount),
+        netToClient: money(settlement.netToClient),
+        sortedAt: settlement.sortedAt.toISOString(),
+        exportedAt: iso(settlement.exportedAt),
+        deliveredAt: iso(settlement.deliveredAt),
+      }),
+    );
 
     const expenses: ExpenseRow[] = expenseRows.map((expense) => ({
       id: expense.id,
@@ -325,16 +385,30 @@ export const prismaAdminDataSource: AdminDataSource = {
       spentAt: expense.spentAt.toISOString(),
     }));
 
-    return { custody, settlements, expenses, summary: computeSummary(orders, expenses) };
+    return {
+      custody,
+      settlements,
+      expenses,
+      summary: computeSummary(orders, expenses),
+    };
   },
 
   async getReports() {
     const prisma = getPrisma();
-    const [orders, courierRows, clientRows] = await Promise.all([
-      loadOrders(),
-      prisma.courier.findMany({ select: { id: true, displayName: true }, orderBy: { employeeCode: "asc" } }),
-      prisma.clientAccount.findMany({ select: { id: true, companyName: true, sector: true } }),
-    ]);
+    const [orders, courierRows, clientRows] = await prisma.$transaction(
+      async (tx) => {
+        const orders = await loadOrders(undefined, tx);
+        const courierRows = await tx.courier.findMany({
+          select: { id: true, displayName: true },
+          orderBy: { employeeCode: "asc" },
+        });
+        const clientRows = await tx.clientAccount.findMany({
+          select: { id: true, companyName: true, sector: true },
+        });
+        return [orders, courierRows, clientRows] as const;
+      },
+      { isolationLevel: "RepeatableRead" },
+    );
 
     const drivers: DriverReportRow[] = courierRows.map((courier) => {
       const mine = orders.filter((order) => order.courierId === courier.id);
@@ -346,14 +420,22 @@ export const prismaAdminDataSource: AdminDataSource = {
         delivered: delivered.length,
         returned: mine.filter((order) => order.status === "RETURNED").length,
         postponed: mine.filter((order) => order.status === "POSTPONED").length,
-        inProgress: mine.filter((order) => IN_PROGRESS.includes(order.status)).length,
-        successRate: mine.length ? Math.round((delivered.length / mine.length) * 100) : 0,
-        codCollected: delivered.reduce((sum, order) => sum + order.codAmount, 0),
+        inProgress: mine.filter((order) => IN_PROGRESS.includes(order.status))
+          .length,
+        successRate: mine.length
+          ? Math.round((delivered.length / mine.length) * 100)
+          : 0,
+        codCollected: delivered.reduce(
+          (sum, order) => sum + order.codAmount,
+          0,
+        ),
       };
     });
 
     const clients: ClientReportRow[] = clientRows.map((client) => {
-      const mine = orders.filter((order) => order.clientAccountId === client.id);
+      const mine = orders.filter(
+        (order) => order.clientAccountId === client.id,
+      );
       const delivered = mine.filter((order) => order.status === "DELIVERED");
       return {
         clientAccountId: client.id,
@@ -364,22 +446,31 @@ export const prismaAdminDataSource: AdminDataSource = {
         returned: mine.filter((order) => order.status === "RETURNED").length,
         codTotal: delivered.reduce((sum, order) => sum + order.codAmount, 0),
         feesTotal: mine.reduce((sum, order) => sum + order.deliveryFee, 0),
-        lastOrderAt: mine.reduce((latest, order) => (order.scheduledAt > latest ? order.scheduledAt : latest), ""),
+        lastOrderAt: mine.reduce(
+          (latest, order) =>
+            order.scheduledAt > latest ? order.scheduledAt : latest,
+          "",
+        ),
       };
     });
 
-    const statusDistribution: StatusDistribution[] = ALL_STATUSES.map((status) => ({
-      status,
-      count: orders.filter((order) => order.status === status).length,
-    })).filter((row) => row.count > 0);
+    const statusDistribution: StatusDistribution[] = ALL_STATUSES.map(
+      (status) => ({
+        status,
+        count: orders.filter((order) => order.status === status).length,
+      }),
+    ).filter((row) => row.count > 0);
 
-    const cityDistribution: CityDistribution[] = [...new Set(orders.map((order) => order.customerArea))]
+    const cityDistribution: CityDistribution[] = [
+      ...new Set(orders.map((order) => order.customerArea)),
+    ]
       .map((area) => {
         const mine = orders.filter((order) => order.customerArea === area);
         return {
           area,
           count: mine.length,
-          delivered: mine.filter((order) => order.status === "DELIVERED").length,
+          delivered: mine.filter((order) => order.status === "DELIVERED")
+            .length,
         };
       })
       .sort((a, b) => b.count - a.count)
@@ -389,13 +480,22 @@ export const prismaAdminDataSource: AdminDataSource = {
   },
 };
 
-/** الملخص المالي — نفس معادلات المواصفة §2.7 (رسوم الرواجع = 50% من أجرة التوصيل). */
-function computeSummary(orders: AdminOrder[], expenses: ExpenseRow[]): FinancialSummary {
+/** Operational totals only. Unverified return tariffs, tax and margin stay unknown. */
+function computeSummary(
+  orders: AdminOrder[],
+  expenses: ExpenseRow[],
+): FinancialSummary {
   const delivered = orders.filter((order) => order.status === "DELIVERED");
-  const returned = orders.filter((order) => order.status === "RETURNED");
-  const deliveredCodSum = delivered.reduce((sum, order) => sum + order.codAmount, 0);
-  const deliveryFeesSum = delivered.reduce((sum, order) => sum + order.deliveryFee, 0);
-  const returnedFeesSum = returned.reduce((sum, order) => sum + order.deliveryFee * 0.5, 0);
+
+  const deliveredCodSum = delivered.reduce(
+    (sum, order) => sum + order.codAmount,
+    0,
+  );
+  const deliveryFeesSum = delivered.reduce(
+    (sum, order) => sum + order.deliveryFee,
+    0,
+  );
+  const returnedFeesSum = null;
 
   const expensesByType: Record<ExpenseType, number> = {
     DRIVER: 0,
@@ -403,9 +503,13 @@ function computeSummary(orders: AdminOrder[], expenses: ExpenseRow[]): Financial
     PARTNER: 0,
     OTHER: 0,
   };
-  for (const expense of expenses) expensesByType[expense.type] += expense.amount;
-  const expensesSum = Object.values(expensesByType).reduce((sum, value) => sum + value, 0);
-  const vatSum = round2((deliveryFeesSum + returnedFeesSum) * VAT_RATE);
+  for (const expense of expenses)
+    expensesByType[expense.type] += expense.amount;
+  const expensesSum = Object.values(expensesByType).reduce(
+    (sum, value) => sum + value,
+    0,
+  );
+  const vatSum = null;
 
   return {
     deliveredCodSum,
@@ -414,10 +518,14 @@ function computeSummary(orders: AdminOrder[], expenses: ExpenseRow[]): Financial
     expensesSum,
     expensesByType,
     vatSum,
-    netProfit: round2(deliveryFeesSum + returnedFeesSum - expensesSum - vatSum),
+    netProfit: null,
     dueToClients: round2(
       orders
-        .filter((order) => order.codStatus && ["RECEIVED", "SORTED", "EXPORTED"].includes(order.codStatus))
+        .filter(
+          (order) =>
+            order.codStatus &&
+            ["RECEIVED", "SORTED", "EXPORTED"].includes(order.codStatus),
+        )
         .reduce((sum, order) => sum + (order.codAmount - order.deliveryFee), 0),
     ),
     codWithCouriers: orders

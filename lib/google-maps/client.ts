@@ -1,4 +1,5 @@
 import "server-only";
+import { matchesAddressAnchor } from './address-match';
 import { getGoogleMapsConfig } from "@/lib/google-maps/config";
 
 const SEARCH_URL = "https://places.googleapis.com/v1/places:searchText";
@@ -37,7 +38,7 @@ export type GoogleLocationVerification = {
   longitude: number;
   formattedAddress: string;
   googleMapsUrl: string;
-  reviewReason: "OUTSIDE_RIYADH" | "PARTIAL_ADDRESS" | "RIYADH_NOT_CONFIRMED" | null;
+  reviewReason: "OUTSIDE_RIYADH" | "PARTIAL_ADDRESS" | "RIYADH_NOT_CONFIRMED" | "ADDRESS_MISMATCH" | null;
 };
 
 export type GoogleMapsProbeResult = {
@@ -84,6 +85,8 @@ export function sanitizeOperationalAddress(input: string): string {
 
   const sanitized = input
     .normalize("NFKC")
+    .replace(/[٠-٩]/g, c => String(c.charCodeAt(0) - 1632))
+    .replace(/(?:\+?966|00966|0)[\s().-]*[1-9](?:[\s().-]*\d){8}/g, " ")
     .replace(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g, " ")
     .replace(/(?:\+?966|00966|0)?5\d{8}/g, " ")
     .replace(/\b\d{10,}\b/g, " ")
@@ -248,7 +251,9 @@ function parseVerification(address: string, details: DetailsPayload): GoogleLoca
       ? "RIYADH_NOT_CONFIRMED"
       : !specific
         ? "PARTIAL_ADDRESS"
-        : null;
+        : !matchesAddressAnchor(address,formattedAddress)
+          ? "ADDRESS_MISMATCH"
+          : null;
 
   return {
     status: reviewReason ? "NEEDS_REVIEW" : "VERIFIED",

@@ -6,6 +6,7 @@
 // الغرض الأمني: مسار /status لا يثق أبداً بـ otpVerified قادمة من العميل — بل
 // يقرأ isOrderOtpVerified() التي لا تُضبط إلا بعد نجاح compareOtp هنا.
 
+import { assertDemoDataAllowed } from '@/lib/runtime-mode';
 import { compareOtp, hashOtp } from "@/lib/security";
 
 const verifiedAt = new Map<string, string>();
@@ -25,6 +26,7 @@ async function expectedHashFor(orderId: string): Promise<string> {
 
 /** يقارن الرمز عبر bcrypt؛ عند النجاح يسجّل التحقق خادميّاً. لا يثق بأي إدخال عميل. */
 export async function verifyOrderOtp(orderId: string, code: string): Promise<boolean> {
+  assertDemoDataAllowed();
   const ok = await compareOtp(code, await expectedHashFor(orderId));
   if (ok) verifiedAt.set(orderId, new Date().toISOString());
   return ok;
@@ -32,6 +34,7 @@ export async function verifyOrderOtp(orderId: string, code: string): Promise<boo
 
 /** هل تحقّق OTP لهذا الطلب فعلاً على الخادم؟ */
 export function isOrderOtpVerified(orderId: string): boolean {
+  assertDemoDataAllowed();
   return verifiedAt.has(orderId);
 }
 

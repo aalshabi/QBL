@@ -1,3 +1,5 @@
+import { assertDemoDataAllowed } from '@/lib/runtime-mode';
+
 type NotificationPayload = {
   to: string;
   templateKey: "tracking_link" | "otp_code" | "delivery_update";
@@ -11,12 +13,14 @@ export type NotificationAdapter = {
 
 export const mockNotificationAdapter: NotificationAdapter = {
   async sendSms(payload) {
+    assertDemoDataAllowed();
     return {
       providerRef: `mock-sms-${payload.templateKey}-${Date.now()}`,
       status: "SENT",
     };
   },
   async sendWhatsApp(payload) {
+    assertDemoDataAllowed();
     return {
       providerRef: `mock-wa-${payload.templateKey}-${Date.now()}`,
       status: "SENT",
@@ -25,5 +29,6 @@ export const mockNotificationAdapter: NotificationAdapter = {
 };
 
 export function getNotificationAdapter() {
+  assertDemoDataAllowed();
   return mockNotificationAdapter;
 }

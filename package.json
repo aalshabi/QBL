@@ -6,13 +6,14 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
-    "test": "node --conditions=react-server --import tsx --test --test-concurrency=1 tests/auth-users.test.ts tests/integrations-overview.test.ts tests/logestechs-client.test.ts tests/logestechs-config.test.ts tests/logestechs-request-security.test.ts tests/logestechs-status-map.test.ts tests/logestechs-webhook.test.ts tests/google-maps-client.test.ts tests/google-maps-request-security.test.ts tests/google-maps-boundaries.test.ts tests/google-maps-route-export.test.ts",
+    "test": "node --conditions=react-server --import tsx --test --test-concurrency=1 tests/*.test.ts",
     "lint": "eslint",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -45,6 +46,8 @@
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@electric-sql/pglite": "0.4.1",
+    "@electric-sql/pglite-socket": "0.1.1"
   }
 }

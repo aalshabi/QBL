@@ -83,10 +83,10 @@ export function getIntegrationServices(): IntegrationService[] {
       category: "البيانات التشغيلية",
       description: "قاعدة البيانات التي تحفظ الطلبات والعملاء والمناديب وحالات التشغيل في QBL.",
       state: databaseConfigured ? "configured" : "needs_attention",
-      stateLabel: databaseConfigured ? "متصل" : "قاعدة البيانات غير مهيأة",
+      stateLabel: databaseConfigured ? "مهيأ — لم يتم فحص الاتصال" : "قاعدة البيانات غير مهيأة",
       mode: "PostgreSQL · Prisma",
       capabilities: ["بيانات الطلبات", "العملاء والمناديب", "الفوترة وسجل الحالات"],
-      boundary: "بيانات Preview معزولة عن Production، ولا تُعرض سلسلة الاتصال في الواجهة.",
+      boundary: "يجب التحقق من عزل بيانات الاختبار عن الإنتاج؛ لا تُعرض سلسلة الاتصال في الواجهة.",
     },
   ];
 }
