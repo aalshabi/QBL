@@ -55,6 +55,14 @@ Do not run build concurrently with typecheck: Next rewrites generated .next/type
 
 Database lifecycle tests use disposable PGlite with its PostgreSQL wire-protocol adapter and the actual Prisma client. All SQL migrations are applied. This verifies SQL constraints and transactional application behavior but is not a substitute for concurrent PostgreSQL/Neon, networking, backup or production deployment tests. See https://pglite.dev/docs/pglite-socket .
 
+Native local PostgreSQL concurrency verification is now available separately through
+`npm run test:postgres`. On 2026-09-13 it passed eight test groups on PostgreSQL 16.13,
+using 19 independent worker backends, plus the seven-migration ledger and restart
+persistence checks. It creates and removes only its own labeled synthetic Docker
+resources. See [the PostgreSQL verification report](postgres-verification.md) for
+isolation, reproduction, results and limitations. Hosted staging/Neon and the release
+sequence below remain unverified and required; local success is not release approval.
+
 To reproduce local UI verification after a build:
 
     node --conditions=react-server --import tsx scripts/verify-stabilization.ts
