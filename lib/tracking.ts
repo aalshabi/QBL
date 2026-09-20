@@ -1,5 +1,5 @@
 import { getPrisma } from "@/lib/prisma";
-import { verifyTrackingToken } from "@/lib/security";
+import { timingSafeEqualStrings, verifyTrackingToken } from "@/lib/security";
 import type { OrderStatus, TrackingSnapshot } from "@/lib/domain";
 
 const maskPhone = (phone: string) => `05******${phone.slice(-2)}`;
@@ -34,9 +34,8 @@ function toDomainStatus(status: string): OrderStatus | null {
   }
 }
 
-export async function getPublicTrackingSnapshot(token: string): Promise<TrackingSnapshot | null> {
+async function buildTrackingSnapshot(orderId: string): Promise<TrackingSnapshot | null> {
   try {
-    const { orderId } = await verifyTrackingToken(token);
     const prisma = getPrisma();
 
     const order = await prisma.deliveryOrder.findUnique({
@@ -155,4 +154,38 @@ export async function getPublicTrackingSnapshot(token: string): Promise<Tracking
   } catch {
     return null;
   }
+}
+
+export async function getPublicTrackingSnapshot(token: string): Promise<TrackingSnapshot | null> {
+  try {
+    const { orderId } = await verifyTrackingToken(token);
+    return await buildTrackingSnapshot(orderId);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * تتبع عام بإدخال رقم الشحنة + آخر 4 أرقام من جوال المستلم، بدل رابط موقّع.
+ * التحقق الثانوي (آخر 4 أرقام) يمنع تخمين رقم شحنة عشوائي من كشف بيانات عميل آخر؛
+ * المقارنة بزمن ثابت، ولا يُميَّز الخطأ بين "الرقم غير موجود" و"آخر 4 أرقام خاطئة".
+ */
+export async function getPublicTrackingSnapshotByCode(
+  publicCode: string,
+  phoneLast4: string,
+): Promise<TrackingSnapshot | null> {
+  const prisma = getPrisma();
+  const order = await prisma.deliveryOrder.findUnique({
+    where: { publicCode },
+    select: { id: true, customer: { select: { phone: true } } },
+  });
+
+  if (!order) return null;
+
+  const actualLast4 = order.customer.phone.replace(/\D/g, "").slice(-4);
+  if (actualLast4.length !== 4 || !timingSafeEqualStrings(actualLast4, phoneLast4)) {
+    return null;
+  }
+
+  return buildTrackingSnapshot(order.id);
 }

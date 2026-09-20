@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { createHash, timingSafeEqual } from "crypto";
 import { jwtVerify, SignJWT } from "jose";
 
 const encoder = new TextEncoder();
@@ -72,4 +73,14 @@ export async function compareOtp(code: string, hash: string) {
 
 export async function hashToken(token: string) {
   return bcrypt.hash(token, 10);
+}
+
+/**
+ * مقارنة بزمن ثابت لا تسرّب طول أو محتوى السلسلتين عبر توقيت التنفيذ —
+ * تُقارن بصمة SHA-256 ثابتة الطول بدل السلسلتين نفسيهما.
+ */
+export function timingSafeEqualStrings(a: string, b: string): boolean {
+  const digestA = createHash("sha256").update(a).digest();
+  const digestB = createHash("sha256").update(b).digest();
+  return timingSafeEqual(digestA, digestB);
 }
