@@ -1,30 +1,98 @@
-import Link from "next/link";
-import { createTrackingToken } from "@/lib/security";
+"use client";
+
+import { useState, type FormEvent } from "react";
+import { Search } from "lucide-react";
+import { TrackingView } from "@/components/tracking/tracking-view";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import type { TrackingSnapshot } from "@/lib/domain";
 
-// التوكن يُوقَّع عند كل طلب: صفحة ثابتة تخبز توكناً منتهي الصلاحية (8h) بعد البناء،
-// والتوقيع وقت البناء يصطدم بإلزامية الأسرار في الإنتاج.
-export const dynamic = "force-dynamic";
+/**
+ * تتبع عام بإدخال رقم الشحنة، بدل رابط SMS/WhatsApp الموقّع وحده — كما ينص
+ * الهدف. التحقق الثانوي (آخر 4 أرقام من الجوال) عبر /api/tracking/lookup
+ * يمنع تخمين رقم شحنة عشوائي من كشف بيانات عميل آخر.
+ */
+export default function TrackEntryPage() {
+  const [publicCode, setPublicCode] = useState("");
+  const [phoneLast4, setPhoneLast4] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [snapshot, setSnapshot] = useState<TrackingSnapshot | null>(null);
 
-export default async function TrackEntryPage() {
-  const token = await createTrackingToken("order-003", "8h");
-  const sampleHref = `/track/${token}`;
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    setStatus("loading");
+    setSnapshot(null);
+    try {
+      const response = await fetch("/api/tracking/lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ publicCode, phoneLast4 }),
+      });
+      if (!response.ok) {
+        setStatus("error");
+        return;
+      }
+      const data = await response.json();
+      setSnapshot(data.snapshot);
+      setStatus("idle");
+    } catch {
+      setStatus("error");
+    }
+  }
+
+  if (snapshot) {
+    const mapProvider = process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_KEY ? "google" : "mock";
+    return <TrackingView snapshot={snapshot} mapProvider={mapProvider} />;
+  }
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-      <p className="font-bold text-accent">تتبع الشحنة</p>
-      <h1 className="mt-3 text-4xl font-bold text-primary">رابط تتبع آمن ومؤقت لكل طلب</h1>
-      <p className="mt-4 leading-8 text-muted-foreground">
-        في التشغيل الحقيقي يتم إنشاء الرابط عند خروج الطلب للتسليم وإرساله للعميل عبر SMS أو WhatsApp. الرابط أدناه عينة موقعة صالحة للتجربة المحلية.
-      </p>
-      <Card className="mt-8 rounded-lg">
-        <CardContent className="p-6">
-          <p className="text-sm text-muted-foreground">رابط تجربة</p>
-          <p className="mt-3 break-all rounded-md bg-muted p-3 text-xs ltr text-left">{sampleHref}</p>
-          <Button asChild className="mt-5 bg-accent text-accent-foreground hover:bg-accent/90">
-            <Link href={sampleHref}>فتح صفحة التتبع</Link>
-          </Button>
+    <main className="mx-auto grid min-h-[70vh] max-w-4xl place-items-center px-4 py-12 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md rounded-lg">
+        <CardHeader>
+          <p className="font-bold text-accent">تتبع الشحنة</p>
+          <CardTitle className="text-2xl font-bold text-primary">أين شحنتي؟</CardTitle>
+          <p className="text-sm text-muted-foreground">أدخل رقم الشحنة وآخر 4 أرقام من رقم الجوال المسجل على الطلب.</p>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="publicCode">رقم الشحنة</Label>
+              <Input
+                id="publicCode"
+                dir="ltr"
+                className="ltr"
+                required
+                value={publicCode}
+                onChange={(event) => setPublicCode(event.target.value)}
+                placeholder="QBL-20260430-0001"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="phoneLast4">آخر 4 أرقام من الجوال</Label>
+              <Input
+                id="phoneLast4"
+                inputMode="numeric"
+                maxLength={4}
+                dir="ltr"
+                className="ltr text-center tracking-[0.35em]"
+                required
+                value={phoneLast4}
+                onChange={(event) => setPhoneLast4(event.target.value.replace(/\D/g, "").slice(0, 4))}
+                placeholder="1234"
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={status === "loading" || phoneLast4.length !== 4 || !publicCode}>
+              <Search className="h-4 w-4" />
+              {status === "loading" ? "جاري البحث..." : "تتبع الشحنة"}
+            </Button>
+            {status === "error" ? (
+              <p className="text-center text-sm font-semibold text-destructive">
+                رقم الشحنة أو آخر 4 أرقام من الجوال غير صحيحة، أو الطلب لم يعد قابلًا للتتبع.
+              </p>
+            ) : null}
+          </form>
         </CardContent>
       </Card>
     </main>
