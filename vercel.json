@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/daily-temperature-report",
+      "schedule": "0 1 * * *"
+    }
+  ]
+}

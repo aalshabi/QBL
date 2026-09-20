@@ -24,5 +24,6 @@ export default async function TrackingPage({ params }: { params: Promise<{ token
     );
   }
 
-  return <TrackingView snapshot={snapshot} />;
+  const mapProvider = process.env.MAP_PROVIDER === "google" ? "google" : "mock";
+  return <TrackingView snapshot={snapshot} mapProvider={mapProvider} />;
 }

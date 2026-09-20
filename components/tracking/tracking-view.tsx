@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Clock, KeyRound, PhoneCall, RefreshCcw, ShieldCheck, Thermometer } from "lucide-react";
 import { MockMap } from "@/components/maps/mock-map";
+import { LiveGoogleMap } from "@/components/maps/live-map";
 import { OrderStatusBadge, TemperatureBadge } from "@/components/status-badge";
 import { StatusTimeline } from "@/components/timeline";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -10,7 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { TrackingSnapshot } from "@/lib/domain";
 
-export function TrackingView({ snapshot }: { snapshot: TrackingSnapshot }) {
+export function TrackingView({
+  snapshot,
+  mapProvider = "mock",
+}: {
+  snapshot: TrackingSnapshot;
+  mapProvider?: "mock" | "google";
+}) {
   const [resent, setResent] = useState(false);
   const marker = useMemo(
     () => [
@@ -58,7 +65,11 @@ export function TrackingView({ snapshot }: { snapshot: TrackingSnapshot }) {
             </CardContent>
           </Card>
 
-          <MockMap markers={marker} compact />
+          {mapProvider === "google" ? (
+            <LiveGoogleMap marker={marker[0]} compact />
+          ) : (
+            <MockMap markers={marker} compact />
+          )}
 
           <Card className="rounded-lg">
             <CardHeader><CardTitle>خط حالة الطلب</CardTitle></CardHeader>
