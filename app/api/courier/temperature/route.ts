@@ -1,0 +1,72 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { assertRole, getSession } from "@/lib/auth";
+import { getPrisma } from "@/lib/prisma";
+
+const schema = z.object({
+  orderId: z.string().optional(),
+  celsius: z.number().min(-40).max(40),
+});
+
+const MANUAL_SENSOR_ID = "manual-driver-app";
+
+/**
+ * Manual temperature reading logged by the courier from inside the vehicle
+ * cabin, via the courier PWA. This is the interim data source until a real
+ * in-vehicle sensor/telematics provider is contracted and wired to
+ * POST /api/webhooks/cold-chain-telemetry — both paths write to the same
+ * TemperatureReading table, so the tracking page and daily report work
+ * identically regardless of which source produced the reading.
+ */
+export async function POST(request: Request) {
+  const session = await getSession();
+  try {
+    assertRole(session?.role, ["COURIER"]);
+  } catch {
+    return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
+  }
+
+  const body = schema.safeParse(await request.json().catch(() => null));
+  if (!body.success) {
+    return NextResponse.json({ error: "INVALID_PAYLOAD" }, { status: 422 });
+  }
+
+  const prisma = getPrisma();
+  const courier = await prisma.courier.findUnique({
+    where: { userId: session!.userId },
+    select: { vehicleId: true },
+  });
+  if (!courier?.vehicleId) {
+    return NextResponse.json({ error: "NO_VEHICLE_ASSIGNED" }, { status: 404 });
+  }
+
+  const vehicle = await prisma.vehicle.findUnique({
+    where: { id: courier.vehicleId },
+    select: { coldRangeMin: true, coldRangeMax: true },
+  });
+  if (!vehicle) {
+    return NextResponse.json({ error: "VEHICLE_NOT_FOUND" }, { status: 404 });
+  }
+
+  const min = Number(vehicle.coldRangeMin);
+  const max = Number(vehicle.coldRangeMax);
+  const withinRange = body.data.celsius >= min && body.data.celsius <= max;
+  const status = withinRange
+    ? "NORMAL"
+    : Math.abs(body.data.celsius - (body.data.celsius < min ? min : max)) > 3
+      ? "CRITICAL"
+      : "WARNING";
+
+  const reading = await prisma.temperatureReading.create({
+    data: {
+      vehicleId: courier.vehicleId,
+      orderId: body.data.orderId,
+      celsius: body.data.celsius,
+      status,
+      sensorId: MANUAL_SENSOR_ID,
+    },
+    select: { id: true, status: true, recordedAt: true },
+  });
+
+  return NextResponse.json({ ok: true, reading });
+}
