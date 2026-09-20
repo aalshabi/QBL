@@ -43,7 +43,7 @@ export default function TrackEntryPage() {
   }
 
   if (snapshot) {
-    const mapProvider = process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_KEY ? "google" : "mock";
+    const mapProvider = process.env.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY ? "google" : "mock";
     return <TrackingView snapshot={snapshot} mapProvider={mapProvider} />;
   }
 
