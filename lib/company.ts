@@ -1,3 +1,5 @@
+import { CONTACT_DOMAIN, CONTACT_EMAILS } from "@/lib/contact";
+
 export const company = {
   officialName: "شركة قدام بابك للخدمات اللوجستية",
   tradeName: "QADDAM BABAK Logistics",
@@ -9,13 +11,14 @@ export const company = {
   vision: "أن نوسّع تغطية التوصيل المبرّد آخر ميل من الرياض إلى مدن أخرى في المملكة، بتشغيل موثّق وقابل للقياس.",
   mission: "تمكين الشركات من تشغيل توصيل مبرّد موثوق، قابل للقياس، ومرن مع تتبع لحظي ووضوح كامل لحالة الطلب.",
   values: ["الموثوقية", "الشفافية", "السرعة", "سلامة المنتج", "خدمة العميل"],
-  website: "qdl.sa",
+  website: CONTACT_DOMAIN,
+  // العناوين من lib/contact.ts — مصدر واحد يمنع تكرار انحراف النطاق.
   emails: {
-    general: "info@qdl.sa",
-    sales: "sales@qdl.sa",
-    ops: "ops@qdl.sa",
-    billing: "billing@qdl.sa",
-    manager: "abdullah@qdl.sa",
+    general: CONTACT_EMAILS.info,
+    sales: CONTACT_EMAILS.sales,
+    ops: CONTACT_EMAILS.ops,
+    billing: CONTACT_EMAILS.billing,
+    manager: CONTACT_EMAILS.owner,
   },
   generalManager: "عبدالله إسماعيل الشعبي",
   address: "الرياض، طريق أبو عبيدة عامر بن الجراح، 4480 — 14256",

@@ -98,3 +98,20 @@ test("لا ادعاء عن حجم الأسطول أو عدد السائقين ف
 
   assert.deepEqual(hits, [], `ادعاءات ممنوعة عادت إلى المحتوى:\n${hits.join("\n")}`);
 });
+
+/**
+ * نطاق التواصل. كان lib/company.ts يحمل qdl.sa — بقايا التسمية القديمة — بينما
+ * lib/site.ts على qbl.sa، فظهر في تذييل الموقع بريد بنطاق قد لا يستقبل. الآن
+ * الملفان يقرآن من lib/contact.ts، وهذا الاختبار يمنع عودة الانحراف.
+ * ملاحظة: lib/prisma.ts يذكر qdl كاسم قاعدة بيانات محلية، لا كنطاق — ولذلك يُستثنى.
+ */
+test("لا نطاق بريد قديم في أي محتوى يراه العميل", () => {
+  const hits = scan([{ pattern: /@qdl\.sa/, label: "نطاق بريد قديم" }, { pattern: /"qdl\.sa"/, label: "نطاق موقع قديم" }]);
+  assert.deepEqual(hits, [], "عاد نطاق qdl.sa إلى المحتوى");
+});
+
+test("عناوين الشركة تقرأ من مصدر واحد", () => {
+  const source = readFileSync(join(root, "lib/company.ts"), "utf8");
+  assert.match(source, /CONTACT_EMAILS/, "company.ts يجب أن يقرأ العناوين من lib/contact.ts");
+  assert.doesNotMatch(source, /@q[bd]l\.sa"/, "لا عناوين مكتوبة يدوياً في company.ts");
+});
