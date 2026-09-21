@@ -39,16 +39,6 @@ export const SITE = {
   emails: CONTACT_EMAILS,
 };
 
-export const NAV_ITEMS = [
-  { href: "/", label: "الرئيسية" },
-  { href: "/about", label: "من نحن" },
-  { href: "/services", label: "الخدمات" },
-  { href: "/services/beauty-shield", label: "Beauty Shield" },
-  { href: "/sectors", label: "القطاعات" },
-  { href: "/fleet-tech", label: "التقنية والتشغيل" },
-  { href: "/cold-chain-system", label: "النظام التشغيلي" },
-];
-
 export const WHY_QBL = [
   {
     icon: Thermometer,

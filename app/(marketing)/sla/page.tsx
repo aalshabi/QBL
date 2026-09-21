@@ -70,7 +70,7 @@ export default function SlaPage() {
             <p>الأرقام هنا نموذج تشغيلي قابل للتعاقد وليست ادعاء أداء تاريخي. يتم تثبيت SLA النهائي بعد دراسة المسارات والسعات.</p>
           </div>
           <Button asChild className="mt-8 bg-accent text-accent-foreground hover:bg-accent/90">
-            <Link href="/quote">اطلب SLA مخصص</Link>
+            <Link href="/quote">اطلب عرض سعر</Link>
           </Button>
         </div>
       </section>

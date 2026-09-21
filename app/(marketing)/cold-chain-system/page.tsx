@@ -271,7 +271,7 @@ export default function ColdChainSystemPage() {
               href="/quote"
               className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-primary px-6 text-sm font-bold text-white transition-colors hover:bg-primary-800"
             >
-              اطلب عرض تشغيل
+              اطلب عرض سعر
               <ArrowLeft className="h-4 w-4" />
             </Link>
             <Link

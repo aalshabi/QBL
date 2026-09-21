@@ -17,7 +17,7 @@ export default function PageHero({
   title,
   description,
   ctaHref,
-  ctaLabel = "اطلب عرض تشغيل",
+  ctaLabel = "اطلب عرض سعر",
   secondaryCtaHref,
   secondaryCtaLabel,
   secondaryCtaExternal = false,

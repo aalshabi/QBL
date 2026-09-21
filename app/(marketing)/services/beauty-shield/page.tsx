@@ -302,7 +302,7 @@ export default function BeautyShieldPage() {
                   href="/quote?service=beauty-shield"
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-primary px-6 text-sm font-bold text-white transition-colors hover:bg-primary-800"
                 >
-                  اطلب التجربة الآن
+                  اطلب عرض سعر
                   <ArrowLeft className="h-4 w-4" />
                 </Link>
                 <a

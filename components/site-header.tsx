@@ -6,6 +6,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { marketingNav } from "@/lib/company";
+import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
   return (
@@ -14,7 +15,11 @@ export function SiteHeader() {
         <BrandLogo />
         <nav className="hidden items-center gap-5 text-sm font-medium text-muted-foreground lg:flex">
           {marketingNav.map((item) => (
-            <Link key={item.href} href={item.href} className="transition hover:text-primary">
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn("transition hover:text-primary", item.latin && "font-latin")}
+            >
               {item.label}
             </Link>
           ))}
@@ -30,26 +35,42 @@ export function SiteHeader() {
             <Link href="/quote">اطلب عرض سعر</Link>
           </Button>
         </div>
-        <Sheet>
-          <SheetTrigger render={<Button variant="outline" size="icon" className="lg:hidden" aria-label="فتح القائمة" />}>
-            <Menu className="h-5 w-5" />
-          </SheetTrigger>
-          <SheetContent side="right" className="w-80">
-            <div className="mt-6 space-y-6">
-              <BrandLogo />
-              <nav className="grid gap-3 text-sm font-medium">
-                {marketingNav.map((item) => (
-                  <Link key={item.href} href={item.href} className="rounded-md px-2 py-2 hover:bg-muted">
-                    {item.label}
+        {/* الهدف التجاري الأول لا يُخفى خلف قائمة. كان الزر ضمن كتلة
+            `hidden lg:flex`، فيغيب عن كل شاشة أصغر من 1024px — أي عن أغلب
+            الزوار. يظهر هنا مصغّراً بجانب زر القائمة، والنسخة الكاملة أعلاه
+            تبقى للشاشات الواسعة. */}
+        <div className="flex items-center gap-2 lg:hidden">
+          <Button asChild size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
+            <Link href="/quote">عرض سعر</Link>
+          </Button>
+          <Sheet>
+            <SheetTrigger render={<Button variant="outline" size="icon" aria-label="فتح القائمة" />}>
+              <Menu className="h-5 w-5" />
+            </SheetTrigger>
+            <SheetContent side="right" className="w-80">
+              <div className="mt-6 space-y-6">
+                <BrandLogo />
+                <nav className="grid gap-3 text-sm font-medium">
+                  {marketingNav.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn("rounded-md px-2 py-2 hover:bg-muted", item.latin && "font-latin")}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                  <Link href="/contact" className="rounded-md px-2 py-2 hover:bg-muted">
+                    تواصل
                   </Link>
-                ))}
-              </nav>
-              <Button asChild className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-                <Link href="/quote">اطلب عرض سعر</Link>
-              </Button>
-            </div>
-          </SheetContent>
-        </Sheet>
+                </nav>
+                <Button asChild className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                  <Link href="/quote">اطلب عرض سعر</Link>
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     </header>
   );

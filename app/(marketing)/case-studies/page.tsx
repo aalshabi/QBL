@@ -62,7 +62,7 @@ export default function CaseStudiesPage() {
           </div>
           <Button asChild className="mt-8 bg-accent text-accent-foreground hover:bg-accent/90">
             <Link href="/quote">
-              اطلب دراسة تشغيل لقطاعك
+              اطلب عرض سعر
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>

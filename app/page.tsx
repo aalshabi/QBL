@@ -55,7 +55,7 @@ export default function Home() {
           <div className="absolute inset-0 opacity-15 map-grid" />
           <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_0.95fr] lg:px-8 lg:py-16">
             <div className="self-center">
-              <Badge className="bg-accent text-accent-foreground">Last-Mile Cold Chain · Riyadh</Badge>
+              <Badge className="bg-accent text-accent-foreground">توصيل مبرّد آخر ميل · الرياض</Badge>
               <h1 className="mt-6 max-w-3xl text-4xl font-bold leading-tight sm:text-5xl">
                 توصيل مبرّد يحافظ على جودة منتجك حتى باب العميل
               </h1>
@@ -73,7 +73,7 @@ export default function Home() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
                   <Link href="/quote">
-                    اطلب تصور تشغيل
+                    اطلب عرض سعر
                     <ArrowLeft className="h-4 w-4" />
                   </Link>
                 </Button>
@@ -177,7 +177,7 @@ export default function Home() {
             </div>
             <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
               <Link href="/quote">
-                اطلب الآن
+                اطلب عرض سعر
                 <Truck className="h-4 w-4" />
               </Link>
             </Button>

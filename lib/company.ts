@@ -133,16 +133,21 @@ export const trustSignals = [
   "تصميم تقني جاهز للربط مع Google Maps أو Mapbox ومزود رسائل حقيقي",
 ];
 
-export const marketingNav = [
+/**
+ * `latin` يعلّم العناصر المكتوبة بحروف لاتينية داخل قائمة عربية. الهوية تنصّ
+ * على Montserrat للاتيني وTajawal للعربي، وبلا هذا الوسم كان اللاتيني يُرسم
+ * بخط عربي — فرق يظهر في القائمة أكثر من أي مكان لأن الكلمات متجاورة.
+ */
+export const marketingNav: { href: string; label: string; latin?: boolean }[] = [
   { href: "/", label: "الرئيسية" },
   { href: "/about", label: "من نحن" },
   { href: "/services", label: "خدماتنا" },
-  { href: "/services/beauty-shield", label: "Beauty Shield" },
+  { href: "/services/beauty-shield", label: "Beauty Shield", latin: true },
   { href: "/cold-chain-system", label: "النظام التشغيلي" },
   { href: "/sectors", label: "القطاعات" },
   { href: "/fleet-tech", label: "التقنيات" },
   { href: "/case-studies", label: "دراسات حالة" },
-  { href: "/sla", label: "SLA" },
+  { href: "/sla", label: "SLA", latin: true },
   { href: "/track", label: "تتبع" },
 ];
 

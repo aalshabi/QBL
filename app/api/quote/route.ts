@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
+import { leadSchema as schema } from "@/lib/lead-schema";
 import { saveLead } from "@/lib/leads";
 import {
   acquireRatePermit,
@@ -7,14 +7,6 @@ import {
   secureJsonHeaders,
 } from "@/lib/logestechs/request-security";
 import { notifyNewLead } from "@/lib/notifications/lead-alert";
-
-const schema = z.object({
-  name: z.string().min(2),
-  company: z.string().min(2),
-  email: z.string().email(),
-  phone: z.string().min(8),
-  message: z.string().min(10),
-});
 
 function clientIp(request: Request): string {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";

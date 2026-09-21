@@ -1,17 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import { leadSchema } from "@/lib/lead-schema";
 import { saveLead } from "@/lib/leads";
 import { notifyNewLead } from "@/lib/notifications/lead-alert";
-
-const leadSchema = z.object({
-  name: z.string().min(2),
-  company: z.string().min(2),
-  email: z.string().email(),
-  phone: z.string().min(8),
-  message: z.string().min(10),
-});
 
 export type LeadResult = { ok: boolean; error?: string };
 

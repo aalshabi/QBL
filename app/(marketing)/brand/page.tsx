@@ -321,7 +321,7 @@ export default function BrandPage() {
                 </div>
                 <div className="mt-7 flex flex-wrap gap-3">
                   <span className="rounded-[10px] bg-white px-5 py-3 text-sm font-bold text-ink">
-                    اطلب عرض تشغيل
+                    اطلب عرض سعر
                   </span>
                   <span className="rounded-[10px] border border-white/30 px-5 py-3 text-sm font-bold text-white">
                     تواصل معنا

@@ -52,13 +52,14 @@ export function QuoteForm() {
         </div>
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="message">ما الذي تحتاجه شركتك؟</Label>
+        <Label htmlFor="message">
+          ما الذي تحتاجه شركتك؟ <span className="font-normal text-muted-foreground">(اختياري)</span>
+        </Label>
         <Textarea
           id="message"
           name="message"
           rows={6}
           placeholder="مثال: 80 طلب يوميًا، منتجات طازجة تحتاج تبريد، تغطية شمال وشرق الرياض، نحتاج تتبع للعميل وكود استلام."
-          required
         />
       </div>
       {state.error && (
@@ -68,7 +69,7 @@ export function QuoteForm() {
       )}
       <Button disabled={pending} className="bg-accent text-accent-foreground hover:bg-accent/90">
         <Send className="h-4 w-4" />
-        اطلب دراسة تشغيل وسعر
+        أرسل طلب عرض السعر
       </Button>
     </form>
   );
