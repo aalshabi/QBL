@@ -79,7 +79,7 @@ async function main() {
   const opsUser = await prisma.user.create({
     data: {
       name: "مدير عمليات QBL",
-      email: "ops.manager@qdl.sa",
+      email: "ops.manager@qbl.sa",
       phone: "0500000000",
       passwordHash: await hashOtp("Admin123456"),
       roles: { create: [{ roleId: roles.find((role) => role.name === "OPS_MANAGER")!.id }] },
@@ -115,7 +115,7 @@ async function main() {
     const user = await prisma.user.create({
       data: {
         name: courier.displayName,
-        email: `${courier.employeeCode.toLowerCase()}@qdl.sa`,
+        email: `${courier.employeeCode.toLowerCase()}@qbl.sa`,
         phone,
         passwordHash: await hashOtp("Courier123456"),
         roles: { create: [{ roleId: roles.find((role) => role.name === "COURIER")!.id }] },

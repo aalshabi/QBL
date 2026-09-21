@@ -22,6 +22,7 @@ import {
   Sun,
   Thermometer,
   Truck,
+  Warehouse,
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import { SITE } from "@/lib/site";
@@ -29,9 +30,9 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { beautyShieldSchema } from "@/lib/structured-data";
 
 export const metadata = {
-  title: "توصيل منتجات التجميل والعناية بدرجة حرارة محمية في الرياض | QBL Beauty Shield",
+  title: "توصيل مستحضرات التجميل والعطور والعناية بدرجة حرارة محمية في الرياض | QBL Beauty Shield",
   description:
-    "خدمة توصيل مخصصة لحماية منتجات التجميل والعناية من حرارة الجو أثناء النقل داخل الرياض. مناسبة للسيروم، فيتامين C، المنتجات العضوية، عيادات الجلدية، والمتاجر الإلكترونية.",
+    "خدمة توصيل مخصصة لحماية مستحضرات التجميل والعناية بالبشرة والشعر والعطور من حرارة الجو أثناء النقل داخل الرياض. مناسبة للمكياج، السيروم، العطور، الهدايا والباقات، ومراكز الفلفلمنت.",
   keywords: [
     "توصيل منتجات تجميل الرياض",
     "توصيل عناية بالبشرة",
@@ -40,15 +41,18 @@ export const metadata = {
     "توصيل منتجات عيادات جلدية",
     "توصيل كوزماتيك مبرد",
     "توصيل محمي حراريا",
+    "توصيل عطور الرياض",
+    "توصيل مكياج ومستحضرات تجميل",
+    "توصيل مبرد لمراكز الفلفلمنت",
     "QBL Beauty Shield",
   ],
   alternates: {
     canonical: "https://qbl.sa/services/beauty-shield",
   },
   openGraph: {
-    title: "QBL Beauty Shield — توصيل محمي حرارياً لمنتجات التجميل والعناية",
+    title: "QBL Beauty Shield — توصيل محمي حرارياً للتجميل والعطور والعناية",
     description:
-      "خدمة توصيل مخصصة لحماية منتجات التجميل والعناية من حرارة الجو أثناء النقل داخل الرياض.",
+      "خدمة توصيل مخصصة لحماية مستحضرات التجميل والعناية بالبشرة والشعر والعطور من حرارة الجو أثناء النقل داخل الرياض.",
     url: "https://qbl.sa/services/beauty-shield",
     type: "website",
     locale: "ar_SA",
@@ -57,13 +61,16 @@ export const metadata = {
 
 const SUITABLE_PRODUCTS: { icon: LucideIcon; label: string }[] = [
   { icon: Droplets, label: "كريمات العناية بالبشرة" },
-  { icon: FlaskConical, label: "السيروم" },
-  { icon: Sparkles, label: "منتجات فيتامين C" },
+  { icon: FlaskConical, label: "السيروم ومنتجات Skincare" },
+  { icon: Sparkles, label: "المكياج ومستحضرات التجميل" },
   { icon: Heart, label: "المنتجات الطبيعية والعضوية" },
   { icon: Sun, label: "الماسكات والكريمات الحساسة للحرارة" },
   { icon: Pill, label: "منتجات عيادات الجلدية" },
-  { icon: Beaker, label: "عينات المختبرات والصيدليات" },
+  { icon: Beaker, label: "عينات المنتجات وإضافات الحملات" },
   { icon: ShoppingBag, label: "منتجات البراندات المحلية" },
+  { icon: Droplets, label: "العطور والزيوت العطرية" },
+  { icon: Box, label: "الهدايا والباقات الموسمية" },
+  { icon: Package, label: "منتجات العناية بالشعر والعناية الشخصية" },
 ];
 
 const TIERS: {
@@ -97,13 +104,14 @@ const TIERS: {
 ];
 
 const AUDIENCES: { icon: LucideIcon; label: string }[] = [
-  { icon: Store, label: "متاجر التجميل والعناية" },
-  { icon: ShoppingBag, label: "المتاجر الإلكترونية" },
+  { icon: Store, label: "علامات تجميل سعودية ناشئة" },
+  { icon: Droplets, label: "علامات العطور" },
+  { icon: ShoppingBag, label: "متاجر Beauty الإلكترونية (سلّة، زد، Shopify)" },
+  { icon: Sparkles, label: "علامات DTC" },
+  { icon: Truck, label: "موزّعو التجميل والعطور" },
+  { icon: MapPinned, label: "علامات أجنبية داخلة للسوق السعودي" },
   { icon: Building2, label: "عيادات الجلدية والتجميل" },
-  { icon: Pill, label: "الصيدليات" },
-  { icon: Beaker, label: "مختبرات المنتجات" },
-  { icon: Sparkles, label: "براندات العناية المحلية" },
-  { icon: Truck, label: "موزعو منتجات التجميل" },
+  { icon: Warehouse, label: "مستودعات وشركات الفلفلمنت" },
 ];
 
 const WHY_QBL_BEAUTY: string[] = [

@@ -1,7 +1,6 @@
 import {
-  Building2,
   ClipboardCheck,
-  Factory,
+  Droplets,
   FileCheck,
   MapPinned,
   PackageCheck,
@@ -11,10 +10,8 @@ import {
   ShoppingBag,
   Snowflake,
   Sparkles,
-  Store,
   Thermometer,
   Truck,
-  Utensils,
   Warehouse,
 } from "lucide-react";
 
@@ -151,12 +148,10 @@ export const PROCESS = [
 ];
 
 export const SECTORS = [
-  { icon: Factory, title: "الموردون الغذائيون", desc: "توريد منظم للمنتجات المبردة من المورد إلى الفروع أو العملاء." },
-  { icon: Utensils, title: "المطاعم والمطابخ المركزية", desc: "ربط المطابخ، الفروع، ونقاط التوزيع ضمن نوافذ تشغيل واضحة." },
-  { icon: Store, title: "متاجر التجزئة", desc: "تجديد المخزون المبرد والمجمد داخل المدينة بجدولة يمكن الاعتماد عليها." },
-  { icon: Pill, title: "الصيدليات", desc: "تسليم المنتجات الحساسة للحرارة بإجراءات مناولة وتوثيق منظمة." },
-  { icon: ShoppingBag, title: "التجارة الإلكترونية", desc: "تجربة تسليم مبردة مناسبة للعلامات التي تبيع مباشرة للمستهلك." },
-  { icon: Building2, title: "الضيافة", desc: "دعم الفنادق والمرافق التي تحتاج توريداً مبرداً منضبطاً ومتكرراً." },
+  { icon: Warehouse, title: "مستودعات وشركات الفلفلمنت", desc: "طبقة توصيل مبرّد متخصصة تُدمج مع عمليات مراكز الفلفلمنت لحماية مخزون عملائهم من التجميل والعناية والعطور." },
+  { icon: Sparkles, title: "التجميل والعناية بالبشرة والشعر", desc: "توصيل محمي حرارياً للمكياج ومنتجات Skincare وHaircare من المصنّع أو المستودع حتى العميل النهائي." },
+  { icon: Droplets, title: "العطور", desc: "نقل مناسب للعطور ومجموعات الهدايا العطرية التي تتأثر بحرارة النقل." },
+  { icon: ShoppingBag, title: "متاجر Beauty الإلكترونية", desc: "دعم متاجر سلّة وزد وShopify التي تبيع منتجات تجميل وعناية وعطور مباشرة للمستهلك." },
 ];
 
 export const OPERATIONS = [

@@ -47,6 +47,18 @@ const GUARANTEE_PATTERNS: { pattern: RegExp; label: string }[] = [
   { pattern: /نضمن/, label: "صيغة ضمان نتيجة" },
 ];
 
+/**
+ * الامتثال التنظيمي. "تشغيل متوافق مع متطلبات SFDA وHACCP" كان مدرجاً بين عوامل
+ * التميّز: صيغة تُقرأ كاعتماد جهة رقابية، ولا سند لها. الصيغة المقبولة الوحيدة هي
+ * ما في صفحة الالتزام: إرشادات كمرجع عمل، مع نفي صريح لادعاء الشهادات.
+ */
+const CERTIFICATION_PATTERNS: { pattern: RegExp; label: string }[] = [
+  { pattern: /متوافق\s+مع\s+متطلبات/, label: "ادعاء امتثال تنظيمي" },
+  { pattern: /حاصل(ون|ة)?\s+على\s+شهادة/, label: "ادعاء حيازة شهادة" },
+  { pattern: /معتمد(ة|ون)?\s+من\s+(SFDA|هيئة|الهيئة)/, label: "ادعاء اعتماد جهة تنظيمية" },
+  { pattern: /مرخّ?ص\s+من\s/, label: "ادعاء ترخيص" },
+];
+
 const SUPERLATIVE_PATTERNS: { pattern: RegExp; label: string }[] = [
   { pattern: /الخيار\s+الأول/, label: "صفة تفضيل" },
   { pattern: /الأفضل\s+في/, label: "صفة تفضيل" },
@@ -114,4 +126,13 @@ test("عناوين الشركة تقرأ من مصدر واحد", () => {
   const source = readFileSync(join(root, "lib/company.ts"), "utf8");
   assert.match(source, /CONTACT_EMAILS/, "company.ts يجب أن يقرأ العناوين من lib/contact.ts");
   assert.doesNotMatch(source, /@q[bd]l\.sa"/, "لا عناوين مكتوبة يدوياً في company.ts");
+});
+
+test("لا ادعاء امتثال أو شهادة تنظيمية بلا سند", () => {
+  assert.deepEqual(scan(CERTIFICATION_PATTERNS), [], "ادعاء امتثال عاد إلى المحتوى");
+});
+
+test("صفحة الالتزام تحتفظ بنفي ادعاء الشهادات", () => {
+  const source = readFileSync(join(root, "app/(marketing)/compliance/page.tsx"), "utf8");
+  assert.match(source, /لا ندّعي شهادات غير مذكورة/, "نفي ادعاء الشهادات حُذف من صفحة الالتزام");
 });
