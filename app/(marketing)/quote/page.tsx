@@ -1,6 +1,15 @@
 import { BarChart3, CalendarCheck, ShieldCheck } from "lucide-react";
 import { QuoteForm } from "@/components/marketing/quote-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = pageMetadata({
+  title: "طلب عرض سعر توصيل مبرّد للشركات في الرياض | QBL",
+  description:
+    "اطلب دراسة تشغيل وعرض سعر لتوصيل مبرّد آخر ميل داخل الرياض: أرسل حجم طلباتك اليومية ومناطق التغطية ونوع المنتج، ويعود فريق QBL بنموذج تشغيل مناسب.",
+  path: "/quote",
+});
 
 export default function QuotePage() {
   return (

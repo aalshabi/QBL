@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import { SITE } from "@/lib/site";
+import { JsonLd } from "@/components/seo/json-ld";
+import { beautyShieldSchema } from "@/lib/structured-data";
 
 export const metadata = {
   title: "توصيل منتجات التجميل والعناية بدرجة حرارة محمية في الرياض | QBL Beauty Shield",
@@ -120,6 +122,7 @@ export default function BeautyShieldPage() {
 
   return (
     <>
+      <JsonLd data={beautyShieldSchema} />
       <PageHero
         eyebrow="QBL Beauty Shield"
         title="توصيل منتجات التجميل والعناية بحماية من حرارة الجو"

@@ -20,6 +20,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { operatingMetrics, sectors, services } from "@/lib/company";
 import { couriers, deliveryOrders } from "@/lib/mock-data";
 import { toCourierMarkers, toOrderMarkers } from "@/lib/maps/adapter";
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
+import { homeSchema } from "@/lib/structured-data";
+
+export const metadata: Metadata = pageMetadata({
+  title: "توصيل مبرّد آخر ميل في الرياض للشركات والمتاجر",
+  description:
+    "توصيل مبرّد آخر ميل داخل الرياض للموردين الغذائيين والصيدليات والمطاعم ومتاجر التجزئة، بمسار واضح من الاستلام حتى التسليم الموثق. اطلب تصور تشغيل لشركتك.",
+  path: "/",
+});
 
 const proofPoints = [
   { icon: Thermometer, label: "تبريد 0 إلى +5" },
@@ -37,6 +48,7 @@ const flow = [
 export default function Home() {
   return (
     <>
+      <JsonLd data={homeSchema} />
       <SiteHeader />
       <main>
         <section className="relative overflow-hidden bg-primary text-primary-foreground">

@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import { STATUS_FLOW } from "@/data/coldChain";
+import { JsonLd } from "@/components/seo/json-ld";
+import { coldChainBreadcrumb } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
   title: "نظام التوصيل المبرّد",
@@ -104,6 +106,7 @@ const ENTRY_POINTS = [
 export default function ColdChainSystemPage() {
   return (
     <>
+      <JsonLd data={coldChainBreadcrumb} />
       <PageHero
         eyebrow="النظام التشغيلي"
         title="نظام تشغيلي مصمم للتوصيل المبرّد"

@@ -1,6 +1,16 @@
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, FileCheck, MapPinned, PackageCheck, Route, ShieldCheck, Snowflake, Thermometer, Truck } from "lucide-react";
 import { SITE } from "@/lib/site";
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = pageMetadata({
+  title: "Refrigerated Last-Mile Delivery in Riyadh | QBL",
+  description:
+    "QBL provides refrigerated last-mile delivery in Riyadh for businesses shipping temperature-sensitive products. Explore the services and request a quote.",
+  path: "/en",
+  locale: "en_US",
+});
 
 const SERVICES = [
   ["B2B2C refrigerated delivery", "Temperature-aware last-mile delivery from business locations to end customers."],

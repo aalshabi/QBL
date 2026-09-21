@@ -1,5 +1,14 @@
 import { ContentPage } from "@/components/marketing/content-page";
 import { sectors } from "@/lib/company";
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = pageMetadata({
+  title: "توصيل مبرّد للصيدليات والمطاعم والتجزئة في الرياض",
+  description:
+    "قطاعات يخدمها QBL بتوصيل مبرّد داخل الرياض: موردو الأغذية، الصيدليات والمستوصفات، المطاعم، التجزئة، الفنادق والمستشفيات، والتجارة الإلكترونية. اطلب عرض تشغيل.",
+  path: "/sectors",
+});
 
 export default function SectorsPage() {
   return (

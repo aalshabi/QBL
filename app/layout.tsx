@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Montserrat, Tajawal } from "next/font/google";
 import { PwaRegister } from "@/components/pwa-register";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
 const tajawal = Tajawal({
@@ -17,9 +18,27 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "قدام بابك | QBL Logistics",
+  // metadataBase يحوّل كل رابط نسبي إلى مطلق في canonical و Open Graph.
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "قدام بابك QBL | توصيل مبرّد آخر ميل في الرياض",
+    template: "%s | QBL",
+  },
   description: "منصة QBL للتوصيل المبرّد آخر ميل في الرياض مع تتبع لحظي وكود استلام.",
   applicationName: "QBL",
+  alternates: {
+    canonical: "/",
+    languages: { "ar-SA": "/", en: "/en", "x-default": "/" },
+  },
+  openGraph: {
+    type: "website",
+    siteName: "QBL — قدام بابك",
+    locale: "ar_SA",
+    url: SITE_URL,
+    title: "قدام بابك QBL | توصيل مبرّد آخر ميل في الرياض",
+    description: "توصيل مبرّد آخر ميل داخل الرياض للموردين والصيدليات والمطاعم والتجزئة، بتتبع وكود استلام.",
+  },
+  twitter: { card: "summary_large_image" },
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [

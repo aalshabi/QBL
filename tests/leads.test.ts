@@ -15,6 +15,16 @@ const originalProvider = process.env.LEAD_ALERT_PROVIDER;
 const originalKey = process.env.RESEND_API_KEY;
 const originalTo = process.env.LEAD_ALERT_EMAIL;
 
+/** NODE_ENV للقراءة فقط في أنواع Node، والاختبار يحتاج تبديلها فعلياً. */
+function setNodeEnv(value: string) {
+  Object.defineProperty(process.env, "NODE_ENV", {
+    value,
+    configurable: true,
+    writable: true,
+    enumerable: true,
+  });
+}
+
 function restore(name: string, value: string | undefined) {
   if (value === undefined) delete process.env[name];
   else process.env[name] = value;
@@ -22,7 +32,7 @@ function restore(name: string, value: string | undefined) {
 
 afterEach(() => {
   restore("DATABASE_URL", originalDatabaseUrl);
-  restore("NODE_ENV", originalNodeEnv);
+  setNodeEnv(originalNodeEnv ?? "test");
   restore("LEAD_ALERT_PROVIDER", originalProvider);
   restore("RESEND_API_KEY", originalKey);
   restore("LEAD_ALERT_EMAIL", originalTo);
@@ -39,7 +49,7 @@ const lead = {
 
 test("الإنتاج بلا DATABASE_URL يفشل بصوت عالٍ ولا يبتلع الطلب", async () => {
   delete process.env.DATABASE_URL;
-  process.env.NODE_ENV = "production";
+  setNodeEnv("production");
 
   await assert.rejects(() => saveLead(lead), LeadStorageUnavailableError);
   await assert.rejects(() => listLeads(), LeadStorageUnavailableError);
@@ -48,7 +58,7 @@ test("الإنتاج بلا DATABASE_URL يفشل بصوت عالٍ ولا يب�
 
 test("التطوير بلا قاعدة بيانات يحفظ في مخزن الذاكرة ويقرأ منه", async () => {
   delete process.env.DATABASE_URL;
-  process.env.NODE_ENV = "development";
+  setNodeEnv("development");
 
   const saved = await saveLead(lead);
   assert.equal(saved.status, "NEW");

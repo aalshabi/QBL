@@ -5,6 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { caseStudies } from "@/lib/company";
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = pageMetadata({
+  title: "سيناريوهات توصيل مبرّد: أغذية وصيدليات ومطاعم بالرياض",
+  description:
+    "سيناريوهات تشغيل التوصيل المبرّد في الرياض لموردي الأغذية والصيدليات والمستوصفات والمطاعم: التحدي والحل والأثر المتوقع. اطلب دراسة تشغيل لقطاعك.",
+  path: "/case-studies",
+});
 
 export default function CaseStudiesPage() {
   return (

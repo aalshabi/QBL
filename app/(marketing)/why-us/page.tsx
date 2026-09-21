@@ -1,5 +1,14 @@
 import { ContentPage } from "@/components/marketing/content-page";
 import { differentiators } from "@/lib/company";
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = pageMetadata({
+  title: "نموذج تشغيل QBL للتوصيل المبرّد آخر ميل في الرياض",
+  description:
+    "تشغيل QBL للتوصيل المبرّد آخر ميل داخل الرياض: متابعة حالة الطلب والمندوب، مراقبة درجة الحرارة والتنبيه عند الاستثناء، وتسليم موثق. اطلب عرض تشغيل.",
+  path: "/why-us",
+});
 
 export default function WhyUsPage() {
   return (

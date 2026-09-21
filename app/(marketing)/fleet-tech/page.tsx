@@ -1,4 +1,13 @@
 import { ContentPage } from "@/components/marketing/content-page";
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = pageMetadata({
+  title: "أسطول مبرّد وتقنية تتبع لتوصيل آخر ميل بالرياض",
+  description:
+    "تشغيل أسطول QBL المبرّد داخل الرياض: تتبع موقع المندوب أثناء الطلب، قراءات حرارة عند توفر المستشعرات، وطبقة خرائط وإشعارات قابلة للربط. اطلب عرض تشغيل.",
+  path: "/fleet-tech",
+});
 
 export default function FleetTechPage() {
   return (

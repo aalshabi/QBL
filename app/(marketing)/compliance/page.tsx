@@ -1,4 +1,13 @@
 import { ContentPage } from "@/components/marketing/content-page";
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = pageMetadata({
+  title: "سجلات حرارة وتدقيق تدعم الامتثال: توصيل مبرّد بالرياض",
+  description:
+    "ما يوثّقه تشغيل التوصيل المبرّد في الرياض: سجل حرارة لكل طلب، سجل تدقيق، إثبات تسليم بكود استلام، وصلاحيات محددة. لفرق الجودة — تواصل مع فريق التشغيل.",
+  path: "/compliance",
+});
 
 export default function CompliancePage() {
   return (

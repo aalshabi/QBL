@@ -4,6 +4,15 @@ import { SectionHeading } from "@/components/marketing/section-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { slaHighlights } from "@/lib/company";
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = pageMetadata({
+  title: "نموذج SLA للتوصيل المبرّد آخر ميل في الرياض",
+  description:
+    "نموذج مؤشرات قابلة للتعاقد للتوصيل المبرّد آخر ميل بالرياض: تتبع، كود استلام، استثناءات الحرارة، وتجاوز موثق. لفرق المشتريات — اطلب SLA مخصصاً.",
+  path: "/sla",
+});
 
 const slaTable = [
   { metric: "تفعيل رابط التتبع", target: "عند حالة Out for Delivery", owner: "النظام / العمليات" },
