@@ -7,6 +7,7 @@ import {
   type WebhookTransportValidation,
 } from "@/lib/cold-chain/telemetry";
 import { processColdChainTelemetry } from "@/lib/cold-chain/telemetry-store";
+import { applyProviderMappingBatch, resolveProviderMapping } from "@/lib/cold-chain/providers";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -65,20 +66,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let event;
+    // المزوّد يُسمّي نفسه في الترويسة، ومحوّله يُعرَّف بالإعداد لا بالكود.
+    // غيابه يعني الشكل الأصلي، واسم غير معرّف يُرفض بدل أن يُفسَّر بالتخمين.
+    const providerId = request.headers.get("x-provider")?.trim() || null;
+    const mapping = resolveProviderMapping(providerId);
+    if (!mapping) {
+      return json({ ok: false, error: "UNKNOWN_PROVIDER" }, 400);
+    }
+
+    let mappedEntries: Record<string, unknown>[];
     try {
-      event = normalizeColdChainTelemetryPayload(payload);
+      mappedEntries = applyProviderMappingBatch(payload, mapping);
     } catch {
+      return json({ ok: false, error: "PROVIDER_MAPPING_FAILED" }, 400);
+    }
+    if (mappedEntries.length === 0 || mappedEntries.length > 100) {
       return json({ ok: false, error: "INVALID_TELEMETRY_PAYLOAD" }, 400);
     }
 
-    const result = await processColdChainTelemetry(event);
+    const results = [];
+    for (const entry of mappedEntries) {
+      let event;
+      try {
+        event = normalizeColdChainTelemetryPayload(entry);
+      } catch {
+        // دفعة فيها قراءة تالفة لا تُسقط بقية القراءات الصالحة معها.
+        results.push({ outcome: "INVALID_TELEMETRY_PAYLOAD" as const, duplicate: false });
+        continue;
+      }
+      const processed = await processColdChainTelemetry(event);
+      results.push({ outcome: processed.outcome, duplicate: processed.duplicate });
+    }
+
     console.info("cold_chain_telemetry_processed", {
-      outcome: result.outcome,
-      duplicate: result.duplicate,
-      eventIdPrefix: result.eventId.slice(0, 17),
+      provider: mapping.id,
+      count: results.length,
+      outcomes: results.map((item) => item.outcome),
     });
-    return json({ ok: true, accepted: result.accepted, duplicate: result.duplicate, outcome: result.outcome });
+
+    if (results.length === 1) {
+      return json({ ok: true, accepted: true, duplicate: results[0].duplicate, outcome: results[0].outcome });
+    }
+    return json({ ok: true, accepted: true, count: results.length, results });
   } catch (error) {
     const databaseMissing = error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED";
     console.warn("cold_chain_telemetry_failed", {
