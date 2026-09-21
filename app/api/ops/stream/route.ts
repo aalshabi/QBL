@@ -1,8 +1,13 @@
 import { couriers, deliveryOrders } from "@/lib/mock-data";
+import { requireOpsApi } from "@/lib/ops/guard";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  // قناة البث تبقى مفتوحة وتُسرّب حالة الأسطول لحظياً — تُفحص الصلاحية قبل فتحها.
+  const denied = await requireOpsApi();
+  if (denied) return denied;
+
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
