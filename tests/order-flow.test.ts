@@ -21,6 +21,8 @@ type StubOptions = {
   courierId?: string | null;
   otpVerified?: boolean;
   updateCount?: number;
+  /** عمر آخر قراءة حرارة بالدقائق، أو null حين لا توجد قراءة إطلاقاً. */
+  readingAgeMinutes?: number | null;
 };
 
 type Recorded = {
@@ -38,6 +40,7 @@ function stubPrisma(options: StubOptions = {}): { prisma: PrismaClient; recorded
     courierId = "courier-1",
     otpVerified = false,
     updateCount = 1,
+    readingAgeMinutes = 2,
   } = options;
 
   const recorded: Recorded = { updates: [], proofs: [], audits: [], otpCreates: [], notifications: [] };
@@ -73,7 +76,16 @@ function stubPrisma(options: StubOptions = {}): { prisma: PrismaClient; recorded
               status: orderStatus,
               courierId: orderCourierId,
               customer: { phone: "0550000000" },
+              temperatureTarget: "0 إلى +5",
+              vehicleId: "vehicle-1",
+              vehicle: { coldRangeMin: 0, coldRangeMax: 5 },
             },
+    },
+    temperatureReading: {
+      findFirst: async () =>
+        readingAgeMinutes === null
+          ? null
+          : { celsius: 3, recordedAt: new Date(Date.now() - readingAgeMinutes * 60_000) },
     },
     courier: {
       findUnique: async () => (courierId ? { id: courierId } : null),
@@ -364,4 +376,49 @@ test("محاولة إيصال الرمز تُسجَّل بصدق عند غياب
     if (previous.sms) process.env.SMS_PROVIDER = previous.sms;
     if (previous.wa) process.env.WHATSAPP_PROVIDER = previous.wa;
   }
+});
+
+test("لا تبدأ رحلة مبرّدة بلا قراءة أساس حديثة", async () => {
+  const missing = stubPrisma({ orderStatus: "ASSIGNED", readingAgeMinutes: null });
+  const noReading = await applyOrderTransition({
+    prisma: missing.prisma,
+    orderId: "order-1",
+    to: "OUT_FOR_DELIVERY",
+    actor: COURIER,
+  });
+  assert.equal(noReading.ok === false && noReading.error, "DEPARTURE_TEMPERATURE_REQUIRED");
+  assert.deepEqual(missing.recorded.updates, [], "لا يتحرك الطلب");
+
+  const stale = stubPrisma({ orderStatus: "ASSIGNED", readingAgeMinutes: 300 });
+  const staleResult = await applyOrderTransition({
+    prisma: stale.prisma,
+    orderId: "order-1",
+    to: "OUT_FOR_DELIVERY",
+    actor: COURIER,
+  });
+  assert.equal(
+    staleResult.ok === false && staleResult.error,
+    "DEPARTURE_TEMPERATURE_REQUIRED",
+    "قراءة الرحلة السابقة ليست أساساً لهذه الرحلة",
+  );
+});
+
+test("إثبات التسليم يختم ما عُرف عن الحرارة — وغيابها يُسجَّل غياباً", async () => {
+  const known = stubPrisma({ orderStatus: "ARRIVED", otpVerified: true, readingAgeMinutes: 3 });
+  await applyOrderTransition({ prisma: known.prisma, orderId: "order-1", to: "DELIVERED", actor: COURIER });
+  const withReading = (known.recorded.proofs[0] as { create: Record<string, unknown> }).create;
+  assert.equal(withReading.temperatureEvidence, "IN_RANGE");
+  assert.equal(withReading.temperatureCelsius, 3);
+
+  const blind = stubPrisma({ orderStatus: "ARRIVED", otpVerified: true, readingAgeMinutes: null });
+  await applyOrderTransition({ prisma: blind.prisma, orderId: "order-1", to: "DELIVERED", actor: COURIER });
+  const withoutReading = (blind.recorded.proofs[0] as { create: Record<string, unknown> }).create;
+  assert.equal(withoutReading.temperatureEvidence, "MISSING", "إغلاق بلا دليل يُوثَّق لا يُترك فارغاً");
+  assert.equal(withoutReading.temperatureCelsius, null);
+});
+
+test("التسليم لا يُحجب لقراءة ناقصة — الحجب عند باب العميل أسوأ من الفجوة", async () => {
+  const { prisma } = stubPrisma({ orderStatus: "ARRIVED", otpVerified: true, readingAgeMinutes: null });
+  const result = await applyOrderTransition({ prisma, orderId: "order-1", to: "DELIVERED", actor: COURIER });
+  assert.equal(result.ok, true);
 });

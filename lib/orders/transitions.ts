@@ -5,6 +5,7 @@ import type { Role } from "@/lib/auth";
 import { canTransition, type OrderStatus } from "@/lib/domain";
 import { isOrderOtpVerified } from "@/lib/orders/otp";
 import { issueAndQueueOrderOtp } from "@/lib/orders/otp-dispatch";
+import { canDepart, readCustodyTemperature, toEvidence, type CustodyTemperature } from "@/lib/cold-chain/custody";
 
 /**
  * انتقالات حالة الطلب — الكتابة الفعلية على قاعدة البيانات.
@@ -112,6 +113,26 @@ export async function applyOrderTransition(input: TransitionInput): Promise<Tran
     return failure(422, "FAILURE_REASON_REQUIRED");
   }
 
+  // رحلة مبرّدة بلا قراءة أساس ليس لها ما تُقارَن به لاحقاً. المندوب عند
+  // المركبة في هذه اللحظة، وهي الوحيدة التي يملك فيها أخذها قبل التحرك.
+  let custody: CustodyTemperature | null = null;
+  if (to === "OUT_FOR_DELIVERY") {
+    custody = await readCustodyTemperature(prisma, orderId);
+    if (!canDepart(custody)) {
+      return failure(
+        409,
+        "DEPARTURE_TEMPERATURE_REQUIRED",
+        custody.evaluation.state === "STALE" ? "آخر قراءة قديمة" : "لا توجد قراءة حرارة",
+      );
+    }
+  }
+
+  // التسليم لا يُحجب لقراءة ناقصة — حجبه عند باب العميل أسوأ من الفجوة — لكن
+  // ما عُرف لحظة الإغلاق يُختم على الإثبات، بما فيه أننا لم نكن نعرف.
+  if (to === "DELIVERED") {
+    custody = await readCustodyTemperature(prisma, orderId);
+  }
+
   const now = new Date();
   const timestampField = TIMESTAMP_FIELD[to];
   const data: Record<string, unknown> = { status: to };
@@ -134,11 +155,17 @@ export async function applyOrderTransition(input: TransitionInput): Promise<Tran
           proofType: overridden ? "MANUAL_OVERRIDE" : "OTP",
           otpVerified: !overridden,
           notes: overridden ? input.reason?.trim() : undefined,
+          temperatureEvidence: toEvidence(custody!.evaluation.state),
+          temperatureCelsius: custody!.celsius,
+          temperatureAt: custody!.recordedAt,
         },
         update: {
           proofType: overridden ? "MANUAL_OVERRIDE" : "OTP",
           otpVerified: !overridden,
           notes: overridden ? input.reason?.trim() : undefined,
+          temperatureEvidence: toEvidence(custody!.evaluation.state),
+          temperatureCelsius: custody!.celsius,
+          temperatureAt: custody!.recordedAt,
         },
       });
     }
@@ -149,7 +176,12 @@ export async function applyOrderTransition(input: TransitionInput): Promise<Tran
         actorId: actor.userId,
         action: overridden ? "OTP_MANUAL_OVERRIDE" : "STATUS_CHANGED",
         reason: input.reason?.trim(),
-        metadata: { from, to, role: actor.role },
+        metadata: {
+          from,
+          to,
+          role: actor.role,
+          ...(custody ? { temperature: custody.evaluation.state, celsius: custody.celsius } : {}),
+        },
       },
     });
   });

@@ -90,6 +90,15 @@ enum ExpenseType {
   OTHER
 }
 
+/// ما عرفه التشغيل عن حرارة الشحنة لحظة تسليمها. MISSING ليست عطلاً في
+/// السجل بل حقيقة عنه: طلب أُغلق ولا أحد يعرف حرارته.
+enum TemperatureEvidence {
+  IN_RANGE
+  OUT_OF_RANGE
+  STALE
+  MISSING
+}
+
 enum ColdChainAlertKind {
   OUT_OF_RANGE
   STALE_READING
@@ -523,6 +532,11 @@ model ProofOfDelivery {
   orderId     String        @unique
   proofType   ProofType
   otpVerified Boolean       @default(false)
+  // دليل سلسلة التبريد وقت الإغلاق. إثبات تسليم لا يقول شيئاً عن الحرارة
+  // ليس إثباتاً لشحنة مبرّدة.
+  temperatureEvidence TemperatureEvidence @default(MISSING)
+  temperatureCelsius  Decimal?            @db.Decimal(5, 2)
+  temperatureAt       DateTime?
   signatureUrl String?
   photoUrl    String?
   notes       String?

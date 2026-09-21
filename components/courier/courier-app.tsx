@@ -44,6 +44,7 @@ const ERROR_TEXT: Record<string, string> = {
   EXPIRED: "انتهت صلاحية الرمز. اطلب رمزاً جديداً من العمليات.",
   TOO_MANY_ATTEMPTS: "استُهلكت محاولات الرمز. تواصل مع العمليات.",
   UNAUTHORIZED: "انتهت الجلسة. سجّل الدخول من جديد.",
+  DEPARTURE_TEMPERATURE_REQUIRED: "سجّل قراءة حرارة المركبة قبل بدء الرحلة.",
 };
 
 const NETWORK_ERROR = "تعذّر الاتصال. لم يُحفظ التغيير — أعد المحاولة.";
@@ -84,6 +85,9 @@ export function CourierApp({ orders, courierName }: { orders: CourierOrderView[]
   const current = orders[0];
   const rest = orders.slice(1);
   const step = current ? nextStepFor(current.status) : null;
+  // الشاشة تطلب ما سيطلبه الخادم: لا تُعرض «ابدأ التوصيل» ثم يُرفض الضغط.
+  const needsDepartureReading =
+    step?.kind === "START" && current?.temperature?.state !== "IN_RANGE" && current?.temperature?.state !== "OUT_OF_RANGE";
 
   const stopSharing = useCallback(() => {
     if (watchIdRef.current !== null) {
@@ -271,8 +275,22 @@ export function CourierApp({ orders, courierName }: { orders: CourierOrderView[]
               </Button>
             </div>
 
+            {step.kind === "START" && needsDepartureReading && (
+              <div className="space-y-2 rounded-lg border border-amber-300 bg-amber-50 p-3">
+                <p className="flex items-start gap-2 text-sm font-semibold text-amber-800">
+                  <Thermometer className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  سجّل قراءة حرارة المركبة أدناه لبدء الرحلة.
+                </p>
+                <p className="text-xs text-amber-800/80">رحلة مبرّدة بلا قراءة أساس لا يمكن إثبات سلامتها لاحقاً.</p>
+              </div>
+            )}
+
             {step.kind === "START" && (
-              <Button className="h-14 w-full text-base" disabled={busy} onClick={() => transition("OUT_FOR_DELIVERY")}>
+              <Button
+                className="h-14 w-full text-base"
+                disabled={busy || needsDepartureReading}
+                onClick={() => transition("OUT_FOR_DELIVERY")}
+              >
                 <Play className="h-5 w-5" aria-hidden="true" /> {step.label}
               </Button>
             )}
