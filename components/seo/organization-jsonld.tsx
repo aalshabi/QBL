@@ -23,6 +23,10 @@ export function OrganizationJsonLd() {
       { "@type": "PropertyValue", propertyID: "CR", value: SITE.cr },
       { "@type": "PropertyValue", propertyID: "Unified National Number", value: SITE.unifiedNo },
     ],
+    areaServed: {
+      "@type": "City",
+      name: SITE.city,
+    },
     contactPoint: [
       {
         "@type": "ContactPoint",
