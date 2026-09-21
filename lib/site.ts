@@ -1,8 +1,7 @@
 import {
-  Building2,
   ClipboardCheck,
-  Factory,
   FileCheck,
+  FlaskConical,
   MapPinned,
   PackageCheck,
   Pill,
@@ -11,10 +10,8 @@ import {
   ShoppingBag,
   Snowflake,
   Sparkles,
-  Store,
   Thermometer,
   Truck,
-  Utensils,
   Warehouse,
 } from "lucide-react";
 
@@ -156,12 +153,10 @@ export const PROCESS = [
 ];
 
 export const SECTORS = [
-  { icon: Factory, title: "الموردون الغذائيون", desc: "توريد منظم للمنتجات المبردة من المورد إلى الفروع أو العملاء." },
-  { icon: Utensils, title: "المطاعم والمطابخ المركزية", desc: "ربط المطابخ، الفروع، ونقاط التوزيع ضمن نوافذ تشغيل واضحة." },
-  { icon: Store, title: "متاجر التجزئة", desc: "تجديد المخزون المبرد والمجمد داخل المدينة بجدولة يمكن الاعتماد عليها." },
-  { icon: Pill, title: "الصيدليات", desc: "تسليم المنتجات الحساسة للحرارة بإجراءات مناولة وتوثيق منظمة." },
-  { icon: ShoppingBag, title: "التجارة الإلكترونية", desc: "تجربة تسليم مبردة مناسبة للعلامات التي تبيع مباشرة للمستهلك." },
-  { icon: Building2, title: "الضيافة", desc: "دعم الفنادق والمرافق التي تحتاج توريداً مبرداً منضبطاً ومتكرراً." },
+  { icon: Warehouse, title: "مستودعات ومراكز الفلفلمنت", desc: "طبقة توصيل مبرّد متخصصة تُدمج مع عمليات مراكز الفلفلمنت لحماية مخزون عملائهم الحساس للحرارة." },
+  { icon: Sparkles, title: "التجميل والعطور", desc: "توصيل محمي حرارياً لمنتجات العناية والتجميل والعطور من المصنّع أو المستودع حتى العميل النهائي." },
+  { icon: FlaskConical, title: "المكملات الغذائية", desc: "نقل مناسب للمكملات الحساسة للحرارة مثل البروبايوتك والبروتين والكولاجين، حسب تعليمات الحفظ." },
+  { icon: ShoppingBag, title: "التجارة الإلكترونية", desc: "دعم المتاجر الإلكترونية التي تبيع منتجات حساسة للحرارة مباشرة للمستهلك." },
 ];
 
 export const OPERATIONS = [
