@@ -113,6 +113,28 @@ const WHY_QBL_BEAUTY: string[] = [
   "إمكانية تجربة محدودة قبل الاشتراك",
 ];
 
+const SERVICE_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  serviceType: "توصيل منتجات التجميل والعناية بحماية من حرارة الجو",
+  name: "QBL Beauty Shield",
+  description:
+    "خدمة توصيل مخصصة لحماية منتجات التجميل والعناية من حرارة الجو أثناء النقل داخل الرياض.",
+  provider: {
+    "@type": "Organization",
+    name: SITE.brandLong,
+    url: `https://${SITE.domain}`,
+  },
+  areaServed: {
+    "@type": "City",
+    name: "الرياض",
+  },
+  audience: {
+    "@type": "BusinessAudience",
+    audienceType: "متاجر ومصنّعو ومورّدو منتجات التجميل والعناية",
+  },
+};
+
 export default function BeautyShieldPage() {
   const whatsappHref = `https://wa.me/${SITE.phone.replace(/[^\d]/g, "")}?text=${encodeURIComponent(
     "السلام عليكم، أرغب بالاستفسار عن خدمة Beauty Shield لتوصيل منتجات التجميل والعناية."
@@ -120,6 +142,7 @@ export default function BeautyShieldPage() {
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SERVICE_JSON_LD) }} />
       <PageHero
         eyebrow="QBL Beauty Shield"
         title="توصيل منتجات التجميل والعناية بحماية من حرارة الجو"

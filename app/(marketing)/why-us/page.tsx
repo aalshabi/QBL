@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import { ContentPage } from "@/components/marketing/content-page";
 import { differentiators } from "@/lib/company";
+
+export const metadata: Metadata = {
+  title: "لماذا QBL؟ وضوح تشغيلي وتسليم موثق | QBL",
+  description:
+    "نموذج تشغيل QBL مبني على تتبع حالة الطلب، رصد الحرارة حسب المنتج، وتوثيق التسليم — عمليات قابلة للمراجعة لا وعود عامة.",
+  alternates: { canonical: "/why-us" },
+};
 
 export default function WhyUsPage() {
   return (

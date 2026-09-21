@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { TrackingView } from "@/components/tracking/tracking-view";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getPublicTrackingSnapshot } from "@/lib/tracking";
+
+export const metadata: Metadata = {
+  title: "تتبع الشحنة | QBL",
+  robots: { index: false, follow: false },
+};
 
 export default async function TrackingPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;

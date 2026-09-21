@@ -1,4 +1,12 @@
+import type { Metadata } from "next";
 import { ContentPage } from "@/components/marketing/content-page";
+
+export const metadata: Metadata = {
+  title: "السلامة والامتثال التشغيلي | QBL",
+  description:
+    "كيف تدعم منصة QBL الالتزام التشغيلي: سجل حرارة، سجل تدقيق، إثبات تسليم، وصلاحيات تشغيل واضحة لكل دور.",
+  alternates: { canonical: "/compliance" },
+};
 
 export default function CompliancePage() {
   return (

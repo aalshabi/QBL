@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { SectionHeading } from "@/components/marketing/section-heading";
@@ -5,6 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { caseStudies } from "@/lib/company";
+
+export const metadata: Metadata = {
+  title: "دراسات حالة تشغيلية: غذاء ودواء وتجزئة | QBL",
+  description:
+    "سيناريوهات تشغيلية توضح كيف يمكن لـ QBL دعم قطاعات الغذاء والدواء والتجزئة بتوصيل مبرد موثق داخل الرياض.",
+  alternates: { canonical: "/case-studies" },
+};
 
 export default function CaseStudiesPage() {
   return (

@@ -1,9 +1,17 @@
+import type { Metadata } from "next";
 import { AlertTriangle, Clock3, FileCheck2, MapPinned, ShieldCheck, Thermometer } from "lucide-react";
 import Link from "next/link";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { slaHighlights } from "@/lib/company";
+
+export const metadata: Metadata = {
+  title: "نموذج اتفاقية مستوى الخدمة SLA | QBL",
+  description:
+    "نموذج SLA تشغيلي للتوصيل المبرد آخر ميل، يوضح كيف تتحول الخدمة إلى مؤشرات قابلة للقياس في العقود المؤسسية.",
+  alternates: { canonical: "/sla" },
+};
 
 const slaTable = [
   { metric: "تفعيل رابط التتبع", target: "عند حالة Out for Delivery", owner: "النظام / العمليات" },

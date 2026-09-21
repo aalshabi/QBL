@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
 import { Building2, Mail, Printer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { company, differentiators, services } from "@/lib/company";
+
+export const metadata: Metadata = {
+  title: "الملف التعريفي للشركة | قدام بابك للخدمات اللوجستية QBL",
+  description:
+    "الملف التعريفي الرسمي لشركة قدام بابك للخدمات اللوجستية (QBL): السجل التجاري، الرؤية والرسالة، الخدمات، ونقاط التميز.",
+  alternates: { canonical: "/company-profile" },
+};
 
 export default function CompanyProfilePage() {
   return (

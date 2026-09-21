@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Montserrat, Tajawal } from "next/font/google";
+import { OrganizationJsonLd } from "@/components/seo/organization-jsonld";
 import { PwaRegister } from "@/components/pwa-register";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
@@ -30,6 +31,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: { capable: true, title: "QBL", statusBarStyle: "black-translucent" },
   formatDetection: { telephone: false },
+  metadataBase: new URL("https://qbl.sa"),
 };
 
 export const viewport: Viewport = {
@@ -41,6 +43,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="ar" dir="rtl" className={`${tajawal.variable} ${montserrat.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
+        <OrganizationJsonLd />
         <PwaRegister />
         <TooltipProvider>{children}</TooltipProvider>
       </body>

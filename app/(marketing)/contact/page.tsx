@@ -1,6 +1,14 @@
+import type { Metadata } from "next";
 import { Mail, MapPin } from "lucide-react";
 import { company } from "@/lib/company";
 import { Card, CardContent } from "@/components/ui/card";
+
+export const metadata: Metadata = {
+  title: "تواصل مع فريق QBL | قدام بابك للخدمات اللوجستية",
+  description:
+    "بيانات التواصل الرسمية لشركة QBL في الرياض: العنوان، والبريد الإلكتروني لفرق المبيعات والتشغيل والفواتير.",
+  alternates: { canonical: "/contact" },
+};
 
 export default function ContactPage() {
   const emails = [

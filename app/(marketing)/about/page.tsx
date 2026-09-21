@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import { ContentPage } from "@/components/marketing/content-page";
 import { company } from "@/lib/company";
+
+export const metadata: Metadata = {
+  title: "من نحن | شركة قدام بابك للخدمات اللوجستية QBL",
+  description:
+    "شركة سعودية متخصصة في التوصيل المبرّد آخر ميل من الرياض، تأسست عام 2024 لخدمة الشركات التي تحتاج تسليماً مبرداً موثوقاً وقابلاً للقياس.",
+  alternates: { canonical: "/about" },
+};
 
 export default function AboutPage() {
   return (

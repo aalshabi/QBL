@@ -1,6 +1,14 @@
+import type { Metadata } from "next";
 import { BarChart3, CalendarCheck, ShieldCheck } from "lucide-react";
 import { QuoteForm } from "@/components/marketing/quote-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+export const metadata: Metadata = {
+  title: "اطلب عرض سعر للتوصيل المبرد | QBL",
+  description:
+    "اطلب عرض سعر مخصص لتوصيل مبرد لشركتك في الرياض: تحليل حجم الطلبات، نطاق الحرارة، ونموذج التشغيل المناسب.",
+  alternates: { canonical: "/quote" },
+};
 
 export default function QuotePage() {
   return (

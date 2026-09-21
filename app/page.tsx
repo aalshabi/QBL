@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -20,6 +21,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { operatingMetrics, sectors, services } from "@/lib/company";
 import { couriers, deliveryOrders } from "@/lib/mock-data";
 import { toCourierMarkers, toOrderMarkers } from "@/lib/maps/adapter";
+
+export const metadata: Metadata = {
+  title: "توصيل مبرّد آخر ميل في الرياض للشركات | QBL",
+  description:
+    "حلول توصيل مبرّد للشركات في الرياض: تتبع حالة الطلب، إثبات تسليم موثق، وتشغيل مصمم لحماية جودة المنتج حتى باب العميل.",
+  alternates: { canonical: "/", languages: { en: "/en" } },
+  openGraph: {
+    title: "QBL — توصيل مبرّد آخر ميل في الرياض",
+    description: "حلول توصيل مبرّد للشركات في الرياض مع تتبع حالة الطلب وإثبات تسليم موثق.",
+    url: "https://qbl.sa/",
+    type: "website",
+    locale: "ar_SA",
+  },
+};
 
 const proofPoints = [
   { icon: Thermometer, label: "تبريد 0 إلى +5" },

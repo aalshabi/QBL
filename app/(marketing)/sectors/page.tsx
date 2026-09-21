@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import { ContentPage } from "@/components/marketing/content-page";
 import { sectors } from "@/lib/company";
+
+export const metadata: Metadata = {
+  title: "القطاعات التي نخدمها: غذاء ودواء وتجزئة | QBL",
+  description:
+    "نخدم القطاعات الحساسة للوقت ودرجة الحرارة في الرياض: الموردون الغذائيون، الصيدليات، متاجر التجزئة، التجارة الإلكترونية، والضيافة.",
+  alternates: { canonical: "/sectors" },
+};
 
 export default function SectorsPage() {
   return (
