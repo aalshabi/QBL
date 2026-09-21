@@ -45,8 +45,15 @@ const BASE_HEADERS = [
   },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
-  { key: "Content-Security-Policy-Report-Only", value: CSP },
 ];
+
+/**
+ * اسم ترويسة السياسة. الافتراض Report-Only حتى تُفحص الخريطة الحية على الإنتاج.
+ * للتحويل إلى الإلزام: اضبط CSP_MODE=enforce في متغيرات البيئة وأعد النشر —
+ * بلا تعديل كود، وبتراجع فوري بإزالة المتغيّر.
+ */
+const CSP_HEADER_NAME =
+  process.env.CSP_MODE === "enforce" ? "Content-Security-Policy" : "Content-Security-Policy-Report-Only";
 
 const nextConfig: NextConfig = {
   async headers() {
@@ -55,7 +62,7 @@ const nextConfig: NextConfig = {
     if (process.env.NODE_ENV !== "production") return [];
 
     return [
-      { source: "/:path*", headers: BASE_HEADERS },
+      { source: "/:path*", headers: [...BASE_HEADERS, { key: CSP_HEADER_NAME, value: CSP }] },
       {
         // مسارات تحمل بيانات عميل أو واجهات داخلية — تُمنع من الفهرسة على مستوى
         // الترويسة أيضاً، لا في robots.txt وحده: رابط تتبع مسرَّب يصبح دائماً في الفهرس.

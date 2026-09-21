@@ -108,4 +108,7 @@ test("ترويسات الأمان لا تكسر الخريطة ولا تتبع �
   assert.match(source, /X-Content-Type-Options/);
   assert.match(source, /X-Robots-Tag/);
   assert.match(source, /process\.env\.NODE_ENV !== "production"/, "الترويسات يجب أن تُعطَّل في التطوير");
+  // الافتراض Report-Only: التحويل إلى الإلزام قرار يُتخذ بمتغيّر بيئة بعد فحص الخريطة الحية.
+  assert.match(source, /CSP_MODE === "enforce"/, "تبديل وضع السياسة يجب أن يبقى بمتغيّر بيئة");
+  assert.match(source, /Content-Security-Policy-Report-Only/, "الافتراضي يجب أن يبقى Report-Only");
 });

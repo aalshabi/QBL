@@ -33,7 +33,7 @@ export const metadata: Metadata = pageMetadata({
 });
 
 const proofPoints = [
-  { icon: Thermometer, label: "تبريد 0 إلى +5" },
+  { icon: Thermometer, label: "تبريد حسب نوع المنتج" },
   { icon: MapPinned, label: "تتبع مباشر" },
   { icon: ShieldCheck, label: "كود استلام OTP" },
 ];
@@ -87,7 +87,7 @@ export default function Home() {
               <div className="rounded-lg border border-white/15 bg-white/8 p-3 shadow-2xl">
                 <MockMap markers={toCourierMarkers(couriers.slice(0, 7))} orderMarkers={toOrderMarkers(deliveryOrders.slice(0, 8))} compact />
               </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {operatingMetrics.map((stat) => (
                   <div key={stat.label} className="rounded-lg border border-white/15 bg-white/8 p-4">
                     <p className="text-2xl font-bold ltr text-right">{stat.value}</p>
