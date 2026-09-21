@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { createHash, timingSafeEqual } from "crypto";
+import { createHash, randomInt, timingSafeEqual } from "crypto";
 import { jwtVerify, SignJWT } from "jose";
 
 const encoder = new TextEncoder();
@@ -57,8 +57,13 @@ export async function verifySessionToken(token: string): Promise<{ userId: strin
   }
 }
 
+/**
+ * رمز الاستلام يفتح إغلاق الطلب، فلا يُولَّد بـ Math.random: مولّدها غير
+ * تشفيري وحالتها قابلة للاستنتاج من مخرجات سابقة. randomInt يقرأ من مصدر
+ * العشوائية في النظام ولا يميل إلى قيمة دون أخرى.
+ */
 export function generateOtpCode() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return String(randomInt(100_000, 1_000_000));
 }
 
 export async function hashOtp(code: string) {
