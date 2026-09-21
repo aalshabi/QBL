@@ -12,6 +12,7 @@ export type ColdChainTelemetryOutcome =
   | "RECORDED_WITH_LOCATION"
   | "IGNORED_VEHICLE_NOT_FOUND"
   | "IGNORED_ORDER_NOT_FOUND"
+  | "IGNORED_SENSOR_NOT_REGISTERED"
   | "DUPLICATE";
 
 export type ColdChainTelemetryResult = {
@@ -50,8 +51,36 @@ export async function processColdChainTelemetry(
         },
       });
 
+      // الجهاز يُعرَّف قبل أي كتابة. معرّف غير مسجّل لا يعني قراءة مجهولة
+      // المصدر تُقبل على أمل — يعني أن أحداً يكتب في سلسلة تبريد لا يملكها.
+      let sensor: { id: string; vehicleId: string | null } | null = null;
+      if (event.sensorId) {
+        sensor = await tx.coldChainSensor.findUnique({
+          where: { sensorId: event.sensorId },
+          select: { id: true, vehicleId: true, active: true },
+        }).then((row) => (row && row.active ? { id: row.id, vehicleId: row.vehicleId } : null));
+
+        if (!sensor) {
+          const outcome = "IGNORED_SENSOR_NOT_REGISTERED" as const;
+          await tx.auditLog.update({
+            where: { id: eventId },
+            data: {
+              reason: "Cold-chain telemetry ignored: sensor not registered",
+              metadata: { ...baseMetadata, outcome },
+            },
+          });
+          return { accepted: true, duplicate: false, outcome, eventId, alertContext: null };
+        }
+      }
+
       const vehicle = await tx.vehicle.findFirst({
-        where: event.vehicleId ? { id: event.vehicleId } : { plateNumber: event.vehiclePlate! },
+        // ربط الجهاز بالمركبة في السجل يسبق ما يذكره البلاغ: البلاغ يصف نفسه،
+        // والسجل يصف ما اتُّفق عليه.
+        where: sensor?.vehicleId
+          ? { id: sensor.vehicleId }
+          : event.vehicleId
+            ? { id: event.vehicleId }
+            : { plateNumber: event.vehiclePlate! },
         select: {
           id: true,
           coldRangeMin: true,
@@ -142,6 +171,10 @@ export async function processColdChainTelemetry(
           metadata: { ...baseMetadata, outcome, vehicleId: vehicle.id, temperatureStatus: status },
         },
       });
+
+      if (sensor) {
+        await tx.coldChainSensor.update({ where: { id: sensor.id }, data: { lastSeenAt: new Date() } });
+      }
 
       return {
         accepted: true,

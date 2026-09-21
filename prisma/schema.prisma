@@ -266,6 +266,7 @@ model Vehicle {
   orders         DeliveryOrder[]
   temperatures   TemperatureReading[]
   coldChainAlerts ColdChainAlert[]
+  coldChainSensors ColdChainSensor[]
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
 }
@@ -586,4 +587,22 @@ model ColdChainAlert {
 
   @@index([orderId, kind, resolvedAt])
   @@index([resolvedAt, detectedAt])
+}
+
+/// سجل أجهزة سلسلة التبريد. بدونه كان أي حامل لمفتاح الويبهوك يكتب قراءة
+/// بأي معرّف مستشعر لأي مركبة، ولا سبيل للتمييز بين «جهاز تعطّل» و«جهاز لم
+/// يوجد قط». التسجيل هو ما يحوّل نقطة الاستقبال إلى تكامل: جهاز معروف،
+/// مربوط بمركبة، تابع لمزود مسمّى، ويُعرف متى صمت.
+model ColdChainSensor {
+  id           String    @id @default(cuid())
+  sensorId     String    @unique
+  provider     String
+  vehicleId    String?
+  label        String?
+  active       Boolean   @default(true)
+  registeredAt DateTime  @default(now())
+  lastSeenAt   DateTime?
+  vehicle      Vehicle?  @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+
+  @@index([active, lastSeenAt])
 }

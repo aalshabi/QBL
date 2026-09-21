@@ -3,10 +3,14 @@ import { IntegrationsView } from "@/components/admin/integrations-view";
 import { Card, CardContent } from "@/components/ui/card";
 import { requireAdminPage } from "@/lib/admin/guard";
 import { getIntegrationServices } from "@/lib/integrations/overview";
+import { readColdChainLiveState } from "@/lib/cold-chain/alerts";
+import { getPrisma } from "@/lib/prisma";
 
 export default async function AdminIntegrationsPage() {
   await requireAdminPage();
-  const services = getIntegrationServices();
+  // حالة التبريد تُقرأ من البيانات: مفتاح مضبوط لا يعني أن جهازاً يرسل.
+  const coldChain = await readColdChainLiveState(getPrisma()).catch(() => null);
+  const services = getIntegrationServices({ coldChain });
   const configured = services.filter((service) => service.state === "configured").length;
   const pending = services.length - configured;
   const readOnly = services.filter(

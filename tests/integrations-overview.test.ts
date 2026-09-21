@@ -39,6 +39,9 @@ test("reports configured integrations without exposing secret values", () => {
   assert.deepEqual(
     services.map(({ id, state }) => ({ id, state })),
     [
+      // سلسلة التبريد أولاً: حالتها تُقرأ من البيانات، وبلا أجهزة مسجّلة
+      // تبقى "غير مهيأة" مهما كان المفتاح مضبوطاً.
+      { id: "cold-chain", state: "not_configured" },
       { id: "logestechs", state: "configured" },
       { id: "google-maps", state: "configured" },
       { id: "neon", state: "configured" },

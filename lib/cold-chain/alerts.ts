@@ -191,3 +191,59 @@ export async function sweepTelemetrySilence(
 
   return { checked: orders.length, opened, updated };
 }
+
+export type SensorSilence = {
+  sensorId: string;
+  provider: string;
+  vehicleId: string | null;
+  lastSeenAt: Date | null;
+  minutesSilent: number | null;
+};
+
+/**
+ * صمت الأجهزة المسجّلة. هذا ما لا يستطيع كشف الصمت على مستوى الطلب رؤيته:
+ * جهاز توقف بينما بقية الأجهزة ترسل يبدو على الشاشة كأن لا شيء حدث، لأن
+ * الطلبات الأخرى تُغطّي عليه. الجهاز المسجّل يُنتظر منه إرسال، وغيابه حدث.
+ */
+export async function findSilentSensors(
+  prisma: PrismaClient,
+  options: { now?: Date; staleAfter?: number | null } = {},
+): Promise<SensorSilence[]> {
+  const now = options.now ?? new Date();
+  const cutoff = new Date(now.getTime() - staleAfterMinutes(options.staleAfter) * 60_000);
+
+  const sensors = await prisma.coldChainSensor.findMany({
+    where: { active: true, OR: [{ lastSeenAt: null }, { lastSeenAt: { lt: cutoff } }] },
+    select: { sensorId: true, provider: true, vehicleId: true, lastSeenAt: true },
+    orderBy: { lastSeenAt: "asc" },
+  });
+
+  return sensors.map((sensor) => ({
+    sensorId: sensor.sensorId,
+    provider: sensor.provider,
+    vehicleId: sensor.vehicleId,
+    lastSeenAt: sensor.lastSeenAt,
+    minutesSilent: sensor.lastSeenAt
+      ? Math.floor((now.getTime() - sensor.lastSeenAt.getTime()) / 60_000)
+      : null,
+  }));
+}
+
+/** حالة الربط الحية كما تقرأها شاشة التكاملات — من البيانات لا من الإعداد. */
+export async function readColdChainLiveState(prisma: PrismaClient): Promise<{
+  registeredSensors: number;
+  activeSensors: number;
+  lastReadingAt: Date | null;
+}> {
+  const [registeredSensors, activeSensors, lastReading] = await Promise.all([
+    prisma.coldChainSensor.count(),
+    prisma.coldChainSensor.count({ where: { active: true } }),
+    prisma.temperatureReading.findFirst({
+      where: { sensorId: { not: null } },
+      orderBy: { receivedAt: "desc" },
+      select: { receivedAt: true },
+    }),
+  ]);
+
+  return { registeredSensors, activeSensors, lastReadingAt: lastReading?.receivedAt ?? null };
+}

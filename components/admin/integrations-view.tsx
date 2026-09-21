@@ -9,6 +9,7 @@ import {
   MapPinned,
   RefreshCw,
   ShieldCheck,
+  Thermometer,
   Truck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,7 @@ const serviceIcons = {
   logestechs: Truck,
   "google-maps": MapPinned,
   neon: Database,
+  "cold-chain": Thermometer,
 } as const;
 
 const stateStyles = {

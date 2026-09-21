@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPrisma } from "@/lib/prisma";
-import { sweepTelemetrySilence } from "@/lib/cold-chain/alerts";
+import { findSilentSensors, sweepTelemetrySilence } from "@/lib/cold-chain/alerts";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -25,8 +25,18 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const result = await sweepTelemetrySilence(getPrisma());
-    return NextResponse.json({ ok: true, ...result });
+    const prisma = getPrisma();
+    const result = await sweepTelemetrySilence(prisma);
+    const silentSensors = await findSilentSensors(prisma);
+    return NextResponse.json({
+      ok: true,
+      ...result,
+      silentSensors: silentSensors.map((sensor) => ({
+        sensorId: sensor.sensorId,
+        provider: sensor.provider,
+        minutesSilent: sensor.minutesSilent,
+      })),
+    });
   } catch {
     return NextResponse.json({ ok: false, error: "SWEEP_FAILED" }, { status: 500 });
   }

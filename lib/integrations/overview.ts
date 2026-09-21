@@ -4,7 +4,7 @@ import { getLogesTechsConfig } from "@/lib/logestechs/config";
 export type IntegrationState = "configured" | "not_configured" | "needs_attention";
 
 export type IntegrationService = {
-  id: "logestechs" | "google-maps" | "neon";
+  id: "logestechs" | "google-maps" | "neon" | "cold-chain";
   name: string;
   category: string;
   description: string;
@@ -31,12 +31,62 @@ function logesTechsState(): Pick<IntegrationService, "state" | "stateLabel"> & {
   }
 }
 
-export function getIntegrationServices(): IntegrationService[] {
+/**
+ * حالة سلسلة التبريد تُقرأ من الواقع لا من متغيّر بيئة: مفتاح ويبهوك مضبوط
+ * لا يعني أن جهازاً واحداً يرسل. الحالة هنا تحتاج عدد الأجهزة المسجّلة وآخر
+ * قراءة وصلت، ولذلك تُمرَّر من المستدعي الذي يملك الوصول إلى القاعدة.
+ */
+export type ColdChainLiveState = {
+  registeredSensors: number;
+  activeSensors: number;
+  lastReadingAt: Date | null;
+};
+
+function coldChainService(live: ColdChainLiveState | null): IntegrationService {
+  const secretConfigured = (process.env.COLD_CHAIN_TELEMETRY_API_KEY?.trim().length ?? 0) >= 32;
+  const receiving = Boolean(live && live.lastReadingAt);
+
+  const state: IntegrationState = !secretConfigured
+    ? "not_configured"
+    : live && live.activeSensors > 0 && receiving
+      ? "configured"
+      : "needs_attention";
+
+  const stateLabel = !secretConfigured
+    ? "المفتاح غير مضبوط"
+    : !live || live.registeredSensors === 0
+      ? "لا جهاز مسجّل — لم يبدأ الربط"
+      : !receiving
+        ? "أجهزة مسجّلة ولا قراءة وصلت بعد"
+        : `يستقبل — ${live.activeSensors} جهاز نشط`;
+
+  return {
+    id: "cold-chain",
+    name: "تتبع التبريد",
+    category: "سلسلة التبريد",
+    description:
+      "استقبال قراءات حرارة المركبات من أجهزة مسجّلة، وربطها بالشحنة، وفتح إنذار عند الخرق أو انقطاع القراءات.",
+    state,
+    stateLabel,
+    mode: "Webhook · POST موثق بـX-API-Key",
+    capabilities: [
+      "قبول القراءات من الأجهزة المسجّلة فقط",
+      "حدود حرارة حسب متطلب الشحنة لا نطاق المركبة",
+      "تمييز القراءة القديمة عن المفقودة",
+      "إنذار واحد مفتوح لكل طلب ونوع، مع كشف الصمت",
+    ],
+    boundary:
+      "لا مزود متعاقد بعد. نقطة الاستقبال محايدة المزود: تسجيل الجهاز يربطه بمركبة ومزود مسمّى، ومعرّف غير مسجّل يُرفض بدل أن يُكتب.",
+  };
+}
+
+export function getIntegrationServices(live?: { coldChain?: ColdChainLiveState | null }): IntegrationService[] {
   const logesTechs = logesTechsState();
   const googleMapsConfigured = Boolean(process.env.GOOGLE_MAPS_API_KEY?.trim());
   const databaseConfigured = Boolean(process.env.DATABASE_URL?.trim());
 
   return [
+    coldChainService(live?.coldChain ?? null),
     {
       id: "logestechs",
       name: "LogesTechs",
