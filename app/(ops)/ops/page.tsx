@@ -1,8 +1,18 @@
 import { OpsDashboard } from "@/components/ops/ops-dashboard";
-import { couriers, deliveryOrders } from "@/lib/mock-data";
+import { loadOpsSnapshot } from "@/lib/ops/live-data";
 import { requireOpsPage } from "@/lib/ops/guard";
+
+export const dynamic = "force-dynamic";
 
 export default async function OpsPage() {
   await requireOpsPage();
-  return <OpsDashboard couriers={couriers} orders={deliveryOrders} />;
+  const snapshot = await loadOpsSnapshot();
+  return (
+    <OpsDashboard
+      couriers={snapshot.couriers}
+      orders={snapshot.orders}
+      clients={snapshot.clients}
+      auditEvents={snapshot.auditEvents}
+    />
+  );
 }

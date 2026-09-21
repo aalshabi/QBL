@@ -11,11 +11,21 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Courier, DeliveryOrder } from "@/lib/domain";
+import type { ClientAccount, Courier, DeliveryOrder } from "@/lib/domain";
 import { toCourierMarkers, toOrderMarkers } from "@/lib/maps/adapter";
-import { auditEvents, clientAccounts } from "@/lib/mock-data";
+import type { OpsAuditEvent } from "@/lib/ops/live-data";
 
-export function OpsDashboard({ couriers, orders }: { couriers: Courier[]; orders: DeliveryOrder[] }) {
+export function OpsDashboard({
+  couriers,
+  orders,
+  clients,
+  auditEvents,
+}: {
+  couriers: Courier[];
+  orders: DeliveryOrder[];
+  clients: ClientAccount[];
+  auditEvents: OpsAuditEvent[];
+}) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
 
@@ -68,7 +78,7 @@ export function OpsDashboard({ couriers, orders }: { couriers: Courier[]; orders
           <Card className="rounded-lg border-white/10 bg-white/5 text-white">
             <CardHeader><CardTitle>خريطة المناديب والطلبات</CardTitle></CardHeader>
             <CardContent>
-              <MockMap markers={toCourierMarkers(couriers)} orderMarkers={toOrderMarkers(activeOrders.slice(0, 18))} />
+              <MockMap markers={toCourierMarkers(couriers.filter((courier) => Number.isFinite(courier.latitude)))} orderMarkers={toOrderMarkers(activeOrders.slice(0, 18))} />
             </CardContent>
           </Card>
 
@@ -127,7 +137,7 @@ export function OpsDashboard({ couriers, orders }: { couriers: Courier[]; orders
                     {activeOrders.slice(0, 18).map((order) => (
                       <TableRow key={order.id} className="border-white/10 hover:bg-white/5">
                         <TableCell className="font-mono">{order.publicCode}</TableCell>
-                        <TableCell>{clientAccounts.find((client) => client.id === order.clientAccountId)?.companyName}</TableCell>
+                        <TableCell>{clients.find((client) => client.id === order.clientAccountId)?.companyName ?? "—"}</TableCell>
                         <TableCell>{order.serviceType}</TableCell>
                         <TableCell><OrderStatusBadge status={order.status} /></TableCell>
                         <TableCell>{order.etaMinutes} د</TableCell>
@@ -154,6 +164,9 @@ export function OpsDashboard({ couriers, orders }: { couriers: Courier[]; orders
           <TabsContent value="audit" className="mt-4">
             <Card className="rounded-lg border-white/10 bg-white/5 text-white">
               <CardContent className="grid gap-3 p-5">
+                {auditEvents.length === 0 && (
+                  <p className="text-sm text-zinc-400">لا توجد أحداث تدقيق بعد.</p>
+                )}
                 {auditEvents.map((event) => (
                   <div key={event.id} className="flex flex-col gap-2 rounded-lg bg-zinc-900 p-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
