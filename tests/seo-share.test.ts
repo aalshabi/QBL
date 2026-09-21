@@ -84,3 +84,36 @@ test("عنوان الصفحة ووصفها ضمن ما يعرضه محرك ال�
     assert.ok(title.length > 0 && title.length <= 65, `${file}: طول العنوان ${title.length}`);
   }
 });
+
+/**
+ * الميتا تصف ما على الصفحة. حين أُعيد توجيه القطاعات بقيت أوصاف الصفحات تسرد
+ * القطاعات القديمة — ومنها الصيدليات والمستوصفات، وهو بالضبط ادعاء القدرة
+ * الذي حُذف من المحتوى. وصف يَعِد بما لا تقدمه الصفحة يضلّل الزائر ومحرك
+ * البحث معاً، ويعيد ادعاءً حُذف من الباب الخلفي.
+ */
+test("أوصاف الصفحات لا تعِد بقطاعات لم تعد تُخدَم", () => {
+  const retired = ["الصيدليات", "المستوصفات", "المستشفيات", "موردو الأغذية", "الموردين الغذائيين"];
+  const surfaces = [
+    "app/page.tsx",
+    "app/layout.tsx",
+    "app/(marketing)/sectors/page.tsx",
+    "app/(marketing)/case-studies/page.tsx",
+  ];
+
+  const hits: string[] = [];
+  for (const file of surfaces) {
+    const source = read(file);
+    for (const term of retired) {
+      if (source.includes(term)) hits.push(`${file}: ${term}`);
+    }
+  }
+
+  assert.deepEqual(hits, [], `قطاع محذوف عاد في وصف صفحة:\n${hits.join("\n")}`);
+});
+
+test("وصف صفحة القطاعات يذكر القطاعات المخدومة فعلاً", () => {
+  const source = read("app/(marketing)/sectors/page.tsx");
+  for (const sector of ["الفلفلمنت", "التجميل", "العطور"]) {
+    assert.ok(source.includes(sector), `وصف الصفحة لا يذكر ${sector}`);
+  }
+});

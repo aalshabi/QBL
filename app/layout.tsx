@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     locale: "ar_SA",
     url: SITE_URL,
     title: "قدام بابك QBL | توصيل مبرّد آخر ميل في الرياض",
-    description: "توصيل مبرّد آخر ميل داخل الرياض للموردين والصيدليات والمطاعم والتجزئة، بتتبع وكود استلام.",
+    description: "توصيل مبرّد آخر ميل داخل الرياض لعلامات التجميل والعناية والعطور، بتتبع وكود استلام.",
   },
   twitter: { card: "summary_large_image" },
   manifest: "/manifest.webmanifest",
