@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "TemperatureReading" ADD COLUMN     "receivedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;

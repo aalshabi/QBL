@@ -1,5 +1,5 @@
 import type { OrderStatus } from "@/lib/domain";
-import type { TemperatureStatus } from "@/lib/domain";
+import type { TemperatureState } from "@/lib/cold-chain/thresholds";
 
 /**
  * ما تحتاجه شاشة المندوب فعلاً، لا أكثر. الشاشة تُقرأ في الشارع بيد واحدة،
@@ -19,7 +19,7 @@ export type CourierOrderView = {
   temperatureTarget: string;
   scheduledAt: string;
   isDelayed: boolean;
-  temperature: { celsius: number; status: TemperatureStatus; recordedAt: string } | null;
+  temperature: { celsius: number; state: TemperatureState; ageMinutes: number | null } | null;
 };
 
 /** الخطوة الواحدة المطلوبة الآن من المندوب في هذه الحالة. */

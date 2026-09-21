@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { assertRole, getSession } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
+import { classifyReading, resolveBounds } from "@/lib/cold-chain/thresholds";
 
 const schema = z.object({
   orderId: z.string().optional(),
@@ -48,14 +49,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "VEHICLE_NOT_FOUND" }, { status: 404 });
   }
 
-  const min = Number(vehicle.coldRangeMin);
-  const max = Number(vehicle.coldRangeMax);
-  const withinRange = body.data.celsius >= min && body.data.celsius <= max;
-  const status = withinRange
-    ? "NORMAL"
-    : Math.abs(body.data.celsius - (body.data.celsius < min ? min : max)) > 3
-      ? "CRITICAL"
-      : "WARNING";
+  // متطلب الشحنة يسبق نطاق المركبة: قراءة +4 سليمة لشحنة طازجة وخرق لشحنة مجمدة.
+  const order = body.data.orderId
+    ? await prisma.deliveryOrder.findUnique({
+        where: { id: body.data.orderId },
+        select: { temperatureTarget: true },
+      })
+    : null;
+
+  const bounds = resolveBounds({
+    orderTarget: order?.temperatureTarget,
+    vehicleMin: Number(vehicle.coldRangeMin),
+    vehicleMax: Number(vehicle.coldRangeMax),
+  });
+  const status = classifyReading(body.data.celsius, bounds);
 
   const reading = await prisma.temperatureReading.create({
     data: {
@@ -64,6 +71,8 @@ export async function POST(request: Request) {
       celsius: body.data.celsius,
       status,
       sensorId: MANUAL_SENSOR_ID,
+      // القراءة اليدوية تُقاس وتُستقبل في اللحظة نفسها؛ التساوي هنا معلومة لا حشو.
+      receivedAt: new Date(),
     },
     select: { id: true, status: true, recordedAt: true },
   });

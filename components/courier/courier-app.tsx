@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { nextStepFor, navigationUrl, telHref, type CourierOrderView } from "@/lib/orders/courier-view";
 import type { OrderStatus } from "@/lib/domain";
+import type { TemperatureState } from "@/lib/cold-chain/thresholds";
 
 /**
  * شاشة المندوب. مبدأ التصميم: خطوة واحدة ظاهرة في كل حالة.
@@ -47,11 +48,15 @@ const ERROR_TEXT: Record<string, string> = {
 
 const NETWORK_ERROR = "تعذّر الاتصال. لم يُحفظ التغيير — أعد المحاولة.";
 
-const TEMPERATURE_TEXT: Record<string, { label: string; tone: string }> = {
-  NORMAL: { label: "ضمن النطاق", tone: "text-emerald-700" },
-  WARNING: { label: "خارج النطاق", tone: "text-amber-700" },
-  CRITICAL: { label: "خارج النطاق بفارق كبير", tone: "text-destructive" },
-  NOT_AVAILABLE: { label: "لا توجد قراءة", tone: "text-muted-foreground" },
+/**
+ * أربع حالات متمايزة لا ثلاث: «قراءة قديمة» ليست «ضمن النطاق» وليست «لا توجد
+ * بيانات». المندوب يحتاج أن يعرف الفرق بين ما لم يُقس وما قيس ثم تقادم.
+ */
+const TEMPERATURE_TEXT: Record<TemperatureState, { label: string; tone: string }> = {
+  IN_RANGE: { label: "ضمن النطاق", tone: "text-emerald-700" },
+  OUT_OF_RANGE: { label: "خارج النطاق", tone: "text-destructive" },
+  STALE: { label: "قراءة قديمة", tone: "text-amber-700" },
+  NO_DATA: { label: "لا توجد قراءة", tone: "text-muted-foreground" },
 };
 
 const STATUS_TEXT: Record<OrderStatus, string> = {
@@ -62,10 +67,6 @@ const STATUS_TEXT: Record<OrderStatus, string> = {
   DELIVERED: "تم التسليم",
   FAILED: "تعذر التسليم",
 };
-
-function minutesSince(iso: string): number {
-  return Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60_000));
-}
 
 export function CourierApp({ orders, courierName }: { orders: CourierOrderView[]; courierName: string }) {
   const router = useRouter();
@@ -212,7 +213,7 @@ export function CourierApp({ orders, courierName }: { orders: CourierOrderView[]
   }
 
   const temp = current.temperature;
-  const tempInfo = TEMPERATURE_TEXT[temp?.status ?? "NOT_AVAILABLE"];
+  const tempInfo = TEMPERATURE_TEXT[temp?.state ?? "NO_DATA"];
 
   return (
     <main className="min-h-screen bg-muted/40 pb-10">
@@ -250,8 +251,10 @@ export function CourierApp({ orders, courierName }: { orders: CourierOrderView[]
               </p>
               <p className={`mt-2 flex items-center gap-1.5 text-sm font-semibold ${tempInfo.tone}`}>
                 <Thermometer className="h-4 w-4" aria-hidden="true" />
-                {temp ? `${temp.celsius}°م — ${tempInfo.label}` : tempInfo.label}
-                {temp && <span className="font-normal text-muted-foreground">· قبل {minutesSince(temp.recordedAt)} د</span>}
+                {temp && temp.state !== "NO_DATA" ? `${temp.celsius}°م — ${tempInfo.label}` : tempInfo.label}
+                {temp?.ageMinutes != null && (
+                  <span className="font-normal text-muted-foreground">· قبل {temp.ageMinutes} د</span>
+                )}
               </p>
             </div>
 

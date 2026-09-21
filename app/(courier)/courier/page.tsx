@@ -4,7 +4,7 @@ import { getSession } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
 import { toDomainStatus } from "@/lib/orders/transitions";
 import type { CourierOrderView } from "@/lib/orders/courier-view";
-import type { TemperatureStatus } from "@/lib/domain";
+import { evaluateTemperature, resolveBounds } from "@/lib/cold-chain/thresholds";
 
 export const dynamic = "force-dynamic";
 
@@ -39,16 +39,29 @@ export default async function CourierPage() {
       scheduledAt: true,
       isDelayed: true,
       customer: { select: { name: true, phone: true } },
+      vehicle: { select: { coldRangeMin: true, coldRangeMax: true } },
       temperatureReadings: {
         orderBy: { recordedAt: "desc" },
         take: 1,
-        select: { celsius: true, status: true, recordedAt: true },
+        select: { celsius: true, recordedAt: true },
       },
     },
   });
 
+  const now = new Date();
   const orders: CourierOrderView[] = rows.map((row) => {
     const reading = row.temperatureReadings[0];
+    // التقييم على الخادم: الشاشة لا تقرر وحدها أن قراءة عمرها ساعة "سليمة".
+    const evaluation = evaluateTemperature({
+      celsius: reading ? Number(reading.celsius) : null,
+      recordedAt: reading?.recordedAt ?? null,
+      bounds: resolveBounds({
+        orderTarget: row.temperatureTarget,
+        vehicleMin: row.vehicle ? Number(row.vehicle.coldRangeMin) : null,
+        vehicleMax: row.vehicle ? Number(row.vehicle.coldRangeMax) : null,
+      }),
+      now,
+    });
     return {
       id: row.id,
       publicCode: row.publicCode,
@@ -63,11 +76,7 @@ export default async function CourierPage() {
       scheduledAt: row.scheduledAt.toISOString(),
       isDelayed: row.isDelayed,
       temperature: reading
-        ? {
-            celsius: Number(reading.celsius),
-            status: reading.status as TemperatureStatus,
-            recordedAt: reading.recordedAt.toISOString(),
-          }
+        ? { celsius: Number(reading.celsius), state: evaluation.state, ageMinutes: evaluation.ageMinutes }
         : null,
     };
   });

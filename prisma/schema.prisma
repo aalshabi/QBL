@@ -379,7 +379,10 @@ model TemperatureReading {
   celsius     Decimal           @db.Decimal(5, 2)
   status      TemperatureStatus @default(NORMAL)
   sensorId    String?
+  // وقت القياس عند المستشعر، ووقت وصوله إلينا. الفارق بينهما هو ما يكشف
+  // تأخر المزود: قراءة عمرها ساعة وصلت الآن ليست قراءة حديثة.
   recordedAt  DateTime          @default(now())
+  receivedAt  DateTime          @default(now())
   vehicle     Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   order       DeliveryOrder?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
 

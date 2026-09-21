@@ -7,6 +7,13 @@ const MIN_SECRET_LENGTH = 32;
 const MAX_REQUEST_BYTES = 16 * 1024;
 const IDENTIFIER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;
 const SENSOR_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$/;
+/**
+ * لوحة المركبة ليست معرّفاً تقنياً. اللوحة السعودية عربية وفيها مسافات — مثل
+ * «ر ي د 3200» — وكانت تُرفض بنمط المعرّفات اللاتيني، فكل بلاغ من مزود يرسل
+ * اللوحة يعود 400. نمط أوسع للوحة وحدها، وأضيق طولاً، والمعرّفات تبقى صارمة.
+ */
+const PLATE_PATTERN = /^[A-Za-z0-9\u0621-\u064A][A-Za-z0-9\u0621-\u064A \-]{0,29}$/;
+const ARABIC_INDIC_DIGITS = /[\u0660-\u0669]/g;
 const MIN_CELSIUS = -40;
 const MAX_CELSIUS = 40;
 
@@ -101,6 +108,17 @@ function boundedIdentifier(value: string | undefined): string | null {
   return text && IDENTIFIER_PATTERN.test(text) ? text : null;
 }
 
+/** اللوحة تُوحَّد قبل المطابقة: أرقام هندية إلى لاتينية، ومسافات متكررة إلى واحدة. */
+function boundedPlate(value: string | undefined): string | null {
+  if (value === undefined) return null;
+  const text = value
+    .normalize("NFKC")
+    .replace(ARABIC_INDIC_DIGITS, (digit) => String(digit.charCodeAt(0) - 0x0660))
+    .replace(/\s+/g, " ")
+    .trim();
+  return text && PLATE_PATTERN.test(text) ? text : null;
+}
+
 function boundedSensorId(value: string | undefined): string | null {
   if (value === undefined) return null;
   const text = value.normalize("NFKC").trim();
@@ -122,7 +140,7 @@ export function normalizeColdChainTelemetryPayload(input: unknown): NormalizedCo
   if (!parsed.success) throw new TypeError("INVALID_TELEMETRY_PAYLOAD");
 
   const data = parsed.data;
-  const vehiclePlate = boundedIdentifier(data.vehiclePlate);
+  const vehiclePlate = boundedPlate(data.vehiclePlate);
   const vehicleId = boundedIdentifier(data.vehicleId);
   if (!vehiclePlate && !vehicleId) throw new TypeError("INVALID_TELEMETRY_PAYLOAD");
 

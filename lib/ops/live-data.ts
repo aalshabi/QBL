@@ -1,6 +1,7 @@
 import "server-only";
 import { getPrisma } from "@/lib/prisma";
 import { toDomainStatus } from "@/lib/orders/transitions";
+import { evaluateTemperature, resolveBounds } from "@/lib/cold-chain/thresholds";
 import type {
   ClientAccount,
   Courier,
@@ -136,10 +137,11 @@ export async function loadOpsSnapshot(): Promise<OpsSnapshot> {
         deliveredAt: true,
         isDelayed: true,
         requiresIntervention: true,
+        vehicle: { select: { coldRangeMin: true, coldRangeMax: true } },
         temperatureReadings: {
           orderBy: { recordedAt: "desc" },
           take: 1,
-          select: { celsius: true, status: true },
+          select: { celsius: true, recordedAt: true },
         },
       },
     }),
@@ -163,8 +165,20 @@ export async function loadOpsSnapshot(): Promise<OpsSnapshot> {
 
   const couriers: Courier[] = courierRows.map((row) => mapCourier(row));
 
+  const now = new Date();
   const orders: DeliveryOrder[] = orderRows.map((row) => {
     const reading = row.temperatureReadings[0];
+    // قراءة متقادمة تُصعَّد إلى تنبيه بدل أن تبقى خضراء على شاشة العمليات.
+    const evaluation = evaluateTemperature({
+      celsius: reading ? Number(reading.celsius) : null,
+      recordedAt: reading?.recordedAt ?? null,
+      bounds: resolveBounds({
+        orderTarget: row.temperatureTarget,
+        vehicleMin: row.vehicle ? Number(row.vehicle.coldRangeMin) : null,
+        vehicleMax: row.vehicle ? Number(row.vehicle.coldRangeMax) : null,
+      }),
+      now,
+    });
     return {
       id: row.id,
       publicCode: row.publicCode,
@@ -185,7 +199,7 @@ export async function loadOpsSnapshot(): Promise<OpsSnapshot> {
       isDelayed: row.isDelayed,
       requiresIntervention: row.requiresIntervention,
       currentTemperature: reading ? Number(reading.celsius) : undefined,
-      temperatureStatus: (reading?.status ?? "NOT_AVAILABLE") as TemperatureStatus,
+      temperatureStatus: evaluation.severity as TemperatureStatus,
       timeline: buildTimeline(row),
     };
   });

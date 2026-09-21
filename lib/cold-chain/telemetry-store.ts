@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getPrisma } from "@/lib/prisma";
+import { classifyReading, resolveBounds } from "@/lib/cold-chain/thresholds";
 import type { NormalizedColdChainTelemetry } from "@/lib/cold-chain/telemetry";
 import { safeTelemetryMetadata, telemetryEventId } from "@/lib/cold-chain/telemetry";
 
@@ -64,6 +65,7 @@ export async function processColdChainTelemetry(
       }
 
       let orderId: string | null = null;
+      let orderTarget: string | null = null;
       if (event.orderPublicCode || event.orderReference) {
         const order = await tx.deliveryOrder.findFirst({
           where: {
@@ -72,7 +74,7 @@ export async function processColdChainTelemetry(
               event.orderReference ? { reference: event.orderReference } : undefined,
             ].filter(Boolean) as Array<{ publicCode: string } | { reference: string }>,
           },
-          select: { id: true },
+          select: { id: true, temperatureTarget: true },
         });
 
         if (!order) {
@@ -87,12 +89,16 @@ export async function processColdChainTelemetry(
           return { accepted: true, duplicate: false, outcome, eventId };
         }
         orderId = order.id;
+        orderTarget = order.temperatureTarget;
       }
 
-      const min = Number(vehicle.coldRangeMin);
-      const max = Number(vehicle.coldRangeMax);
-      const withinRange = event.celsius >= min && event.celsius <= max;
-      const status = withinRange ? "NORMAL" : Math.abs(event.celsius - (event.celsius < min ? min : max)) > 3 ? "CRITICAL" : "WARNING";
+      // نطاق الشحنة يسبق نطاق المركبة: الفان الواحد يحمل مجمداً وطازجاً معاً.
+      const bounds = resolveBounds({
+        orderTarget,
+        vehicleMin: Number(vehicle.coldRangeMin),
+        vehicleMax: Number(vehicle.coldRangeMax),
+      });
+      const status = classifyReading(event.celsius, bounds);
 
       await tx.temperatureReading.create({
         data: {
@@ -102,6 +108,7 @@ export async function processColdChainTelemetry(
           status,
           sensorId: event.sensorId,
           recordedAt: event.recordedAt,
+          receivedAt: new Date(),
         },
       });
 
