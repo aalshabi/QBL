@@ -8,6 +8,7 @@ import {
   BarChart3,
   LayoutDashboard,
   LogOut,
+  Inbox,
   Package,
   PlugZap,
   Search,
@@ -20,6 +21,7 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/admin", label: "الملخص", icon: LayoutDashboard },
   { href: "/admin/orders", label: "إدارة الطلبات", icon: Package },
+  { href: "/admin/leads", label: "العملاء المحتملون", icon: Inbox },
   { href: "/admin/fleet", label: "المناديب والأسطول", icon: Truck },
   { href: "/admin/cod", label: "الفوترة والتحصيل", icon: Banknote },
   { href: "/admin/reports", label: "التقارير والتحليلات", icon: BarChart3 },

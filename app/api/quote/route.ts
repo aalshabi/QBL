@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { saveLead } from "@/lib/leads";
+import { notifyNewLead } from "@/lib/notifications/lead-alert";
 
 const schema = z.object({
   name: z.string().min(2),
@@ -23,6 +24,9 @@ export async function POST(request: Request) {
     console.error("[quote] failed to persist lead", error);
     return NextResponse.json({ error: "Could not save the request." }, { status: 500 });
   }
+
+  // الطلب محفوظ. فشل التنبيه يُسجَّل ولا يُفشل استجابة الزائر.
+  await notifyNewLead(body.data);
 
   return NextResponse.json({ ok: true, message: "Quote request received." }, { status: 201 });
 }

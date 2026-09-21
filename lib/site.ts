@@ -20,6 +20,8 @@ import {
 
 import type { LucideIcon } from "lucide-react";
 
+import { CONTACT_EMAILS } from "@/lib/contact";
+
 export const SITE = {
   brand: "QBL",
   brandAr: "قدام بابك",
@@ -37,14 +39,7 @@ export const SITE = {
   address: "الرياض، طريق أبو عبيدة عامر بن الجراح، 4480",
   postalCode: "14256",
   phone: "+966 55 632 0555",
-  emails: {
-    info: "info@qbl.sa",
-    sales: "sales@qbl.sa",
-    ops: "ops@qbl.sa",
-    support: "support@qbl.sa",
-    billing: "billing@qbl.sa",
-    owner: "abdullah@qbl.sa",
-  },
+  emails: CONTACT_EMAILS,
 };
 
 export const NAV_ITEMS = [

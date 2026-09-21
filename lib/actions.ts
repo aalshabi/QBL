@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { saveLead } from "@/lib/leads";
+import { notifyNewLead } from "@/lib/notifications/lead-alert";
 
 const leadSchema = z.object({
   name: z.string().min(2),
@@ -27,6 +28,9 @@ export async function submitLead(formData: FormData): Promise<LeadResult> {
     console.error("[lead] failed to persist", error);
     return { ok: false, error: "تعذر حفظ الطلب، حاول مرة أخرى." };
   }
+
+  // الطلب محفوظ. فشل التنبيه يُسجَّل ولا يُفشل استجابة الزائر.
+  await notifyNewLead(parsed.data);
 
   revalidatePath("/quote");
   return { ok: true };
