@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
   CheckCircle2,
-  ChevronLeft,
   Clock,
   MapPin,
   Navigation,
@@ -396,12 +395,9 @@ export function CourierApp({ orders, courierName }: { orders: CourierOrderView[]
             <h2 className="text-sm font-bold text-muted-foreground">الطلبات التالية</h2>
             <ul className="mt-2 space-y-2">
               {rest.map((order) => (
-                <li key={order.id} className="flex items-center justify-between gap-2 rounded-lg border bg-background p-3">
-                  <div className="min-w-0">
-                    <p className="ltr text-sm font-bold text-primary">{order.publicCode}</p>
-                    <p className="truncate text-xs text-muted-foreground">{order.dropoffAddress}</p>
-                  </div>
-                  <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <li key={order.id} className="rounded-lg border bg-background p-3">
+                  <p className="ltr text-sm font-bold text-primary">{order.publicCode}</p>
+                  <p className="truncate text-xs text-muted-foreground">{order.dropoffAddress}</p>
                 </li>
               ))}
             </ul>
