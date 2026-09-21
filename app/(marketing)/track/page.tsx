@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { Search } from "lucide-react";
 import { TrackingView } from "@/components/tracking/tracking-view";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { TrackingSnapshot } from "@/lib/domain";
@@ -52,7 +52,9 @@ export default function TrackEntryPage() {
       <Card className="w-full max-w-md rounded-lg">
         <CardHeader>
           <p className="font-bold text-accent">تتبع الشحنة</p>
-          <CardTitle className="text-2xl font-bold text-primary">أين شحنتي؟</CardTitle>
+          {/* عنوان رئيسي فعلي: الصفحة كانت بلا h1 إطلاقاً، فلا الزاحف ولا قارئ الشاشة
+                يعرف موضوعها. CardTitle عنصر div مُنسَّق، لا عنوان. */}
+            <h1 className="font-heading text-2xl leading-snug font-bold text-primary">أين شحنتي؟</h1>
           <p className="text-sm text-muted-foreground">أدخل رقم الشحنة وآخر 4 أرقام من رقم الجوال المسجل على الطلب.</p>
         </CardHeader>
         <CardContent>

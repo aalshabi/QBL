@@ -25,6 +25,7 @@ import PageHero from "@/components/PageHero";
 import { STATUS_FLOW } from "@/data/coldChain";
 import { JsonLd } from "@/components/seo/json-ld";
 import { coldChainBreadcrumb } from "@/lib/structured-data";
+import { OG_IMAGE } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "نظام التوصيل المبرّد",
@@ -32,6 +33,7 @@ export const metadata: Metadata = {
     "نظام تشغيلي مصمم للتوصيل المبرّد داخل الرياض: من إنشاء الطلب إلى إثبات التسليم، مع ضبط الحرارة، التنبيهات، وقواعد الالتزام الزمني.",
   alternates: { canonical: "https://qbl.sa/cold-chain-system" },
   openGraph: {
+    images: [OG_IMAGE],
     title: "نظام التوصيل المبرّد | QBL",
     description: "تشغيل واضح للسلسلة الباردة: طلبات، حرارة، تخزين، إرسال، إثبات تسليم.",
     url: "https://qbl.sa/cold-chain-system",

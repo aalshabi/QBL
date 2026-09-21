@@ -28,11 +28,12 @@ import PageHero from "@/components/PageHero";
 import { SITE } from "@/lib/site";
 import { JsonLd } from "@/components/seo/json-ld";
 import { beautyShieldSchema } from "@/lib/structured-data";
+import { OG_IMAGE } from "@/lib/seo";
 
 export const metadata = {
-  title: "توصيل مستحضرات التجميل والعطور والعناية بدرجة حرارة محمية في الرياض | QBL Beauty Shield",
+  title: "توصيل التجميل والعطور بحماية حرارية — الرياض | QBL",
   description:
-    "خدمة توصيل مخصصة لحماية مستحضرات التجميل والعناية بالبشرة والشعر والعطور من حرارة الجو أثناء النقل داخل الرياض. مناسبة للمكياج، السيروم، العطور، الهدايا والباقات، ومراكز الفلفلمنت.",
+    "توصيل يحمي مستحضرات التجميل والعناية والعطور من حرارة الجو داخل الرياض: مكياج، سيروم، عطور، وهدايا موسمية، لمتاجر Beauty ومراكز الفلفلمنت.",
   keywords: [
     "توصيل منتجات تجميل الرياض",
     "توصيل عناية بالبشرة",
@@ -50,6 +51,7 @@ export const metadata = {
     canonical: "https://qbl.sa/services/beauty-shield",
   },
   openGraph: {
+    images: [OG_IMAGE],
     title: "QBL Beauty Shield — توصيل محمي حرارياً للتجميل والعطور والعناية",
     description:
       "خدمة توصيل مخصصة لحماية مستحضرات التجميل والعناية بالبشرة والشعر والعطور من حرارة الجو أثناء النقل داخل الرياض.",

@@ -10,6 +10,18 @@ export function absoluteUrl(path = "/"): string {
   return new URL(path, SITE_URL).toString();
 }
 
+/**
+ * صورة المشاركة. تُذكر صراحة في كل صفحة لأن pageMetadata يبني كائن openGraph
+ * كاملاً، و Next لا يدمج صورة الملف الاصطلاحي في كائن مُصرَّح به — فبدون هذا
+ * السطر تبقى الصورة على الجذر وحده، وكل صفحة أخرى تُشارَك بلا صورة.
+ */
+export const OG_IMAGE = {
+  url: absoluteUrl("/opengraph-image"),
+  width: 1200,
+  height: 630,
+  alt: "QBL — قدام بابك للخدمات اللوجستية",
+} as const;
+
 type PageMetadataInput = {
   title: string;
   description: string;
@@ -38,8 +50,9 @@ export function pageMetadata({
       url,
       title,
       description,
+      images: [OG_IMAGE],
     },
-    twitter: { card: "summary_large_image", title, description },
+    twitter: { card: "summary_large_image", title, description, images: [OG_IMAGE.url] },
     ...(noIndex ? { robots: { index: false, follow: false } } : {}),
   };
 }
