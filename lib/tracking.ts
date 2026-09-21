@@ -1,6 +1,7 @@
 import { getPrisma } from "@/lib/prisma";
 import { timingSafeEqualStrings, verifyTrackingToken } from "@/lib/security";
 import type { OrderStatus, TrackingSnapshot } from "@/lib/domain";
+import { evaluateTemperature, resolveBounds } from "@/lib/cold-chain/thresholds";
 
 const maskPhone = (phone: string) => `05******${phone.slice(-2)}`;
 
@@ -58,6 +59,7 @@ async function buildTrackingSnapshot(orderId: string): Promise<TrackingSnapshot 
         customer: { select: { name: true, phone: true } },
         courierId: true,
         vehicleId: true,
+        vehicle: { select: { coldRangeMin: true, coldRangeMax: true } },
       },
     });
 
@@ -75,13 +77,13 @@ async function buildTrackingSnapshot(orderId: string): Promise<TrackingSnapshot 
       prisma.temperatureReading.findFirst({
         where: { orderId: order.id },
         orderBy: { recordedAt: "desc" },
-        select: { celsius: true, status: true },
+        select: { celsius: true, recordedAt: true },
       }),
       order.vehicleId
         ? prisma.temperatureReading.findFirst({
             where: { vehicleId: order.vehicleId, orderId: null },
             orderBy: { recordedAt: "desc" },
-            select: { celsius: true, status: true },
+            select: { celsius: true, recordedAt: true },
           })
         : Promise.resolve(null),
       prisma.otpCode.findFirst({
@@ -92,6 +94,17 @@ async function buildTrackingSnapshot(orderId: string): Promise<TrackingSnapshot 
     ]);
 
     const temperatureReading = latestOrderReading ?? latestVehicleReading;
+    // العميل كان يرى الحالة المخزّنة: قراءة عمرها ساعتان تظهر له خضراء
+    // «ضمن النطاق». التقييم هنا هو نفسه الذي تراه العمليات والمندوب.
+    const temperatureEvaluation = evaluateTemperature({
+      celsius: temperatureReading ? Number(temperatureReading.celsius) : null,
+      recordedAt: temperatureReading?.recordedAt ?? null,
+      bounds: resolveBounds({
+        orderTarget: order.temperatureTarget,
+        vehicleMin: order.vehicle ? Number(order.vehicle.coldRangeMin) : null,
+        vehicleMax: order.vehicle ? Number(order.vehicle.coldRangeMax) : null,
+      }),
+    });
 
     return {
       order: {
@@ -102,8 +115,9 @@ async function buildTrackingSnapshot(orderId: string): Promise<TrackingSnapshot 
         dropoffAddress: order.dropoffAddress,
         etaMinutes: order.etaMinutes,
         temperatureTarget: order.temperatureTarget,
-        currentTemperature: temperatureReading ? Number(temperatureReading.celsius) : undefined,
-        temperatureStatus: temperatureReading?.status ?? "NOT_AVAILABLE",
+        currentTemperature:
+          temperatureEvaluation.state === "NO_DATA" ? undefined : Number(temperatureReading!.celsius),
+        temperatureStatus: temperatureEvaluation.severity,
         timeline: [
           { status: "CREATED", label: "تم إنشاء الطلب", at: order.scheduledAt.toISOString(), done: true },
           {

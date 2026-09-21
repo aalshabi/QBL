@@ -90,6 +90,12 @@ enum ExpenseType {
   OTHER
 }
 
+enum ColdChainAlertKind {
+  OUT_OF_RANGE
+  STALE_READING
+  NO_TELEMETRY
+}
+
 enum TemperatureStatus {
   NORMAL
   WARNING
@@ -250,6 +256,7 @@ model Vehicle {
   courier        Courier?
   orders         DeliveryOrder[]
   temperatures   TemperatureReading[]
+  coldChainAlerts ColdChainAlert[]
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
 }
@@ -305,6 +312,7 @@ model DeliveryOrder {
   notificationLogs    NotificationLog[]
   auditLogs           AuditLog[]
   proofOfDelivery     ProofOfDelivery?
+  coldChainAlerts     ColdChainAlert[]
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
 
@@ -538,4 +546,30 @@ model Lead {
   message   String
   status    LeadStatus @default(NEW)
   createdAt DateTime   @default(now())
+}
+
+/// إنذار سلسلة التبريد. القراءات وحدها لا تحمي شحنة: ما يحميها هو أن الخرق
+/// يصير حالة مفتوحة يراها التشغيل ويغلقها، لا سطراً في جدول قياسات.
+/// إنذار واحد مفتوح لكل (طلب، نوع): تكرار الخرق يرفع العدّاد ولا ينشئ صفاً.
+model ColdChainAlert {
+  id          String             @id @default(cuid())
+  orderId     String?
+  vehicleId   String?
+  kind        ColdChainAlertKind
+  severity    TemperatureStatus  @default(WARNING)
+  celsius     Decimal?           @db.Decimal(5, 2)
+  boundsMin   Decimal?           @db.Decimal(5, 2)
+  boundsMax   Decimal?           @db.Decimal(5, 2)
+  occurrences Int                @default(1)
+  detectedAt  DateTime           @default(now())
+  lastSeenAt  DateTime           @default(now())
+  readingAt   DateTime?
+  resolvedAt  DateTime?
+  note        String?
+  order       DeliveryOrder?     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  vehicle     Vehicle?           @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  createdAt   DateTime           @default(now())
+
+  @@index([orderId, kind, resolvedAt])
+  @@index([resolvedAt, detectedAt])
 }

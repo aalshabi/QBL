@@ -14,17 +14,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ClientAccount, Courier, DeliveryOrder } from "@/lib/domain";
 import { toCourierMarkers, toOrderMarkers } from "@/lib/maps/adapter";
 import type { OpsAuditEvent } from "@/lib/ops/live-data";
+import { COLD_CHAIN_ALERT_LABEL, type OpsColdChainAlert } from "@/lib/cold-chain/alert-labels";
 
 export function OpsDashboard({
   couriers,
   orders,
   clients,
   auditEvents,
+  coldChainAlerts,
 }: {
   couriers: Courier[];
   orders: DeliveryOrder[];
   clients: ClientAccount[];
   auditEvents: OpsAuditEvent[];
+  coldChainAlerts: OpsColdChainAlert[];
 }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
@@ -151,6 +154,24 @@ export function OpsDashboard({
             </Card>
           </TabsContent>
           <TabsContent value="alerts" className="mt-4 grid gap-4 md:grid-cols-2">
+            {coldChainAlerts.map((alert) => (
+              <Card
+                key={alert.id}
+                className={`rounded-lg text-white ${alert.severity === "CRITICAL" ? "border-red-400/40 bg-red-400/10" : "border-amber-300/30 bg-amber-300/10"}`}
+              >
+                <CardContent className="p-5">
+                  <Badge className={alert.severity === "CRITICAL" ? "bg-red-400 text-zinc-950" : "bg-amber-300 text-zinc-950"}>
+                    {COLD_CHAIN_ALERT_LABEL[alert.kind]}
+                  </Badge>
+                  <h3 className="mt-3 font-bold ltr text-right">{alert.orderCode}</h3>
+                  <p className="mt-2 text-sm text-zinc-300">
+                    {alert.celsius !== null ? `${alert.celsius}°م · ` : ""}
+                    تكرر {alert.occurrences} مرة
+                  </p>
+                  {alert.note ? <p className="mt-1 text-xs text-zinc-400">{alert.note}</p> : null}
+                </CardContent>
+              </Card>
+            ))}
             {[...tempAlerts, ...intervention].slice(0, 10).map((order) => (
               <Card key={order.id} className="rounded-lg border-orange-300/30 bg-orange-300/10 text-white">
                 <CardContent className="p-5">

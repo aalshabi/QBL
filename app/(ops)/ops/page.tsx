@@ -13,6 +13,7 @@ export default async function OpsPage() {
       orders={snapshot.orders}
       clients={snapshot.clients}
       auditEvents={snapshot.auditEvents}
+      coldChainAlerts={snapshot.coldChainAlerts}
     />
   );
 }

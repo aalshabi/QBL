@@ -1,7 +1,9 @@
 import "server-only";
 
 import { getPrisma } from "@/lib/prisma";
-import { classifyReading, resolveBounds } from "@/lib/cold-chain/thresholds";
+import { classifyReading, evaluateTemperature, resolveBounds } from "@/lib/cold-chain/thresholds";
+import type { TemperatureBounds } from "@/lib/cold-chain/thresholds";
+import { applyReadingToAlerts } from "@/lib/cold-chain/alerts";
 import type { NormalizedColdChainTelemetry } from "@/lib/cold-chain/telemetry";
 import { safeTelemetryMetadata, telemetryEventId } from "@/lib/cold-chain/telemetry";
 
@@ -19,6 +21,9 @@ export type ColdChainTelemetryResult = {
   eventId: string;
 };
 
+type AlertContext = { orderId: string | null; vehicleId: string; bounds: TemperatureBounds | null };
+type InternalResult = ColdChainTelemetryResult & { alertContext: AlertContext | null };
+
 function isUniqueConstraintError(error: unknown): boolean {
   return Boolean(
     error && typeof error === "object" && "code" in error && (error as { code?: unknown }).code === "P2002",
@@ -35,7 +40,7 @@ export async function processColdChainTelemetry(
   const baseMetadata = safeTelemetryMetadata(event);
 
   try {
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx): Promise<InternalResult> => {
       await tx.auditLog.create({
         data: {
           id: eventId,
@@ -61,7 +66,7 @@ export async function processColdChainTelemetry(
           where: { id: eventId },
           data: { reason: "Cold-chain telemetry ignored: vehicle not found", metadata: { ...baseMetadata, outcome } },
         });
-        return { accepted: true, duplicate: false, outcome, eventId };
+        return { accepted: true, duplicate: false, outcome, eventId, alertContext: null };
       }
 
       let orderId: string | null = null;
@@ -86,7 +91,7 @@ export async function processColdChainTelemetry(
               metadata: { ...baseMetadata, outcome, vehicleId: vehicle.id },
             },
           });
-          return { accepted: true, duplicate: false, outcome, eventId };
+          return { accepted: true, duplicate: false, outcome, eventId, alertContext: null };
         }
         orderId = order.id;
         orderTarget = order.temperatureTarget;
@@ -138,8 +143,44 @@ export async function processColdChainTelemetry(
         },
       });
 
-      return { accepted: true, duplicate: false, outcome, eventId };
+      return {
+        accepted: true,
+        duplicate: false,
+        outcome,
+        eventId,
+        alertContext: { orderId, vehicleId: vehicle.id, bounds },
+      };
     });
+    // الإنذار خارج المعاملة عمداً: فشل فتح إنذار يجب ألا يُلغي قراءة وصلت
+    // فعلاً. القراءة هي الحقيقة، والإنذار قراءة عليها.
+    const { alertContext } = result;
+    const outcomeResult: ColdChainTelemetryResult = {
+      accepted: true,
+      duplicate: result.duplicate,
+      outcome: result.outcome,
+      eventId: result.eventId,
+    };
+    if (alertContext) {
+      const evaluation = evaluateTemperature({
+        celsius: event.celsius,
+        recordedAt: event.recordedAt,
+        bounds: alertContext.bounds,
+      });
+      try {
+        await applyReadingToAlerts({
+          prisma,
+          orderId: alertContext.orderId,
+          vehicleId: alertContext.vehicleId,
+          evaluation,
+          celsius: event.celsius,
+          readingAt: event.recordedAt,
+        });
+      } catch {
+        // تُسجَّل ضمناً في سجل التدقيق عبر غياب الإنذار؛ لا تُبتلع القراءة.
+      }
+    }
+
+    return outcomeResult;
   } catch (error) {
     if (isUniqueConstraintError(error)) {
       return { accepted: true, duplicate: true, outcome: "DUPLICATE", eventId };

@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { assertRole, getSession } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
-import { classifyReading, resolveBounds } from "@/lib/cold-chain/thresholds";
+import { classifyReading, evaluateTemperature, resolveBounds } from "@/lib/cold-chain/thresholds";
+import { applyReadingToAlerts } from "@/lib/cold-chain/alerts";
 
 const schema = z.object({
   orderId: z.string().optional(),
@@ -76,6 +77,20 @@ export async function POST(request: Request) {
     },
     select: { id: true, status: true, recordedAt: true },
   });
+
+  // القراءة اليدوية تمر بنفس محرك الإنذارات: مصدر القراءة لا يغيّر واجبها.
+  await applyReadingToAlerts({
+    prisma,
+    orderId: body.data.orderId ?? null,
+    vehicleId: courier.vehicleId,
+    evaluation: evaluateTemperature({
+      celsius: body.data.celsius,
+      recordedAt: reading.recordedAt,
+      bounds,
+    }),
+    celsius: body.data.celsius,
+    readingAt: reading.recordedAt,
+  }).catch(() => undefined);
 
   return NextResponse.json({ ok: true, reading });
 }

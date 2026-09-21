@@ -2,6 +2,9 @@ import "server-only";
 import { getPrisma } from "@/lib/prisma";
 import { toDomainStatus } from "@/lib/orders/transitions";
 import { evaluateTemperature, resolveBounds } from "@/lib/cold-chain/thresholds";
+import type { OpsColdChainAlert } from "@/lib/cold-chain/alert-labels";
+
+export type { OpsColdChainAlert };
 import type {
   ClientAccount,
   Courier,
@@ -35,6 +38,7 @@ export type OpsSnapshot = {
   orders: DeliveryOrder[];
   clients: ClientAccount[];
   auditEvents: OpsAuditEvent[];
+  coldChainAlerts: OpsColdChainAlert[];
 };
 
 /** رقم الجوال لا يخرج كاملاً إلى شاشة مشتركة؛ آخر أربعة تكفي للتمييز. */
@@ -92,7 +96,7 @@ export function mapCourier(row: CourierRow): Courier {
 export async function loadOpsSnapshot(): Promise<OpsSnapshot> {
   const prisma = getPrisma();
 
-  const [courierRows, orderRows, clientRows, auditRows] = await Promise.all([
+  const [courierRows, orderRows, clientRows, auditRows, alertRows] = await Promise.all([
     prisma.courier.findMany({
       take: 60,
       orderBy: { employeeCode: "asc" },
@@ -161,6 +165,22 @@ export async function loadOpsSnapshot(): Promise<OpsSnapshot> {
         actor: { select: { name: true } },
       },
     }),
+    // الإنذارات المفتوحة فقط: المغلقة تاريخ، والشاشة لقرار الآن.
+    prisma.coldChainAlert.findMany({
+      where: { resolvedAt: null },
+      orderBy: [{ severity: "desc" }, { detectedAt: "desc" }],
+      take: 40,
+      select: {
+        id: true,
+        kind: true,
+        severity: true,
+        celsius: true,
+        occurrences: true,
+        detectedAt: true,
+        note: true,
+        order: { select: { publicCode: true } },
+      },
+    }),
   ]);
 
   const couriers: Courier[] = courierRows.map((row) => mapCourier(row));
@@ -220,7 +240,18 @@ export async function loadOpsSnapshot(): Promise<OpsSnapshot> {
     at: row.createdAt.toISOString(),
   }));
 
-  return { couriers, orders, clients, auditEvents };
+  const coldChainAlerts: OpsColdChainAlert[] = alertRows.map((row) => ({
+    id: row.id,
+    orderCode: row.order?.publicCode ?? "—",
+    kind: row.kind,
+    severity: row.severity,
+    celsius: row.celsius === null ? null : Number(row.celsius),
+    occurrences: row.occurrences,
+    detectedAt: row.detectedAt.toISOString(),
+    note: row.note,
+  }));
+
+  return { couriers, orders, clients, auditEvents, coldChainAlerts };
 }
 
 /** أرقام البث الحي — استعلام عدّ فقط، فالقناة تُحدَّث كل عشر ثوانٍ. */
