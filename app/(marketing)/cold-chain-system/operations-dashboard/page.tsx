@@ -284,7 +284,7 @@ export default function OperationsDashboardPage() {
               </div>
             </Card>
 
-            <Card title="طابور الفشل وRTO" subtitle="إجراءات قابلة للتنفيذ">
+            <Card title="طابور الفشل و RTO" subtitle="إجراءات قابلة للتنفيذ">
               {failed.length === 0 ? (
                 <EmptyState text="لا توجد طلبات فشل تسليم حالياً." />
               ) : (

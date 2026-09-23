@@ -17,7 +17,8 @@ import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { operatingMetrics, sectors, services } from "@/lib/company";
+import { operatingMetrics, services } from "@/lib/company";
+import { SECTORS } from "@/lib/site";
 import { couriers, deliveryOrders } from "@/lib/mock-data";
 import { toCourierMarkers, toOrderMarkers } from "@/lib/maps/adapter";
 import type { Metadata } from "next";
@@ -52,9 +53,10 @@ export default function Home() {
       <SiteHeader />
       <main>
         <section className="relative overflow-hidden bg-primary text-primary-foreground">
-          <div className="absolute inset-0 opacity-15 map-grid" />
+          <div className="absolute inset-0 opacity-15 map-grid" aria-hidden="true" />
+          <div className="absolute inset-0 brand-rings" aria-hidden="true" />
           <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_0.95fr] lg:px-8 lg:py-16">
-            <div className="self-center">
+            <div className="self-center motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700">
               <Badge className="bg-accent text-accent-foreground">توصيل مبرّد آخر ميل · الرياض</Badge>
               <h1 className="mt-6 max-w-3xl text-4xl font-bold leading-tight sm:text-5xl">
                 توصيل مبرّد يحافظ على جودة منتجك حتى باب العميل
@@ -65,7 +67,7 @@ export default function Home() {
               <div className="mt-6 flex flex-wrap gap-2">
                 {proofPoints.map((item) => (
                   <span key={item.label} className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/8 px-3 py-2 text-sm">
-                    <item.icon className="h-4 w-4 text-accent" />
+                    <item.icon className="h-4 w-4 text-accent" aria-hidden="true" />
                     {item.label}
                   </span>
                 ))}
@@ -83,11 +85,15 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="space-y-3">
-              <div className="rounded-lg border border-white/15 bg-white/8 p-3 shadow-2xl">
+            <div className="relative space-y-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-6 motion-safe:duration-700 motion-safe:delay-150 motion-safe:fill-mode-backwards">
+              <div
+                aria-hidden="true"
+                className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-accent/25 blur-3xl"
+              />
+              <div className="relative rounded-lg border border-white/15 bg-white/8 p-3 shadow-2xl">
                 <MockMap markers={toCourierMarkers(couriers.slice(0, 7))} orderMarkers={toOrderMarkers(deliveryOrders.slice(0, 8))} compact />
               </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <div className="relative grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {operatingMetrics.map((stat) => (
                   <div key={stat.label} className="rounded-lg border border-white/15 bg-white/8 p-4">
                     <p className="text-2xl font-bold ltr text-right">{stat.value}</p>
@@ -100,13 +106,20 @@ export default function Home() {
         </section>
 
         <section className="border-b bg-background">
-          <div className="mx-auto grid max-w-7xl gap-3 px-4 py-6 sm:px-6 md:grid-cols-3 lg:px-8">
-            {["للغذاء والدواء والتجزئة", "تقليل الهدر والاتصالات", "لوحة عمليات وتتبع لحظي"].map((item) => (
-              <div key={item} className="flex items-center gap-2 text-sm font-semibold">
-                <CheckCircle2 className="h-5 w-5 text-accent" />
-                {item}
-              </div>
-            ))}
+          <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+            <p className="max-w-3xl text-lg leading-8 text-muted-foreground">
+              قدّام بابك (QBL) شركة سعودية متخصصة في التوصيل المبرّد آخر ميل داخل الرياض. نخدم علامات
+              التجميل والعناية والعطور، ومتاجر Beauty الإلكترونية، ومراكز الفلفلمنت التي تحتاج طبقة
+              توصيل مخصصة لمنتجاتها الحساسة للحرارة — من استلام الطلب حتى تسليمه موثقاً لعميلك النهائي.
+            </p>
+            <div className="mt-6 grid gap-3 md:grid-cols-3">
+              {["للتجميل والعناية والعطور", "تقليل الهدر والاتصالات", "لوحة عمليات وتتبع لحظي"].map((item) => (
+                <div key={item} className="flex items-center gap-2 text-sm font-semibold">
+                  <CheckCircle2 className="h-5 w-5 text-accent" aria-hidden="true" />
+                  {item}
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -122,10 +135,13 @@ export default function Home() {
           </div>
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {services.slice(0, 4).map((service) => (
-              <Card key={service.title} className="rounded-lg">
+              <Card key={service.title} className="rounded-lg transition-shadow hover:shadow-md">
                 <CardContent className="p-5">
-                  <Snowflake className="h-6 w-6 text-accent" />
+                  <div className="flex h-11 w-11 items-center justify-center rounded-md bg-accent/10 text-accent">
+                    <Snowflake className="h-5 w-5" aria-hidden="true" />
+                  </div>
                   <h3 className="mt-4 text-base font-bold text-primary">{service.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{service.description}</p>
                 </CardContent>
               </Card>
             ))}
@@ -141,7 +157,7 @@ export default function Home() {
                 <Card key={step.title} className="rounded-lg">
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between">
-                      <step.icon className="h-6 w-6 text-accent" />
+                      <step.icon className="h-6 w-6 text-accent" aria-hidden="true" />
                       <span className="font-mono text-sm text-muted-foreground">0{index + 1}</span>
                     </div>
                     <h3 className="mt-4 font-bold text-primary">{step.title}</h3>
@@ -153,17 +169,21 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
-            <div>
-              <p className="font-bold text-accent">القطاعات</p>
-              <h2 className="mt-2 text-3xl font-bold text-primary">نخدم الشركات الحساسة للوقت والحرارة</h2>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {sectors.map((sector) => (
-                <Badge key={sector} variant="secondary" className="px-3 py-1 text-sm">
-                  {sector}
-                </Badge>
+        <section className="bg-background">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+            <p className="font-bold text-accent">القطاعات</p>
+            <h2 className="mt-2 text-3xl font-bold text-primary">نخدم الشركات الحساسة للوقت والحرارة</h2>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {SECTORS.map((sector) => (
+                <Card key={sector.title} className="rounded-lg transition-shadow hover:shadow-md">
+                  <CardContent className="p-5">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-md bg-accent/10 text-accent">
+                      <sector.icon className="h-5 w-5" aria-hidden="true" />
+                    </div>
+                    <h3 className="mt-4 text-base font-bold text-primary">{sector.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{sector.desc}</p>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 
 interface PageHeroProps {
@@ -10,6 +11,8 @@ interface PageHeroProps {
   secondaryCtaHref?: string;
   secondaryCtaLabel?: string;
   secondaryCtaExternal?: boolean;
+  /** عنصر بصري اختياري يظهر أسفل النص — لا يغيّر تخطيط الصفحات التي لا تمرّره. */
+  visual?: ReactNode;
 }
 
 export default function PageHero({
@@ -21,6 +24,7 @@ export default function PageHero({
   secondaryCtaHref,
   secondaryCtaLabel,
   secondaryCtaExternal = false,
+  visual,
 }: PageHeroProps) {
   const SecondaryTag = secondaryCtaExternal ? "a" : Link;
   const secondaryProps = secondaryCtaExternal
@@ -59,6 +63,11 @@ export default function PageHero({
             </div>
           )}
         </div>
+        {visual && (
+          <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700 mt-10">
+            {visual}
+          </div>
+        )}
       </div>
     </section>
   );

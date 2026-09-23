@@ -23,7 +23,6 @@ export function MockMap({
     <div className={cn("relative overflow-hidden rounded-lg border bg-sky-50 map-grid", compact ? "h-72" : "h-[520px]")}>
       <div className="absolute inset-x-6 top-6 flex items-center justify-between rounded-md border bg-white/90 px-3 py-2 text-xs text-muted-foreground shadow-sm">
         <span>خريطة تشغيل تجريبية · الرياض</span>
-        <span className="ltr">Mock Map Adapter</span>
       </div>
       <div className="absolute bottom-10 left-10 h-24 w-40 rounded-[50%] border-8 border-primary/10" />
       <div className="absolute bottom-20 right-14 h-40 w-56 rotate-12 rounded-[50%] border-8 border-accent/20" />

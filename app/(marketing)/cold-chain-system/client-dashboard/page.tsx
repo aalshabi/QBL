@@ -111,7 +111,7 @@ export default function ClientDashboardPage() {
           {/* Orders table */}
           <Card
             title="طلباتي"
-            subtitle="تابع جميع الطلبات وحالة الحرارة وSLA"
+            subtitle="تابع جميع الطلبات وحالة الحرارة و SLA"
             action={
               <div className="flex gap-2">
                 <FilterPill label="الحالة" />

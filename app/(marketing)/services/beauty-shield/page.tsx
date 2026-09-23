@@ -142,6 +142,26 @@ export default function BeautyShieldPage() {
         secondaryCtaHref={whatsappHref}
         secondaryCtaLabel="تحدث مع فريق التشغيل"
         secondaryCtaExternal
+        visual={
+          <div aria-hidden="true" className="grid gap-3 sm:grid-cols-3">
+            {TIERS.map((tier, index) => (
+              <div
+                key={tier.title}
+                className={`rounded-xl border p-5 backdrop-blur-sm transition-transform sm:hover:-translate-y-1 ${
+                  index === 1
+                    ? "border-accent/50 bg-white/12 sm:mt-0"
+                    : "border-white/15 bg-white/6 sm:mt-4"
+                }`}
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/20 text-accent-light">
+                  <tier.icon className="h-5 w-5" />
+                </div>
+                <p className="mt-4 text-xs font-bold text-accent-light">{tier.badge}</p>
+                <p className="mt-1 text-sm font-bold text-white">{tier.title}</p>
+              </div>
+            ))}
+          </div>
+        }
       />
 
       {/* المشكلة */}
