@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkCronAuth, cronAuthFailure } from "@/lib/cron/auth";
 import { ColdChainPollNotConfiguredError, pollColdChainProvider } from "@/lib/cold-chain/poll";
 
 export const dynamic = "force-dynamic";
@@ -6,9 +7,10 @@ export const runtime = "nodejs";
 
 /** سحب مجدول لمزوّد لا يدفع القراءات. معطّل بأمان حتى يُضبط عنوانه ومحوّله. */
 export async function GET(request: NextRequest) {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
-    return NextResponse.json({ ok: false, error: "UNAUTHORIZED" }, { status: 401 });
+  const auth = checkCronAuth(request.headers);
+  if (!auth.ok) {
+    const { status, body } = cronAuthFailure("cold-chain-poll", auth);
+    return NextResponse.json(body, { status });
   }
 
   try {
