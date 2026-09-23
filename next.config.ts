@@ -72,6 +72,21 @@ const REPORTING_ENDPOINTS = {
 };
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    // مسارات الموقع السابق التي كانت تُخدَم من هذا النطاق قبل انتقاله إلى هذا
+    // المشروع. خريطة الموقع القديمة ما زالت تعلنها على الجذر، فتعود 404.
+    // التحويل دائم (308) لنقل الإشارات إلى الصفحة المكافئة لا إسقاطها.
+    return [
+      { source: "/beauty-shield", destination: "/services/beauty-shield", permanent: true },
+      { source: "/why-protection", destination: "/services/beauty-shield", permanent: true },
+      { source: "/protection-levels", destination: "/services/beauty-shield", permanent: true },
+      { source: "/how-it-works", destination: "/cold-chain-system", permanent: true },
+      { source: "/operations-demo", destination: "/cold-chain-system", permanent: true },
+      { source: "/quality", destination: "/compliance", permanent: true },
+      { source: "/faq", destination: "/services", permanent: true },
+      { source: "/trial", destination: "/quote", permanent: true },
+    ];
+  },
   async headers() {
     // في التطوير تُعطَّل: HMR يحتاج unsafe-eval وسوكت ws، و upgrade-insecure-requests
     // يكسر http://localhost.
