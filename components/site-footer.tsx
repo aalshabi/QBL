@@ -1,3 +1,4 @@
+import VisitorChat from '@/components/visitor-chat/VisitorChat';
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
 import { company, marketingNav } from "@/lib/company";
@@ -52,6 +53,7 @@ export function SiteFooter() {
           <p className="mt-4 text-sm leading-7 text-white/76">{company.address}</p>
         </div>
       </div>
+      {process.env.VISITOR_CHAT_ENABLED === 'true' && <VisitorChat name="مساعد قدّام بابك" welcome="أساعدك تحدد احتياجات التوصيل وتطلب عرضًا مناسبًا. ما نوع منتجات متجرك؟" handoffHref="/quote" handoffLabel="اطلب عرضًا من فريق QBL" color="#102E3A" />}
     </footer>
   );
 }
