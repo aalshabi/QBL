@@ -9,6 +9,6 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-  await requireAdminPage();
-  return <AdminShell>{children}</AdminShell>;
+  const session = await requireAdminPage();
+  return <AdminShell role={session.role}>{children}</AdminShell>;
 }

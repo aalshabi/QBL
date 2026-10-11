@@ -10,7 +10,7 @@ const ADMIN_ROLES: Role[] = ["ADMIN", "OPS_MANAGER"];
  * فلا يُعتمد على الـ layout وحده لحماية البيانات.
  * غياب الجلسة يُرفض قبل أي فحص للدور — لا وصول مجهول إطلاقاً.
  */
-export async function requireAdminPage(): Promise<void> {
+export async function requireAdminPage(): Promise<Session> {
   const session = await getSession();
   if (!session) {
     redirect("/login");
@@ -18,6 +18,7 @@ export async function requireAdminPage(): Promise<void> {
   if (!ADMIN_ROLES.includes(session.role)) {
     redirect("/");
   }
+  return session;
 }
 
 /**

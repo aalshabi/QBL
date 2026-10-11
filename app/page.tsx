@@ -11,7 +11,7 @@ import {
   Thermometer,
   Truck,
 } from "lucide-react";
-import { MockMap } from "@/components/maps/mock-map";
+import { HomeTrack } from "@/components/marketing/home-track";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
@@ -19,8 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { operatingMetrics, services } from "@/lib/company";
 import { SECTORS } from "@/lib/site";
-import { couriers, deliveryOrders } from "@/lib/mock-data";
-import { toCourierMarkers, toOrderMarkers } from "@/lib/maps/adapter";
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -90,9 +88,7 @@ export default function Home() {
                 aria-hidden="true"
                 className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-accent/25 blur-3xl"
               />
-              <div className="relative rounded-lg border border-white/15 bg-white/8 p-3 shadow-2xl">
-                <MockMap markers={toCourierMarkers(couriers.slice(0, 7))} orderMarkers={toOrderMarkers(deliveryOrders.slice(0, 8))} compact />
-              </div>
+              <HomeTrack />
               <div className="relative grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {operatingMetrics.map((stat) => (
                   <div key={stat.label} className="rounded-lg border border-white/15 bg-white/8 p-4">
