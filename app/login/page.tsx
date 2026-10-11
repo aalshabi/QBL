@@ -8,14 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-const HOME_BY_ROLE: Record<string, string> = {
-  ADMIN: "/admin",
-  OPS_MANAGER: "/admin",
-  DISPATCHER: "/admin",
-  COURIER: "/courier",
-  CLIENT: "/",
-};
+import { employeeHome } from "@/lib/workspace";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -42,7 +35,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push(HOME_BY_ROLE[payload.role] ?? "/");
+      router.push(employeeHome(payload.role));
       router.refresh();
     } catch {
       setError("تعذر الاتصال بالخادم، حاول مرة أخرى");

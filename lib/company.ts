@@ -138,17 +138,28 @@ export const trustSignals = [
  * على Montserrat للاتيني وTajawal للعربي، وبلا هذا الوسم كان اللاتيني يُرسم
  * بخط عربي — فرق يظهر في القائمة أكثر من أي مكان لأن الكلمات متجاورة.
  */
+/**
+ * Primary header navigation — intentionally compact (≤4 informational links
+ * plus the quote CTA and the contact button, both rendered in SiteHeader).
+ * Tracking is first because returning customers come for it. The longer detail
+ * pages (sectors, fleet-tech, case-studies, sla, beauty-shield, company
+ * profile…) stay reachable from the footer and in-page links — no page is
+ * deleted, only lifted out of the top bar. The demo "النظام التشغيلي"
+ * (/cold-chain-system) is deliberately kept out of the customer journey.
+ */
 export const marketingNav: { href: string; label: string; latin?: boolean }[] = [
-  { href: "/", label: "الرئيسية" },
-  { href: "/about", label: "من نحن" },
+  { href: "/track", label: "تتبع شحنتك" },
+  { href: "/services", label: "خدماتنا" },
+  { href: "/about", label: "عن QBL" },
+];
+
+/** Grouped footer links so the detail pages lifted out of the top bar stay reachable. */
+export const footerServiceLinks: { href: string; label: string; latin?: boolean }[] = [
   { href: "/services", label: "خدماتنا" },
   { href: "/services/beauty-shield", label: "Beauty Shield", latin: true },
-  { href: "/cold-chain-system", label: "النظام التشغيلي" },
   { href: "/sectors", label: "القطاعات" },
   { href: "/fleet-tech", label: "التقنيات" },
-  { href: "/case-studies", label: "دراسات حالة" },
-  { href: "/sla", label: "SLA", latin: true },
-  { href: "/track", label: "تتبع" },
+  { href: "/track", label: "تتبع شحنة" },
 ];
 
 export const statusLabels = {
