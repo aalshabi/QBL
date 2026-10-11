@@ -31,3 +31,21 @@ export function employeeHome(role: string): string {
       return "/";
   }
 }
+
+/** Human-readable role name shown in the workspace header — Arabic, audience-facing. */
+export function roleLabel(role: string): string {
+  switch (role) {
+    case "ADMIN":
+      return "مدير النظام";
+    case "OPS_MANAGER":
+      return "مدير العمليات";
+    case "DISPATCHER":
+      return "منسّق التشغيل";
+    case "COURIER":
+      return "مندوب";
+    case "CLIENT":
+      return "عميل";
+    default:
+      return "مستخدم";
+  }
+}
