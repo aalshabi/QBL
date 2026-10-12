@@ -29,6 +29,11 @@ const webhookPayloadSchema = z
     time: z.union([z.string(), z.number()]).optional(),
     postponedDate: z.string().optional(),
     postponedDeliveryDate: z.string().optional(),
+    // سبب الفشل أو التأجيل يصل نصًا هنا؛ التوثيق يكتبه Notes والحمولة الفعلية notes.
+    notes: z.string().nullable().optional(),
+    Notes: z.string().nullable().optional(),
+    cod: z.union([z.number(), z.string()]).nullable().optional(),
+    Cod: z.union([z.number(), z.string()]).nullable().optional(),
   })
   .passthrough();
 
@@ -39,6 +44,10 @@ export type NormalizedLogesTechsWebhook = {
   packageId: string | null;
   invoiceNumber: string | null;
   externalTime: Date | null;
+  /** سبب الفشل/التأجيل كما يرسله المورد. لا يدخل في معرّف الحدث. */
+  notes: string | null;
+  /** مبلغ COD المعلن في الحدث، أو null إن غاب أو لم يكن رقمًا صالحًا. */
+  codAmount: number | null;
 };
 
 export type WebhookTransportValidation =
@@ -88,6 +97,12 @@ function boundedText(value: string | number | undefined, maxLength: number): str
   return text && text.length <= maxLength ? text : null;
 }
 
+function parseCodAmount(value: string | number | null | undefined): number | null {
+  if (value === null || value === undefined) return null;
+  const amount = typeof value === "number" ? value : Number(String(value).trim());
+  return Number.isFinite(amount) && amount >= 0 && amount < 100_000_000 ? Math.round(amount * 100) / 100 : null;
+}
+
 function parseExternalTime(value: string | number | undefined): Date | null {
   if (value === undefined) return null;
   const raw = typeof value === "number" ? value : /^\d+$/.test(value.trim()) ? Number(value) : NaN;
@@ -122,6 +137,8 @@ export function normalizeLogesTechsWebhookPayload(input: unknown): NormalizedLog
     packageId: boundedText(data.packageId, 100),
     invoiceNumber: boundedText(data.invoiceNumber, 150),
     externalTime: parseExternalTime(data.time),
+    notes: boundedText(data.notes ?? data.Notes ?? undefined, 2_000),
+    codAmount: parseCodAmount(data.cod ?? data.Cod),
   };
 }
 

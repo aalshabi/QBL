@@ -437,6 +437,29 @@ model AuditLog {
   @@index([orderId, createdAt])
 }
 
+/// صندوق وارد خام لأحداث ويبهوك LogesTechs: يُحفظ كل حدث قبل معالجته، فلا يضيع حدث
+/// لشحنة غير موجودة بعد في QBL، ويمكن إعادة معالجته أو مطابقته لاحقًا عبر الباركود.
+/// المعرّف هو معرّف الحدث الحتمي (ltwh_…) فيمنع التكرار.
+/// لا بيانات شخصية: لا اسم سائق ولا جوال ولا مرفقات ولا حمولة خام.
+model LogesTechsWebhookEvent {
+  id             String    @id
+  kind           String
+  barcode        String
+  externalStatus String
+  packageId      String?
+  invoiceNumber  String?
+  externalTime   DateTime?
+  notes          String?
+  codAmount      Decimal?  @db.Decimal(10, 2)
+  outcome        String?
+  orderId        String?
+  receivedAt     DateTime  @default(now())
+  processedAt    DateTime?
+
+  @@index([barcode, receivedAt])
+  @@index([processedAt])
+}
+
 // ─── Admin module (migrated from LogesTechs admin-pro spec) ───
 
 model Hub {

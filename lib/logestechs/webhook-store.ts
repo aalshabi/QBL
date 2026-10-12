@@ -24,6 +24,7 @@ export type LogesTechsWebhookResult = {
   duplicate: boolean;
   outcome: LogesTechsWebhookOutcome;
   eventId: string;
+  orderId?: string;
 };
 
 function mappedStatus(event: NormalizedLogesTechsWebhook): AdminOrderStatus | null {
@@ -98,7 +99,7 @@ export async function processLogesTechsWebhook(
             metadata: { ...baseMetadata, outcome, currentStatus: order.status },
           },
         });
-        return { accepted: true, duplicate: false, outcome, eventId };
+        return { accepted: true, duplicate: false, outcome, eventId, orderId: order.id };
       }
 
       const decision = decideWebhookTransition(order.status as AdminOrderStatus, targetStatus);
@@ -120,7 +121,7 @@ export async function processLogesTechsWebhook(
             },
           },
         });
-        return { accepted: true, duplicate: false, outcome, eventId };
+        return { accepted: true, duplicate: false, outcome, eventId, orderId: order.id };
       }
 
       const now = new Date();
@@ -142,7 +143,7 @@ export async function processLogesTechsWebhook(
         },
       });
 
-      return { accepted: true, duplicate: false, outcome: "UPDATED", eventId };
+      return { accepted: true, duplicate: false, outcome: "UPDATED", eventId, orderId: order.id };
     });
   } catch (error) {
     if (isUniqueConstraintError(error)) {
@@ -150,4 +151,77 @@ export async function processLogesTechsWebhook(
     }
     throw error;
   }
+}
+
+export type LogesTechsWebhookIngestOutcome = LogesTechsWebhookOutcome | "PROCESSING_FAILED";
+
+export type LogesTechsWebhookIngestResult = {
+  accepted: true;
+  duplicate: boolean;
+  outcome: LogesTechsWebhookIngestOutcome;
+  eventId: string;
+};
+
+/**
+ * يحفظ الحدث في صندوق الوارد أولًا ثم يعالجه.
+ *
+ * LogesTechs لا تعيد الإرسال تلقائيًا، فأي حدث لا يُحفظ لحظة وصوله يضيع. لذلك:
+ * - فشل الحفظ نفسه (القاعدة غير متاحة) هو الحالة الوحيدة التي تُرمى للمسار فيرد 503.
+ * - بعد الحفظ، فشل المعالجة لا يُرمى: الحدث محفوظ بلا processedAt ويمكن إعادة معالجته.
+ * - إعادة إرسال حدث محفوظ لم يُعالَج بعد تعيد محاولة معالجته؛ والمعالَج يُعاد DUPLICATE.
+ */
+export async function ingestLogesTechsWebhook(
+  event: NormalizedLogesTechsWebhook,
+): Promise<LogesTechsWebhookIngestResult> {
+  if (!process.env.DATABASE_URL?.trim()) throw new Error("DATABASE_NOT_CONFIGURED");
+
+  const prisma = getPrisma();
+  const eventId = webhookEventId(event);
+
+  try {
+    await prisma.logesTechsWebhookEvent.create({
+      data: {
+        id: eventId,
+        kind: event.kind,
+        barcode: event.barcode,
+        externalStatus: event.externalStatus,
+        packageId: event.packageId,
+        invoiceNumber: event.invoiceNumber,
+        externalTime: event.externalTime,
+        notes: event.notes,
+        codAmount: event.codAmount,
+      },
+    });
+  } catch (error) {
+    if (!isUniqueConstraintError(error)) throw error;
+    const existing = await prisma.logesTechsWebhookEvent.findUnique({
+      where: { id: eventId },
+      select: { processedAt: true },
+    });
+    if (existing?.processedAt) {
+      return { accepted: true, duplicate: true, outcome: "DUPLICATE", eventId };
+    }
+  }
+
+  let result: LogesTechsWebhookResult;
+  try {
+    result = await processLogesTechsWebhook(event);
+  } catch {
+    await prisma.logesTechsWebhookEvent
+      .update({ where: { id: eventId }, data: { outcome: "PROCESSING_FAILED" } })
+      .catch(() => undefined);
+    return { accepted: true, duplicate: false, outcome: "PROCESSING_FAILED", eventId };
+  }
+
+  try {
+    await prisma.logesTechsWebhookEvent.update({
+      where: { id: eventId },
+      data: { outcome: result.outcome, orderId: result.orderId ?? null, processedAt: new Date() },
+    });
+  } catch {
+    // المعالجة تمت؛ بقاء processedAt فارغًا يعني أن إعادة الإرسال ستعيد المعالجة،
+    // وهي آمنة لأن سجل التدقيق بالمعرّف نفسه يجعلها DUPLICATE.
+  }
+
+  return { accepted: true, duplicate: result.duplicate, outcome: result.outcome, eventId };
 }
