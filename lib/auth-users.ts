@@ -1,6 +1,7 @@
 // التحقق من بيانات الاعتماد لمسار الدخول من قاعدة البيانات فقط.
 
 import { getPrisma } from "@/lib/prisma";
+import { isPublishedSeedPassword, rejectsPublishedSeedPasswords } from "@/lib/published-credentials";
 import { compareOtp } from "@/lib/security";
 import type { Role } from "@/lib/auth";
 
@@ -35,5 +36,10 @@ async function verifyAgainstDatabase(email: string, password: string): Promise<A
 /** null عند غياب قاعدة البيانات أو فشل التحقق — لا توجد بيانات دخول احتياطية. */
 export async function verifyCredentials(email: string, password: string): Promise<AuthenticatedUser | null> {
   if (!process.env.DATABASE_URL) return null;
+  // كلمات مرور seed منشورة في المستودع العام؛ لا تفتح أي حساب في الإنتاج.
+  if (rejectsPublishedSeedPasswords() && isPublishedSeedPassword(password)) {
+    console.warn("auth_published_seed_password_rejected");
+    return null;
+  }
   return verifyAgainstDatabase(email, password);
 }
