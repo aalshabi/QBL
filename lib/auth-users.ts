@@ -2,7 +2,7 @@
 
 import { getPrisma } from "@/lib/prisma";
 import { isPublishedSeedPassword, rejectsPublishedSeedPasswords } from "@/lib/published-credentials";
-import { compareOtp } from "@/lib/security";
+import { comparePassword } from "@/lib/security";
 import type { Role } from "@/lib/auth";
 
 export type AuthenticatedUser = { userId: string; name: string; role: Role };
@@ -27,7 +27,7 @@ async function verifyAgainstDatabase(email: string, password: string): Promise<A
   });
 
   if (!user || user.status !== "ACTIVE") return null;
-  if (!(await compareOtp(password, user.passwordHash))) return null;
+  if (!(await comparePassword(password, user.passwordHash))) return null;
 
   const role = primaryRole(user.roles.map((entry) => entry.role.name));
   return role ? { userId: user.id, name: user.name, role } : null;

@@ -21,7 +21,7 @@ afterEach(() => {
 /** كلمات المرور الحرفية في seed.ts — تُقرأ من الملف ولا تُكتب في الاختبار. */
 function seedPasswords(): string[] {
   const source = readFileSync(join(root, "prisma/seed.ts"), "utf8");
-  return [...new Set([...source.matchAll(/hashOtp\(\s*"([^"]+)"\s*\)/g)].map((match) => match[1]))];
+  return [...new Set([...source.matchAll(/hash(?:Otp|Password)\(\s*"([^"]+)"\s*\)/g)].map((match) => match[1]))];
 }
 
 test("every literal password in prisma/seed.ts has its fingerprint on the deny list", () => {

@@ -2,7 +2,7 @@ import "server-only";
 
 import { checkNewPassword, type PasswordPolicyError } from "@/lib/account/password-policy";
 import { getPrisma } from "@/lib/prisma";
-import { compareOtp, hashOtp } from "@/lib/security";
+import { comparePassword, hashPassword } from "@/lib/security";
 
 export type ChangePasswordResult =
   | { ok: true }
@@ -27,7 +27,7 @@ export async function changeOwnPassword(input: {
   });
 
   const currentMatches =
-    Boolean(user) && user!.status === "ACTIVE" && (await compareOtp(input.currentPassword, user!.passwordHash));
+    Boolean(user) && user!.status === "ACTIVE" && (await comparePassword(input.currentPassword, user!.passwordHash));
   if (!user || !currentMatches) {
     return { ok: false, error: "INVALID_CURRENT_PASSWORD", message: "كلمة المرور الحالية غير صحيحة" };
   }
@@ -39,13 +39,23 @@ export async function changeOwnPassword(input: {
   });
   if (!policy.ok) return { ok: false, error: policy.error, message: policy.message };
 
-  const passwordHash = await hashOtp(input.newPassword);
-  await prisma.$transaction([
-    prisma.user.update({ where: { id: user.id }, data: { passwordHash } }),
-    prisma.auditLog.create({
+  const passwordHash = await hashPassword(input.newPassword);
+  const changed = await prisma.$transaction(async (tx) => {
+    const update = await tx.user.updateMany({
+      where: { id: user.id, status: "ACTIVE", passwordHash: user.passwordHash },
+      data: { passwordHash },
+    });
+    if (update.count !== 1) return false;
+
+    await tx.auditLog.create({
       data: { action: "PASSWORD_CHANGED", actorId: user.id, reason: "Password changed by the account owner" },
-    }),
-  ]);
+    });
+    return true;
+  });
+
+  if (!changed) {
+    return { ok: false, error: "INVALID_CURRENT_PASSWORD", message: "كلمة المرور الحالية غير صحيحة" };
+  }
 
   return { ok: true };
 }

@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { createHash, randomInt, timingSafeEqual } from "crypto";
+import { createHash, createHmac, randomInt, timingSafeEqual } from "crypto";
 import { jwtVerify, SignJWT } from "jose";
 
 const encoder = new TextEncoder();
@@ -74,6 +74,30 @@ export async function hashOtp(code: string) {
 export async function compareOtp(code: string, hash: string) {
   const pepper = requireSecret("OTP_PEPPER", "dev-otp-pepper-change-me");
   return bcrypt.compare(`${code}:${pepper}`, hash);
+}
+
+const PASSWORD_HASH_PREFIX = "v2$";
+
+function passwordPrehash(password: string) {
+  const pepper = requireSecret("OTP_PEPPER", "dev-otp-pepper-change-me");
+  return createHmac("sha256", pepper).update(password, "utf8").digest("base64url");
+}
+
+/**
+ * Passwords are HMAC-prehashed before bcrypt so bcrypt always receives a fixed
+ * length input. This prevents its 72-byte cutoff from discarding the pepper or
+ * a long password suffix. The prefix keeps legacy hashes readable during the
+ * gradual migration that happens when staff change their passwords.
+ */
+export async function hashPassword(password: string) {
+  return `${PASSWORD_HASH_PREFIX}${await bcrypt.hash(passwordPrehash(password), 12)}`;
+}
+
+export async function comparePassword(password: string, storedHash: string) {
+  if (storedHash.startsWith(PASSWORD_HASH_PREFIX)) {
+    return bcrypt.compare(passwordPrehash(password), storedHash.slice(PASSWORD_HASH_PREFIX.length));
+  }
+  return compareOtp(password, storedHash);
 }
 
 export async function hashToken(token: string) {

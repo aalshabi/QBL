@@ -342,7 +342,7 @@ export default async function AdminTasksPage() {
       </Tabs>
 
       <p className="text-xs text-slate-500">
-        المرجع الكامل: <span dir="ltr">{LOGESTECHS_TASK.reference}</span> في مستودع المشروع. الحالات هنا تُحدَّث مع كل
+        المصدر التشغيلي الحالي: <span dir="ltr">{LOGESTECHS_TASK.reference}</span> في مستودع المشروع. الحالات هنا تُحدَّث مع كل
         نشر، ولا يُكتب «منجز» قبل تحقق معيار القبول.
       </p>
     </div>

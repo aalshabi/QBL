@@ -4,7 +4,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { company } from "../lib/company";
 import { clientAccounts, couriers, customers, deliveryOrders, vehicles } from "../lib/mock-data";
 import { adminOrders } from "../lib/admin/mock";
-import { createTrackingToken, generateOtpCode, hashOtp, hashToken } from "../lib/security";
+import { createTrackingToken, generateOtpCode, hashOtp, hashPassword, hashToken } from "../lib/security";
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({
@@ -81,7 +81,7 @@ async function main() {
       name: "مدير عمليات QBL",
       email: "ops.manager@qbl.sa",
       phone: "0500000000",
-      passwordHash: await hashOtp("Admin123456"),
+      passwordHash: await hashPassword("Admin123456"),
       roles: { create: [{ roleId: roles.find((role) => role.name === "OPS_MANAGER")!.id }] },
     },
   });
@@ -117,7 +117,7 @@ async function main() {
         name: courier.displayName,
         email: `${courier.employeeCode.toLowerCase()}@qbl.sa`,
         phone,
-        passwordHash: await hashOtp("Courier123456"),
+        passwordHash: await hashPassword("Courier123456"),
         roles: { create: [{ roleId: roles.find((role) => role.name === "COURIER")!.id }] },
       },
     });

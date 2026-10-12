@@ -111,6 +111,10 @@ test("الصفحة خلف حارس الإدارة وغير مفهرسة", () => 
   assert.match(pageSource, /index:\s*false/, "الصفحة قابلة للفهرسة");
 });
 
+test("بيانات اللوحة نفسها هي المصدر التشغيلي الحالي", () => {
+  assert.equal(LOGESTECHS_TASK.reference, "lib/tasks/logestechs-integration.ts");
+});
+
 
 test("G19 stays open until all three scheduled jobs have production evidence", () => {
   const cronSecretGap = TASK_GAPS.find((gap) => gap.id === "G19");
