@@ -138,6 +138,7 @@ enum AuditAction {
   LOCATION_PING
   TEMPERATURE_READING
   POD_CAPTURED
+  PASSWORD_CHANGED
 }
 
 enum ProofType {

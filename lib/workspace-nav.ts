@@ -60,7 +60,10 @@ export const WORKSPACE_GROUPS: WorkspaceNavGroup[] = [
     id: "settings",
     label: "الإعدادات",
     roles: ADMIN_AREA,
-    items: [{ href: "/admin/integrations", label: "التكاملات والخدمات" }],
+    items: [
+      { href: "/admin/integrations", label: "التكاملات والخدمات" },
+      { href: "/admin/account", label: "حسابي وكلمة المرور" },
+    ],
   },
 ];
 
