@@ -13,5 +13,5 @@
       "schedule": "*/15 * * * *"
     }
   ],
-  "buildCommand": "prisma migrate deploy && next build --webpack"
+  "buildCommand": "node scripts/vercel-build.mjs"
 }

@@ -110,3 +110,11 @@ test("الصفحة خلف حارس الإدارة وغير مفهرسة", () => 
   assert.match(pageSource, /await requireAdminPage\(\)/, "الصفحة لا تستدعي حارس الإدارة");
   assert.match(pageSource, /index:\s*false/, "الصفحة قابلة للفهرسة");
 });
+
+
+test("G19 stays open until all three scheduled jobs have production evidence", () => {
+  const cronSecretGap = TASK_GAPS.find((gap) => gap.id === "G19");
+  assert.ok(cronSecretGap);
+  assert.equal(cronSecretGap.status, "IN_PROGRESS");
+  assert.match(cronSecretGap.action, /المتبقي: التحقق المباشر/);
+});
