@@ -26,7 +26,10 @@ export const WORKSPACE_GROUPS: WorkspaceNavGroup[] = [
     id: "dashboard",
     label: "لوحة العمل",
     roles: ADMIN_AREA,
-    items: [{ href: "/admin", label: "الملخص والتنبيهات" }],
+    items: [
+      { href: "/admin", label: "الملخص والتنبيهات" },
+      { href: "/admin/tasks", label: "المهام الحرجة" },
+    ],
   },
   {
     id: "operations",
