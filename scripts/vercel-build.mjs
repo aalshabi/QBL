@@ -6,13 +6,18 @@ export function shouldRunMigrations(vercelEnv = process.env.VERCEL_ENV) {
   return vercelEnv === "production";
 }
 
-function localBinary(name) {
-  const filename = process.platform === "win32" ? `${name}.cmd` : name;
-  return join(process.cwd(), "node_modules", ".bin", filename);
-}
-
 function run(name, args) {
-  const result = spawnSync(localBinary(name), args, { stdio: "inherit" });
+  const windowsEntrypoints = {
+    next: ["next", "dist", "bin", "next"],
+    prisma: ["prisma", "build", "index.js"],
+  };
+  const command = process.platform === "win32"
+    ? process.execPath
+    : join(process.cwd(), "node_modules", ".bin", name);
+  const commandArgs = process.platform === "win32"
+    ? [join(process.cwd(), "node_modules", ...windowsEntrypoints[name]), ...args]
+    : args;
+  const result = spawnSync(command, commandArgs, { stdio: "inherit" });
   if (result.error) throw result.error;
   if (result.status !== 0) process.exit(result.status ?? 1);
 }

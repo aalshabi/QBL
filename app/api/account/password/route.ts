@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { changeOwnPassword } from "@/lib/account/change-password";
+import { consumePasswordChangeAttempt } from "@/lib/account/password-change-rate-limit";
 import { MAX_PASSWORD_LENGTH } from "@/lib/account/password-policy";
 import { ACCOUNT_REQUEST_MARKER } from "@/lib/account/request-marker";
 import { getSession } from "@/lib/auth";
-import { acquireRatePermit, readBoundedRequestJson, secureJsonHeaders } from "@/lib/logestechs/request-security";
+import { readBoundedRequestJson, secureJsonHeaders } from "@/lib/logestechs/request-security";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -35,13 +36,15 @@ export async function POST(request: Request) {
   const rejected = sameOriginJson(request);
   if (rejected) return json({ ok: false, error: rejected }, rejected === "UNSUPPORTED_MEDIA_TYPE" ? 415 : 403);
 
-  // تخمين الكلمة الحالية عبر هذا المسار يُبطَّأ: خمس محاولات في الدقيقة لكل حساب.
-  const permit = acquireRatePermit(`password-change:${session.userId}`, 5, 1);
-  if (!permit.ok) {
-    return json({ ok: false, error: "RATE_LIMITED" }, 429, { "Retry-After": String(permit.retryAfterSeconds) });
-  }
-
   try {
+    // عدّاد مشترك في Postgres: خمس محاولات في الدقيقة لكل حساب عبر جميع نسخ Vercel.
+    const rateLimit = await consumePasswordChangeAttempt(session.userId);
+    if (!rateLimit.ok) {
+      return json({ ok: false, error: "RATE_LIMITED" }, 429, {
+        "Retry-After": String(rateLimit.retryAfterSeconds),
+      });
+    }
+
     let raw: unknown;
     try {
       raw = await readBoundedRequestJson(request);
@@ -62,7 +65,5 @@ export async function POST(request: Request) {
   } catch {
     console.warn("account_password_change_failed");
     return json({ ok: false, error: "PASSWORD_CHANGE_FAILED" }, 503);
-  } finally {
-    permit.release();
   }
 }

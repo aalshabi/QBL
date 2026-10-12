@@ -32,7 +32,7 @@ test("policy rejects short, same, single-character and account-name passwords", 
 
 test("policy rejects every password published in prisma/seed.ts", () => {
   const seed = read("prisma/seed.ts");
-  const published = [...new Set([...seed.matchAll(/hashOtp\(\s*"([^"]+)"\s*\)/g)].map((match) => match[1]))];
+  const published = [...new Set([...seed.matchAll(/hash(?:Otp|Password)\(\s*"([^"]+)"\s*\)/g)].map((match) => match[1]))];
   assert.ok(published.length > 0);
   for (const password of published) {
     const result = checkNewPassword({ email: "x@qbl.sa", currentPassword: "old-password-123", newPassword: password });
@@ -45,10 +45,32 @@ test("route requires a session, the same-origin marker and a rate limit", () => 
   const route = read("app/api/account/password/route.ts");
   assert.match(route, /getSession\(\)/);
   assert.match(route, /ACCOUNT_REQUEST_MARKER/);
-  assert.match(route, /acquireRatePermit\(`password-change:\$\{session\.userId\}`/);
+  assert.match(route, /consumePasswordChangeAttempt\(session\.userId\)/);
+  const rateLimit = read("lib/account/password-change-rate-limit.ts");
+  assert.match(rateLimit, /ON CONFLICT \("userId"\) DO UPDATE/);
+  assert.match(rateLimit, /"PasswordChangeRateLimit"\."attempts" \+ 1/);
   assert.match(route, /CROSS_SITE_REQUEST/);
   // لا يمرّر إلى السجلات أي متغير يحمل الكلمات أو جسم الطلب (أسماء الأحداث النصية مسموحة).
   assert.doesNotMatch(route, /console\.\w+\([^)]*\b(currentPassword|newPassword|body|raw|data)\b/);
+});
+
+test("password replacement is conditional on the hash that was verified", () => {
+  const change = read("lib/account/change-password.ts");
+  assert.match(change, /updateMany\(\{/);
+  assert.match(change, /passwordHash:\s*user\.passwordHash/);
+  assert.match(change, /if \(update\.count !== 1\) return false/);
+  assert.ok(change.indexOf("update.count !== 1") < change.indexOf("auditLog.create"));
+});
+
+test("password hashing preserves suffixes beyond bcrypt's byte cutoff", async () => {
+  process.env.OTP_PEPPER = "account-password-unit-test-pepper";
+  const { comparePassword, hashPassword } = await import("@/lib/security");
+  const first = `${"x".repeat(90)}-first`;
+  const second = `${"x".repeat(90)}-second`;
+  const hash = await hashPassword(first);
+  assert.match(hash, /^v2\$\$2/);
+  assert.equal(await comparePassword(first, hash), true);
+  assert.equal(await comparePassword(second, hash), false);
 });
 
 test("the account page is admin-guarded, not indexed, and reachable from the workspace nav", () => {
