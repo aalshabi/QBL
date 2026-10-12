@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { acquireRatePermit, readBoundedRequestJson, secureJsonHeaders } from "@/lib/logestechs/request-security";
+import { readBoundedRequestJson, secureJsonHeaders } from "@/lib/logestechs/request-security";
 import {
   LogesTechsWebhookConfigurationError,
   normalizeLogesTechsWebhookPayload,
   validateWebhookTransport,
   type WebhookTransportValidation,
 } from "@/lib/logestechs/webhook";
-import { processLogesTechsWebhook } from "@/lib/logestechs/webhook-store";
+import { ingestLogesTechsWebhook } from "@/lib/logestechs/webhook-store";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -42,34 +42,28 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const permit = acquireRatePermit(`logestechs-webhook:${transport.rateKey}`, 120, 8);
-  if (!permit.ok) {
+  // لا حدّ معدل هنا عمدًا: LogesTechs لا تعيد الإرسال تلقائيًا، فكل 429 حدثٌ ضائع.
+  // الطلب وصل بعد التحقق من X-API-Key، فلا يرسل إلى هذه النقطة إلا حامل المفتاح.
+  let payload: unknown;
+  try {
+    payload = await readBoundedRequestJson(request);
+  } catch (error) {
     return json(
-      { ok: false, error: "RATE_LIMITED" },
-      429,
-      { "Retry-After": String(permit.retryAfterSeconds) },
+      { ok: false, error: error instanceof RangeError ? "PAYLOAD_TOO_LARGE" : "INVALID_JSON" },
+      error instanceof RangeError ? 413 : 400,
     );
   }
 
+  let event;
   try {
-    let payload: unknown;
-    try {
-      payload = await readBoundedRequestJson(request);
-    } catch (error) {
-      return json(
-        { ok: false, error: error instanceof RangeError ? "PAYLOAD_TOO_LARGE" : "INVALID_JSON" },
-        error instanceof RangeError ? 413 : 400,
-      );
-    }
+    event = normalizeLogesTechsWebhookPayload(payload);
+  } catch {
+    return json({ ok: false, error: "INVALID_WEBHOOK_PAYLOAD" }, 400);
+  }
 
-    let event;
-    try {
-      event = normalizeLogesTechsWebhookPayload(payload);
-    } catch {
-      return json({ ok: false, error: "INVALID_WEBHOOK_PAYLOAD" }, 400);
-    }
-
-    const result = await processLogesTechsWebhook(event);
+  try {
+    // الحفظ يسبق المعالجة؛ بعد الحفظ يُرد 200 حتى لو فشلت المعالجة، فالحدث لم يضع.
+    const result = await ingestLogesTechsWebhook(event);
     console.info("logestechs_webhook_processed", {
       outcome: result.outcome,
       duplicate: result.duplicate,
@@ -84,13 +78,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const databaseMissing = error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED";
     console.warn("logestechs_webhook_failed", {
-      code: databaseMissing ? "DATABASE_NOT_CONFIGURED" : "PROCESSING_FAILED",
+      code: databaseMissing ? "DATABASE_NOT_CONFIGURED" : "STORE_FAILED",
     });
     return json(
-      { ok: false, error: databaseMissing ? "DATABASE_NOT_CONFIGURED" : "PROCESSING_FAILED", retryable: true },
+      { ok: false, error: databaseMissing ? "DATABASE_NOT_CONFIGURED" : "STORE_FAILED", retryable: true },
       503,
     );
-  } finally {
-    permit.release();
   }
 }
