@@ -116,9 +116,10 @@ test("بيانات اللوحة نفسها هي المصدر التشغيلي ا
 });
 
 
-test("G19 stays open until all three scheduled jobs have production evidence", () => {
+test("G19 closes after all three scheduled jobs have production evidence", () => {
   const cronSecretGap = TASK_GAPS.find((gap) => gap.id === "G19");
   assert.ok(cronSecretGap);
-  assert.equal(cronSecretGap.status, "IN_PROGRESS");
-  assert.match(cronSecretGap.action, /المتبقي: التحقق المباشر/);
+  assert.equal(cronSecretGap.status, "DONE");
+  assert.match(cronSecretGap.action, /\/api\/cron\/daily-temperature-report/);
+  assert.match(cronSecretGap.action, /HTTP 200/);
 });
