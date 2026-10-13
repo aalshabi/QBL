@@ -16,8 +16,9 @@ export function withExplicitVerifyFull(connectionString: string): string {
     return connectionString;
   }
 
-  const mode = url.searchParams.get("sslmode");
-  if (!mode || !VERIFY_FULL_ALIASES.has(mode)) return connectionString;
+  // تكرار sslmode غامض (pg يأخذ الأخير): لا نخمّن، نترك الرابط كما هو.
+  const modes = url.searchParams.getAll("sslmode");
+  if (modes.length !== 1 || !VERIFY_FULL_ALIASES.has(modes[0])) return connectionString;
   if (url.searchParams.has("uselibpqcompat")) return connectionString;
 
   url.searchParams.set("sslmode", "verify-full");

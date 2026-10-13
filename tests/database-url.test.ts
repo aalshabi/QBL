@@ -50,6 +50,9 @@ test("prefer وverify-ca تُثبَّت كذلك؛ ما عداها لا يُلم
     "postgresql://u:p@h/db?sslmode=no-verify",
     "postgresql://postgres:postgres@localhost:5432/qdl?schema=public",
     "postgresql://u:p@h/db?uselibpqcompat=true&sslmode=require",
+    // تكرار: pg يأخذ القيمة الأخيرة (disable)؛ لا يجوز أن نحوّلها إلى verify-full.
+    "postgresql://u:p@h/db?sslmode=require&sslmode=disable",
+    "postgresql://u:p@h/db?sslmode=disable&sslmode=require",
     "not a url",
   ]) {
     assert.equal(withExplicitVerifyFull(untouched), untouched);
