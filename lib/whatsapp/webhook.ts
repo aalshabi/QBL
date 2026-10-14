@@ -7,6 +7,12 @@ import { safeText, sha256 } from "@/lib/whatsapp/security";
 type MetaMessage = { id?: string; from?: string; timestamp?: string; type?: string; text?: { body?: string } };
 type MetaStatus = { id?: string; status?: string; timestamp?: string; errors?: Array<{ code?: number; title?: string }> };
 
+const STATUS_RANK = { QUEUED: 0, SENT: 1, DELIVERED: 2, READ: 3, FAILED: 4, DEAD_LETTER: 5, RECEIVED: 0 } as const;
+export function shouldApplyMessageStatus(current: keyof typeof STATUS_RANK, next: keyof typeof STATUS_RANK) {
+  if (next === "FAILED") return current !== "READ";
+  return STATUS_RANK[next] >= STATUS_RANK[current];
+}
+
 export function extractWebhookChanges(payload: unknown) {
   const entries = typeof payload === "object" && payload && "entry" in payload && Array.isArray((payload as { entry?: unknown }).entry)
     ? (payload as { entry: Array<{ changes?: Array<{ value?: { messages?: MetaMessage[]; statuses?: MetaStatus[] } }> }> }).entry
@@ -42,7 +48,8 @@ export async function ingestWhatsAppWebhook(payload: unknown, rawBody: Buffer) {
         if (!status.id || !status.status) continue;
         const mapped = status.status === "sent" ? "SENT" : status.status === "delivered" ? "DELIVERED" : status.status === "read" ? "READ" : status.status === "failed" ? "FAILED" : null;
         if (!mapped) continue;
-        await tx.whatsAppMessage.updateMany({ where: { providerMessageId: status.id }, data: { status: mapped, providerTimestamp: providerDate(status.timestamp), errorCode: status.errors?.[0]?.code?.toString(), errorSummary: safeText(status.errors?.[0]?.title ?? "", 120) || null } });
+        const existing = await tx.whatsAppMessage.findUnique({ where: { providerMessageId: status.id }, select: { status: true } });
+        if (existing && shouldApplyMessageStatus(existing.status, mapped)) await tx.whatsAppMessage.update({ where: { providerMessageId: status.id }, data: { status: mapped, providerTimestamp: providerDate(status.timestamp), errorCode: status.errors?.[0]?.code?.toString(), errorSummary: safeText(status.errors?.[0]?.title ?? "", 120) || null } });
       }
       for (const message of messages) {
         if (!message.id || message.type !== "text" || !message.text?.body) continue;

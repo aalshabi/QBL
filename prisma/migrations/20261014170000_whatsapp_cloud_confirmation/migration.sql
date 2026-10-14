@@ -39,6 +39,7 @@ CREATE TABLE "WhatsAppOutbox" (
   "nextAttemptAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "leaseOwner" TEXT,
   "leaseExpiresAt" TIMESTAMP(3), "providerMessageId" TEXT, "lastError" TEXT, "sentAt" TIMESTAMP(3),
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL,
+  "expiresAt" TIMESTAMP(3),
   CONSTRAINT "WhatsAppOutbox_pkey" PRIMARY KEY ("id")
 );
 
@@ -61,3 +62,4 @@ ALTER TABLE "WhatsAppMessage" ADD CONSTRAINT "WhatsAppMessage_orderId_fkey" FORE
 ALTER TABLE "WhatsAppMessage" ADD CONSTRAINT "WhatsAppMessage_confirmationId_fkey" FOREIGN KEY ("confirmationId") REFERENCES "WhatsAppConfirmation"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 ALTER TABLE "WhatsAppOutbox" ADD CONSTRAINT "WhatsAppOutbox_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "DeliveryOrder"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "WhatsAppOutbox" ADD CONSTRAINT "WhatsAppOutbox_confirmationId_fkey" FOREIGN KEY ("confirmationId") REFERENCES "WhatsAppConfirmation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TYPE "AuditAction" ADD VALUE 'WHATSAPP_MANUAL_REPLY_QUEUED';

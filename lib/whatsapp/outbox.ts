@@ -26,7 +26,10 @@ export async function enqueueDeliveryConfirmation(orderId: string, version = 1) 
 async function sendTemplate(row: { phoneE164: string; templateName: string; templateLanguage: string; parameters: unknown }) {
   const config = assertSendingConfigured();
   const parameters = Array.isArray(row.parameters) ? row.parameters.map((text) => ({ type: "text", text: String(text) })) : [];
-  const response = await fetch(`https://graph.facebook.com/${config.graphVersion}/${config.phoneNumberId}/messages`, { method: "POST", headers: { Authorization: `Bearer ${config.accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify({ messaging_product: "whatsapp", to: row.phoneE164.slice(1), type: "template", template: { name: row.templateName, language: { code: row.templateLanguage }, components: [{ type: "body", parameters }] } }), signal: AbortSignal.timeout(15_000) });
+  const message = row.templateName === "__text__"
+    ? { messaging_product: "whatsapp", to: row.phoneE164.slice(1), type: "text", text: { preview_url: false, body: parameters[0]?.text ?? "" } }
+    : { messaging_product: "whatsapp", to: row.phoneE164.slice(1), type: "template", template: { name: row.templateName, language: { code: row.templateLanguage }, components: [{ type: "body", parameters }] } };
+  const response = await fetch(`https://graph.facebook.com/${config.graphVersion}/${config.phoneNumberId}/messages`, { method: "POST", headers: { Authorization: `Bearer ${config.accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(message), signal: AbortSignal.timeout(15_000) });
   const body = await response.json() as { messages?: Array<{ id?: string }>; error?: { code?: number; message?: string } };
   if (!response.ok || !body.messages?.[0]?.id) throw new Error(`META_SEND_${body.error?.code ?? response.status}`);
   return body.messages[0].id;
@@ -41,7 +44,8 @@ export async function processWhatsAppOutbox(limit = 10) {
   if (sentToday >= config.dailyInitialLimit || (sentToday + 1) * UTILITY_RATE_USD > config.dailyCostLimitUsd) throw new Error("WHATSAPP_DAILY_GUARD_REACHED");
   const now = new Date();
   const leaseOwner = randomUUID();
-  const candidates = await prisma.whatsAppOutbox.findMany({ where: { status: { in: ["QUEUED", "RETRY"] }, nextAttemptAt: { lte: now }, OR: [{ leaseExpiresAt: null }, { leaseExpiresAt: { lt: now } }] }, orderBy: { createdAt: "asc" }, take: Math.min(limit, config.dailyInitialLimit - sentToday) });
+  await prisma.whatsAppOutbox.updateMany({ where: { status: { in: ["QUEUED", "RETRY", "LEASED"] }, expiresAt: { lte: now } }, data: { status: "CANCELLED", leaseOwner: null, leaseExpiresAt: null, lastError: "CUSTOMER_SERVICE_WINDOW_CLOSED" } });
+  const candidates = await prisma.whatsAppOutbox.findMany({ where: { status: { in: ["QUEUED", "RETRY"] }, nextAttemptAt: { lte: now }, AND: [{ OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] }, { OR: [{ leaseExpiresAt: null }, { leaseExpiresAt: { lt: now } }] }] }, orderBy: { createdAt: "asc" }, take: Math.min(limit, config.dailyInitialLimit - sentToday) });
   const results = [];
   for (const candidate of candidates) {
     const leased = await prisma.whatsAppOutbox.updateMany({ where: { id: candidate.id, status: { in: ["QUEUED", "RETRY"] }, OR: [{ leaseExpiresAt: null }, { leaseExpiresAt: { lt: now } }] }, data: { status: "LEASED", leaseOwner, leaseExpiresAt: new Date(Date.now() + 60_000), attemptCount: { increment: 1 } } });
@@ -51,7 +55,7 @@ export async function processWhatsAppOutbox(limit = 10) {
       await prisma.$transaction([
         prisma.whatsAppOutbox.update({ where: { id: candidate.id }, data: { status: "SENT", providerMessageId, sentAt: new Date(), leaseOwner: null, leaseExpiresAt: null } }),
         prisma.whatsAppConfirmation.update({ where: { id: candidate.confirmationId }, data: { requestedAt: new Date() } }),
-        prisma.whatsAppMessage.create({ data: { providerMessageId, orderId: candidate.orderId, confirmationId: candidate.confirmationId, direction: "OUTBOUND", status: "SENT", phoneE164: candidate.phoneE164, messageType: "template", payloadHash: candidate.idempotencyKey } }),
+        prisma.whatsAppMessage.create({ data: { providerMessageId, orderId: candidate.orderId, confirmationId: candidate.confirmationId, direction: "OUTBOUND", status: "SENT", phoneE164: candidate.phoneE164, messageType: candidate.templateName === "__text__" ? "text" : "template", payloadHash: candidate.idempotencyKey } }),
       ]);
       results.push({ id: candidate.id, status: "SENT" });
     } catch (error) {

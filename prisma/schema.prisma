@@ -173,6 +173,7 @@ enum AuditAction {
   TEMPERATURE_READING
   POD_CAPTURED
   PASSWORD_CHANGED
+  WHATSAPP_MANUAL_REPLY_QUEUED
 }
 
 enum ProofType {
@@ -472,6 +473,7 @@ model WhatsAppOutbox {
   providerMessageId String?
   lastError       String?
   sentAt          DateTime?
+  expiresAt       DateTime?
   order           DeliveryOrder        @relation(fields: [orderId], references: [id], onDelete: Cascade)
   confirmation    WhatsAppConfirmation  @relation(fields: [confirmationId], references: [id], onDelete: Cascade)
   createdAt       DateTime              @default(now())

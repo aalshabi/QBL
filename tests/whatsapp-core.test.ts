@@ -5,6 +5,8 @@ import { classifyReply } from "@/lib/whatsapp/intent";
 import { normalizeSaudiPhone } from "@/lib/whatsapp/phone";
 import { verifyMetaSignature } from "@/lib/whatsapp/security";
 import { confirmationTemplate, DELIVERY_CONFIRMATION_COD_TEMPLATE, DELIVERY_CONFIRMATION_TEMPLATE } from "@/lib/whatsapp/templates";
+import { customerServiceWindowEnds } from "@/lib/whatsapp/manual-reply";
+import { shouldApplyMessageStatus } from "@/lib/whatsapp/webhook";
 
 test("normalizes Saudi mobile numbers and rejects unsupported numbers", () => {
   assert.equal(normalizeSaudiPhone("050 123 4567"), "+966501234567");
@@ -35,4 +37,17 @@ test("uses separate utility templates for COD and prepaid shipments", () => {
 test("simulates 500 initial messages without any provider calls", () => {
   const keys = new Set(Array.from({ length: 500 }, (_, i) => `delivery-confirmation:order-${i}:v1`));
   assert.equal(keys.size, 500);
+});
+
+test("manual replies are allowed only inside the rolling 24-hour window", () => {
+  const inbound = new Date("2026-10-14T10:00:00Z");
+  assert.equal(customerServiceWindowEnds(inbound, new Date("2026-10-15T09:59:59Z")).open, true);
+  assert.equal(customerServiceWindowEnds(inbound, new Date("2026-10-15T10:00:00Z")).open, false);
+});
+
+test("out-of-order callbacks cannot regress delivered or read messages", () => {
+  assert.equal(shouldApplyMessageStatus("DELIVERED", "SENT"), false);
+  assert.equal(shouldApplyMessageStatus("READ", "DELIVERED"), false);
+  assert.equal(shouldApplyMessageStatus("SENT", "DELIVERED"), true);
+  assert.equal(shouldApplyMessageStatus("READ", "FAILED"), false);
 });
