@@ -12,7 +12,18 @@
 - برومبتا Cowork وChrome محفوظان في archive/ كأدلة تاريخية؛ ليسا تكليفين نشطين مستقلين.
 - ملاحظات الموقع أدناه من فحص 14 أكتوبر؛ جاهزية الإنتاج لم تُثبت لكل بند.
 - المراسلات التشغيلية الخاصة ومعلومات العملاء والمالية تبقى خارج المستودع العام. يوجد ملخص خاص يجمع 29 مجموعة متابعة؛ هذا العدد ليس عدد شحنات أو حوادث مستقلة.
-- لم تتوفر أداة لدمج/أرشفة محادثات Codex أو الوصول إلى مجلدات Windows؛ لا تدعي اكتمال هذه الخطوة.
+- أمكن في تحديث 14 أكتوبر فحص نسخة Windows الحالية وإنشاء نسخة سلامة خارج المستودع، لكن محادثات Codex لم تُدمج أو تُؤرشف، ولم يُحذف أي worktree أو فرع أو مجلد.
+
+## تحديث التنفيذ المحلي — 14 أكتوبر 2026
+
+هذا التحديث يراجع تنظيم PR #28 مقابل عمل المعالجة الأحدث، ولا يساوي دمجًا في `master` أو نشرًا في الإنتاج.
+
+- بقي checkout العامل الأصلي على `codex/brand-identity-production` عند `32a65f2b298c4a04533988812efa2f08cbd43922` دون تبديل فرع أو stash أو reset. جرى حصر 44 ملفًا tracked معدلًا و61 مدخلًا untracked.
+- حُفظت التغييرات قبل العمل في نسخة سلامة خارج المستودع: binary patch للتعديلات tracked، وأرشيف متحقق يحوي 56 ملفًا untracked عاديًا، مع SHA-256 وبيان حالة worktrees. خمسة مجلدات worktree متداخلة بقيت في مكانها ولم تدخل في أرشيف متكرر.
+- روجعت ملفات commit `613444b5fa934f2683a686b38112294bb612200a` التسعة في worktree معزول. التغيير الأصلي توثيقي فقط، وأرشيفاته الثلاثة مطابقة للبصمات المسجلة.
+- أدلة المعالجة الأحدث أصبحت تحت [`docs/qbl/`](../qbl/): [تقرير المعالجة](../qbl/website-remediation-report.md)، [سجل الادعاءات](../qbl/claim-register.md)، [قبول التكامل](../qbl/integration-acceptance.md)، [حدود النظام](../qbl/system-boundaries.md)، و[قرار البناء/الشراء/التكامل](../qbl/build-buy-integrate.md).
+- الإنتاج ما زال منقسمًا بين `qbl.sa` و`www.qbl.sa`. لم يتم نشر أو تغيير نطاق أو تطبيق migration أو إرسال نموذج حقيقي. لذلك لا تُرقّى نتائج الاختبارات المحلية إلى حالة «منجز إنتاجيًا».
+- تحقق تقرير المعالجة من 39/39 اختبارًا مستهدفًا على checkout العمل. وفي worktree التوحيد نجح full suite بعد توليد Prisma: 218 ناجحًا، 0 فشل، و10 skipped لغياب متغيرات قواعد اختبار اختيارية؛ كما نجح ESLint وTypeScript وPrisma validation. فشل build داخل sandbox بـWindows `EPERM` ثم نجح كاملًا خارج sandbox دون تغيير الكود. سجل الأوامر والنتائج في [CONSOLIDATION_VERIFICATION.md](CONSOLIDATION_VERIFICATION.md).
 
 ## ترتيب التنفيذ
 1. تثبيت مصدر النشر والنسخة الرئيسية وحصر الفروع والعمل المحلي غير المرفوع.
@@ -53,7 +64,7 @@
 احفظ D1–D12 وT1–T11 في المصدر التشغيلي دون تغيير معرّفاتها أو قراراتها. G01 موعده المسجل 13 أكتوبر وحالته IN_PROGRESS؛ تحقق من أي دليل لاحق قبل وصفه متأخرًا حاليًا. ملاك السجل مقترحون حتى التأكيد.
 
 ## ملاحظات الموقع ضمن المهمة
-المعرّفات QBL-xx محفوظة لاستمرار الربط بالتقرير. كلها تحتاج تحققًا وإغلاقًا جديدًا؛ لا تساوِ ملاحظة الكود بتسريب أو عطل إنتاج مؤكد.
+المعرّفات QBL-xx محفوظة لاستمرار الربط بالتقرير. جدول التعريف أدناه يحفظ معيار القبول التاريخي، ثم يوضح جدول الحالة الحالية ما ثبت محليًا وما بقي للنشر أو لطرف خارجي. لا تساوِ ملاحظة الكود بتسريب أو عطل إنتاج مؤكد.
 
 | ID | النوع | الأولوية | المجال | الموضع | معيار القبول |
 |---|---|---|---|---|---|
@@ -75,6 +86,31 @@
 | QBL-16 | تحقق | P2 | جوال ووصولية | الصفحات الرئيسة | صور ونتائج في المقاسات الثلاثة؛ labels/focus/errors/contrast؛ لا ادعاء اعتماد شامل |
 | QBL-17 | تحقق | P2 | أداء وSEO | الموقع العام | قياس مختبر مؤرخ + بيانات حقل إن وجدت، ثم إصلاح سبب مثبت |
 | QBL-18 | تحقق | P1/P2 | صلاحيات/نسخ احتياطي | البوابات المحمية | fixtures مصرح بها، اختبارات page/API/tenant، استعادة اختبار موثقة |
+
+### الحالة الحالية حسب أحدث دليل
+
+تعريف الحالات: `LOCALLY_VERIFIED` = منفذ ومختبر في checkout غير منشور؛ `LOCAL_PARTIAL` = جزء مثبت محليًا ومعيار القبول غير مكتمل؛ `DEPLOYMENT_PENDING` = التنفيذ المحلي موجود ولا يغلق قبل النشر والتحقق الحي؛ `EXTERNALLY_BLOCKED` = يحتاج اعتمادًا أو صلاحية أو عقد مزود؛ `OPEN` = لم يثبت التنفيذ المطلوب.
+
+| ID | الحالة الحالية | الدليل والحد المتبقي |
+|---|---|---|
+| QBL-01 | LOCALLY_VERIFIED | `lib/actions.ts` و`app/api/quote/route.ts` يستخدمان parser وتخزينًا مشتركين؛ اختبارات deduplication وrate limiting ناجحة محليًا. لا يوجد إرسال إنتاجي حقيقي. |
+| QBL-02 | OPEN | `public/sw.js` ما زال يخزن كل navigation من نفس الأصل ويضم `/quote` في app shell؛ لم يثبت استثناء الصفحات الخاصة أو تطهير cache سابق. |
+| QBL-03 | DEPLOYMENT_PENDING | canonical redirects وسياسات headers منفذة محليًا؛ apex وwww ما زالا deploymentين مختلفين، ولا توجد صلاحية نشر/نطاق معتمدة. |
+| QBL-04 | LOCAL_PARTIAL | `docs/qbl/claim-register.md` يضبط حالات Ready/Pilot/Planned/Unknown، وأزيلت أو قُيدت ادعاءات غير مثبتة؛ اعتماد المالك/القانوني والنشر باقيان. |
+| QBL-05 | LOCALLY_VERIFIED | `lib/quote.ts` يطبق validation موحدًا للهاتف والحقول، مع اختبار إدخال اصطناعي. يلزم تتبع معدلات الرفض بعد النشر. |
+| QBL-06 | LOCAL_PARTIAL | reference وdeduplication وrate limiting و`ownerRole=SALES` والحفظ fail-closed في production منفذة محليًا؛ migration وقاعدة الإنتاج والتنبيه القابل للاسترجاع لم تُثبت. |
+| QBL-07 | LOCALLY_VERIFIED | حقول التأهيل و`source` والموافقة منفذة، وتحليلات العميل allowlisted بلا PII؛ لا يوجد قياس funnel إنتاجي. |
+| QBL-08 | LOCAL_PARTIAL | التتبع الاصطناعي موقّع ومقنع البيانات ومحدود المعدل؛ الحالة المسلّمة ما زالت تغلق الرابط، ولم يعتمد مالك العمل سياسة عرض كل الحالات النهائية. |
+| QBL-09 | OPEN | لم يثبت مسار واجهة يميز 429 و5xx وأعطال الشبكة؛ API الحالي يعيد رسالة موحدة للرابط غير الصالح/المنتهي/المغلق. |
+| QBL-10 | EXTERNALLY_BLOCKED | `docs/qbl/integration-acceptance.md` يصنف التكامل غير جاهز للإنتاج؛ يلزم Salla sandbox وعقد توقيع webhook وتتبع اصطناعي مصرح. |
+| QBL-11 | LOCAL_PARTIAL | `lang=en` و`dir=ltr` وcanonical/hreflang المتبادل مثبتة محليًا لمسار `/en`؛ رحلة quote/track الإنجليزية الكاملة غير مثبتة. |
+| QBL-12 | EXTERNALLY_BLOCKED | صفحات privacy/terms وروابط النموذج والتذييل منفذة محليًا؛ اعتماد الاحتفاظ والمعالجين والقانون الحاكم ووسيلة التواصل الرسمية مطلوب من المالك/القانوني. |
+| QBL-13 | LOCALLY_VERIFIED | فحصا 390px و1440px لم يظهرا overflow أفقيًا؛ يبقى إعادة التحقق بعد النشر. |
+| QBL-14 | LOCALLY_VERIFIED | العناوين وcanonical وhreflang وsitemap/noindex منفذة ومفحوصة محليًا. |
+| QBL-15 | LOCAL_PARTIAL | سجل الادعاءات يمنع النشر غير المثبت؛ أمثلة Beauty التشغيلية المصرح بها وأدلة العميل لم تُعتمد بعد. |
+| QBL-16 | LOCAL_PARTIAL | mobile/desktop وkeyboard focus الأساسي فُحصت؛ لا يوجد تدقيق وصولية شامل أو قياس contrast موثق لكل الصفحات. |
+| QBL-17 | OPEN | نجح production build خارج sandbox، لكن لا يوجد قياس أداء مختبري حديث مرتبط بتغييرات المعالجة ولا بيانات حقل تثبت النتيجة. |
+| QBL-18 | EXTERNALLY_BLOCKED | لا توجد fixtures أدوار/tenants مصرح بها أو تجربة استعادة backup؛ أدلة G19/G20 لا تغلق هذا المعيار الأوسع. |
 
 ## تقليل التكرار بين البنود
 - QBL-10 يرتبط بـG01/G02/G03/G04/G05/G07 وT1–T9؛ لا تفتح مهمة ثانية للتكامل نفسه.
@@ -130,7 +166,5 @@
 ## تكليف كودكس المستمر
 Work in English and write the final report in Arabic. Start from this file and Issue #27; read applicable AGENTS.md/local instructions and inspect current HEAD. Maintain the current integration data source and preserved IDs. Work through the ordered phases above in small reviewable changes. Revalidate old evidence before closing, creating or reopening tasks. Preserve unrelated work and non-equivalent branches. Inspect the application's actual entry points before selecting filenames. Do not flatten Next.js folders or apply blanket merges of divergent branches.
 
-For the first implementation slice use the quote/cache task below. Its baseline is historical and must be refreshed; the current requested consolidation does not execute it.
-
-Use QBL-01/02/05/06 as the first implementation slice; verify the actual Server Action and Service Worker with synthetic fixtures.
+The quote path (QBL-01/05 and part of QBL-06) now has local evidence. The next implementation slice is QBL-02: replace the Service Worker's blanket navigation caching with an explicit public allowlist, remove `/quote` and protected/tracking routes from cacheability, rotate the cache version, and add synthetic cache-policy tests. Do not claim completion until the old-cache purge and private-route exclusions are verified.
 

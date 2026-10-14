@@ -1,34 +1,84 @@
 {
-  "baseline": "03f2b4ec1a26ad41088b552105d70d267f775c62",
-  "date_riyadh": "2026-10-14",
-  "scope": "documentation consolidation only",
-  "issue": "https://github.com/aalshabi/QBL/issues/27",
+  "original_consolidation": {
+    "baseline": "03f2b4ec1a26ad41088b552105d70d267f775c62",
+    "commit": "613444b5fa934f2683a686b38112294bb612200a",
+    "date_riyadh": "2026-10-14",
+    "scope": "documentation consolidation only",
+    "issue": "https://github.com/aalshabi/QBL/issues/27",
+    "pull_request": "https://github.com/aalshabi/QBL/pull/28",
+    "changed_file_count": 9,
+    "runtime_code_changed": false,
+    "production_deployed": false,
+    "feature_branches_deleted": false,
+    "old_codex_chats_archived": false
+  },
   "archives": [
     {
       "original_path": "LOGESTECHS_QBL_TASK.md",
       "archive_path": "docs/project/archive/LOGESTECHS_QBL_TASK.md",
-      "sha256": "a5dd7464279bb188cb27d295a2502246d9917daec1978eca8d840ab047b1fabf",
-      "bytes": 26094,
-      "byte_identical": true
+      "git_blob": "224b6354ac17f331c51b92abafb10dfdf2546b4d",
+      "sha256_lf": "a5dd7464279bb188cb27d295a2502246d9917daec1978eca8d840ab047b1fabf",
+      "bytes_lf": 26094,
+      "git_blob_identical": true
     },
     {
       "original_path": "docs/logestechs/PROMPT_CLAUDE_COWORK.md",
       "archive_path": "docs/project/archive/PROMPT_CLAUDE_COWORK.md",
-      "sha256": "0e33a1e0c9dbc701c1d080371cc8db30beb6742ef770e9087f603ef3cf7bfcd0",
-      "bytes": 5688,
-      "byte_identical": true
+      "git_blob": "75ed0036a5701ed3237765aa78436639e192955c",
+      "sha256_lf": "0e33a1e0c9dbc701c1d080371cc8db30beb6742ef770e9087f603ef3cf7bfcd0",
+      "bytes_lf": 5688,
+      "git_blob_identical": true
     },
     {
       "original_path": "docs/logestechs/PROMPT_CLAUDE_IN_CHROME.md",
       "archive_path": "docs/project/archive/PROMPT_CLAUDE_IN_CHROME.md",
-      "sha256": "14c2521a15ac8ebbe55f37191ae5d2834f20dc82aabc2e0ac73ac9cba144c100",
-      "bytes": 6292,
-      "byte_identical": true
+      "git_blob": "00bfc1332abe9afbe82c900e8bb1c4e68f95ad5c",
+      "sha256_lf": "14c2521a15ac8ebbe55f37191ae5d2834f20dc82aabc2e0ac73ac9cba144c100",
+      "bytes_lf": 6292,
+      "git_blob_identical": true
     }
   ],
-  "runtime_code_changed": false,
-  "production_deployed": false,
-  "feature_branches_deleted": false,
-  "old_codex_chats_archived": false,
-  "windows_worktrees_accessed": false
+  "local_refresh": {
+    "date_riyadh": "2026-10-14",
+    "branch": "codex/qbl-consolidation-refresh",
+    "source_commit": "613444b5fa934f2683a686b38112294bb612200a",
+    "protected_checkout": {
+      "branch": "codex/brand-identity-production",
+      "head": "32a65f2b298c4a04533988812efa2f08cbd43922",
+      "modified_tracked_files": 44,
+      "untracked_entries": 61,
+      "ordinary_untracked_files_archived": 56,
+      "nested_worktree_directories_preserved": 5
+    },
+    "safety_snapshot": {
+      "tracked_patch_sha256": "255b0a7bff0fa2c02d8bca7c775541c56466192789f328f48a797ccdde879168",
+      "untracked_archive_sha256": "1c378fd8659b5cf28a09cfc030af79edc7f1ea0af488fd45fa22430a4d9842cd",
+      "inventory_sha256": "52a62d477f3a858bbcec7f07027d969d5bb7d6edc3a8d8a7d09763e05db83878"
+    },
+    "incorporated_evidence": [
+      "docs/qbl/website-remediation-report.md",
+      "docs/qbl/claim-register.md",
+      "docs/qbl/integration-acceptance.md",
+      "docs/qbl/system-boundaries.md",
+      "docs/qbl/build-buy-integrate.md",
+      "docs/project/CONSOLIDATION_VERIFICATION.md"
+    ],
+    "validation": {
+      "git_diff_check": "passed",
+      "active_document_links": "10 documents; 14 local links; 0 missing",
+      "verification_json": "parsed",
+      "prisma_generate": "passed",
+      "prisma_validate": "passed",
+      "tests": "228 total; 218 passed; 0 failed; 10 skipped without optional database test URLs",
+      "typescript_no_emit": "passed after exact lockfile install",
+      "eslint": "passed",
+      "production_build": "passed outside sandbox after sandbox EPERM",
+      "npm_install_audit": "35 advisories reported; no automatic dependency mutation"
+    },
+    "runtime_code_changed": false,
+    "production_deployed": false,
+    "production_status": "deployment pending and externally blocked",
+    "branches_or_worktrees_deleted": false,
+    "merged_or_pushed": false
+  }
 }
