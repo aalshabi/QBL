@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "توصيل مبرّد للصيدليات والمطاعم والتجزئة في الرياض",
+  title: "توصيل مبرّد لعلامات التجميل والعطور ومراكز الفلفلمنت بالرياض",
   description:
     "قطاعات يخدمها QBL بتوصيل مبرّد داخل الرياض: مستودعات ومراكز الفلفلمنت، علامات التجميل والعناية بالبشرة والشعر، العطور، ومتاجر Beauty الإلكترونية.",
   path: "/sectors",

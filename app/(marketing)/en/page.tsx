@@ -14,9 +14,9 @@ export const metadata: Metadata = pageMetadata({
 
 const SERVICES = [
   ["B2B2C refrigerated delivery", "Temperature-aware last-mile delivery from business locations to end customers."],
-  ["Fresh food delivery", "A disciplined model for dairy, fresh food, and sensitive chilled products."],
-  ["Frozen items", "Dedicated trips for frozen products based on the agreed operating requirements."],
-  ["Pharmacy and sensitive products", "Careful handling and delivery confirmation without unsupported certification claims."],
+  ["Beauty Shield protected delivery", "Thermal protection for cosmetics and personal-care products in transit: insulated bags and boxes, an air-conditioned vehicle, and a documented handoff."],
+  ["Heat-sensitive products", "Organised delivery for products affected by transit heat, with handling procedures and documentation, and no unsupported certification claims."],
+  ["In-city distribution", "Riyadh routes between warehouses, branches, points of sale, and end customers."],
 ];
 
 const PROCESS = [
@@ -95,7 +95,7 @@ export default function EnHomePage() {
             {[
               ["Temperature discipline", "Operations start from product sensitivity and required handling."],
               ["Clear delivery handoff", "Delivery proof is defined by the client operating model."],
-              ["Sensitive product fit", "Designed for fresh, frozen, pharmacy, and B2B/B2B2C flows."],
+              ["Sensitive product fit", "Designed for cosmetics, skincare, haircare, perfume, and fulfillment-centre flows."],
               ["Scalable structure", "Routes and procedures can be repeated as volume grows."],
             ].map(([title, desc]) => (
               <article key={title} className="rounded-lg border border-muted bg-white p-5">

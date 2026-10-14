@@ -59,6 +59,36 @@ const CERTIFICATION_PATTERNS: { pattern: RegExp; label: string }[] = [
   { pattern: /مرخّ?ص\s+من\s/, label: "ادعاء ترخيص" },
 ];
 
+/**
+ * نطاق الخدمة. الأغذية الطازجة، المجمدات، الصيدليات، والمطاعم قطاعات أُخرجت من
+ * النطاق: لا سند ترخيص لتوصيل دوائي، والنطاق المعتمد هو التجميل والعناية والعطور
+ * ومراكز الفلفلمنت (lib/company.ts → sectors). الادعاء عاد سابقاً من الباب
+ * الخلفي عبر وصف صفحة ونسخة /en، فالأنماط هنا تطابق الجذر لا الكلمة المعرّفة
+ * حتى لا تتجاوزها السوابق («للصيدليات»، «وصيدليات»).
+ */
+const OUT_OF_SCOPE_SECTOR_PATTERNS: { pattern: RegExp; label: string }[] = [
+  { pattern: /صيدل/, label: "قطاع الصيدليات" },
+  { pattern: /مستوصف/, label: "قطاع المستوصفات" },
+  { pattern: /دوائي/, label: "التوصيل الدوائي" },
+  { pattern: /أغذية|الغذاء/, label: "قطاع الأغذية" },
+  { pattern: /طازج/, label: "الأغذية الطازجة" },
+  { pattern: /ألبان/, label: "الألبان" },
+  { pattern: /مجمّ?دات|المنتجات\s+المجمّ?دة/, label: "المجمدات كخدمة" },
+  { pattern: /مطاعم|كافيه/, label: "قطاع المطاعم والكافيهات" },
+  { pattern: /\bpharmac/i, label: "pharmacy sector" },
+  { pattern: /\bfresh\s+food\b/i, label: "fresh food sector" },
+  { pattern: /\bdairy\b/i, label: "dairy sector" },
+  { pattern: /\bfrozen\s+(product|item|good)/i, label: "frozen goods as a service" },
+  { pattern: /\brestaurant/i, label: "restaurant sector" },
+];
+
+/**
+ * شاشات /cold-chain-system عرض توضيحي للنظام التشغيلي: أسماء وهمية ومناطق حرارة
+ * من نموذج البيانات، مُخرجة عمداً من رحلة العميل وصفحاتها الفرعية غير مؤرشفة
+ * (lib/seo.ts → PRIVATE_PATH_PREFIXES). ليست ادعاء قطاع، فتُستثنى من هذا الفحص وحده.
+ */
+const DEMO_PREFIX = "app/(marketing)/cold-chain-system";
+
 const SUPERLATIVE_PATTERNS: { pattern: RegExp; label: string }[] = [
   { pattern: /الخيار\s+الأول/, label: "صفة تفضيل" },
   { pattern: /الأفضل\s+في/, label: "صفة تفضيل" },
@@ -135,4 +165,31 @@ test("لا ادعاء امتثال أو شهادة تنظيمية بلا سند"
 test("صفحة الالتزام تحتفظ بنفي ادعاء الشهادات", () => {
   const source = readFileSync(join(root, "app/(marketing)/compliance/page.tsx"), "utf8");
   assert.match(source, /لا ندّعي شهادات غير مذكورة/, "نفي ادعاء الشهادات حُذف من صفحة الالتزام");
+});
+
+test("لا قطاع خارج النطاق في أي محتوى يراه العميل", () => {
+  const hits: string[] = [];
+
+  for (const file of CUSTOMER_FACING) {
+    if (file.startsWith(DEMO_PREFIX)) continue;
+    let source: string;
+    try {
+      source = readFileSync(join(root, file), "utf8");
+    } catch {
+      continue;
+    }
+    for (const { pattern, label } of OUT_OF_SCOPE_SECTOR_PATTERNS) {
+      const match = source.match(pattern);
+      if (match) hits.push(`${file}: ${label} → "${match[0].trim()}"`);
+    }
+  }
+
+  assert.deepEqual(hits, [], `قطاع خارج النطاق عاد إلى المحتوى:\n${hits.join("\n")}`);
+});
+
+test("النطاق المعتمد ما زال معلناً في القطاعات", () => {
+  const source = readFileSync(join(root, "lib/company.ts"), "utf8");
+  for (const sector of ["الفلفلمنت", "التجميل", "العطور", "Beauty"]) {
+    assert.ok(source.includes(sector), `النطاق المعتمد فقد ${sector}`);
+  }
 });

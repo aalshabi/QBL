@@ -9,7 +9,7 @@ import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "سيناريوهات توصيل مبرّد: أغذية وصيدليات ومطاعم بالرياض",
+  title: "سيناريوهات توصيل مبرّد: تجميل وعطور وفلفلمنت بالرياض",
   description:
     "سيناريوهات تشغيل التوصيل المبرّد في الرياض لعلامات التجميل والعناية والعطور ومراكز الفلفلمنت: التحدي والحل والأثر المتوقع. اطلب دراسة تشغيل لقطاعك.",
   path: "/case-studies",
@@ -21,7 +21,7 @@ export default function CaseStudiesPage() {
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <SectionHeading
           eyebrow="دراسات حالة تشغيلية"
-          title="سيناريوهات جاهزة للنقاش مع عملاء الغذاء والدواء والتجزئة"
+          title="سيناريوهات جاهزة للنقاش مع علامات التجميل والعناية والعطور ومراكز الفلفلمنت"
           description="هذه أمثلة تشغيلية مبنية على قطاعات QBL المستهدفة. عند توفر عملاء فعليين يمكن تحويلها إلى قصص نجاح موثقة بالأرقام والصور."
         />
         <div className="mt-10 grid gap-5 lg:grid-cols-3">
