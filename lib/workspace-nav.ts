@@ -65,6 +65,7 @@ export const WORKSPACE_GROUPS: WorkspaceNavGroup[] = [
     roles: ADMIN_AREA,
     items: [
       { href: "/admin/integrations", label: "التكاملات والخدمات" },
+      { href: "/admin/whatsapp", label: "استثناءات واتساب" },
       { href: "/admin/account", label: "حسابي وكلمة المرور" },
     ],
   },

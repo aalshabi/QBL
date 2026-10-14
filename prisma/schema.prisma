@@ -125,6 +125,40 @@ enum NotificationStatus {
   FAILED
 }
 
+enum WhatsAppConfirmationStatus {
+  PENDING
+  CONFIRMED
+  RESCHEDULE_REQUESTED
+  DECLINED
+  NO_REPLY
+  MANUAL_REVIEW
+  OPTED_OUT
+}
+
+enum WhatsAppMessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum WhatsAppMessageStatus {
+  RECEIVED
+  QUEUED
+  SENT
+  DELIVERED
+  READ
+  FAILED
+  DEAD_LETTER
+}
+
+enum WhatsAppOutboxStatus {
+  QUEUED
+  LEASED
+  SENT
+  RETRY
+  DEAD_LETTER
+  CANCELLED
+}
+
 enum AuditAction {
   ORDER_CREATED
   ORDER_ASSIGNED
@@ -219,6 +253,7 @@ model Customer {
   longitude Decimal         @db.Decimal(9, 6)
   sector    ClientSector
   orders    DeliveryOrder[]
+  whatsappConsents WhatsAppConsent[]
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 }
@@ -333,12 +368,117 @@ model DeliveryOrder {
   auditLogs            AuditLog[]
   proofOfDelivery      ProofOfDelivery?
   coldChainAlerts      ColdChainAlert[]
+  whatsappConfirmations WhatsAppConfirmation[]
+  whatsappMessages      WhatsAppMessage[]
+  whatsappOutbox        WhatsAppOutbox[]
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
   @@index([status, scheduledAt])
   @@index([courierId, status])
   @@index([codStatus])
+}
+
+model WhatsAppConsent {
+  id          String   @id @default(cuid())
+  customerId  String
+  phoneE164   String
+  purpose     String
+  source      String
+  grantedAt   DateTime
+  revokedAt   DateTime?
+  evidenceRef String?
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([phoneE164, revokedAt])
+  @@index([customerId, grantedAt])
+}
+
+model WhatsAppConfirmation {
+  id                String                     @id @default(cuid())
+  orderId           String
+  version           Int                        @default(1)
+  phoneE164         String
+  status            WhatsAppConfirmationStatus @default(PENDING)
+  requestedAt       DateTime?
+  respondedAt       DateTime?
+  requestedTimeText String?
+  lastInboundAt     DateTime?
+  manualReviewAt    DateTime?
+  optedOutAt        DateTime?
+  order             DeliveryOrder              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  messages          WhatsAppMessage[]
+  outbox            WhatsAppOutbox[]
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+
+  @@unique([orderId, version])
+  @@index([phoneE164, status, createdAt])
+  @@index([status, updatedAt])
+}
+
+model WhatsAppMessage {
+  id               String                   @id @default(cuid())
+  providerMessageId String?                  @unique
+  orderId          String?
+  confirmationId   String?
+  direction        WhatsAppMessageDirection
+  status           WhatsAppMessageStatus
+  phoneE164        String
+  messageType      String
+  bodyRedacted     String?
+  payloadHash      String
+  providerTimestamp DateTime?
+  errorCode        String?
+  errorSummary     String?
+  order            DeliveryOrder?            @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  confirmation     WhatsAppConfirmation?      @relation(fields: [confirmationId], references: [id], onDelete: SetNull)
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+
+  @@index([phoneE164, createdAt])
+  @@index([orderId, createdAt])
+}
+
+model WhatsAppWebhookEvent {
+  id          String    @id
+  payloadHash String
+  eventType   String
+  receivedAt  DateTime  @default(now())
+  processedAt DateTime?
+  outcome     String?
+  attempts    Int       @default(0)
+  lastError   String?
+
+  @@index([processedAt, receivedAt])
+}
+
+model WhatsAppOutbox {
+  id              String               @id @default(cuid())
+  idempotencyKey  String               @unique
+  orderId         String
+  confirmationId  String
+  phoneE164       String
+  templateName    String
+  templateLanguage String              @default("ar")
+  parameters      Json
+  status          WhatsAppOutboxStatus @default(QUEUED)
+  attemptCount    Int                  @default(0)
+  nextAttemptAt   DateTime             @default(now())
+  leaseOwner      String?
+  leaseExpiresAt  DateTime?
+  providerMessageId String?
+  lastError       String?
+  sentAt          DateTime?
+  order           DeliveryOrder        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  confirmation    WhatsAppConfirmation  @relation(fields: [confirmationId], references: [id], onDelete: Cascade)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@index([status, nextAttemptAt])
+  @@index([leaseExpiresAt])
 }
 
 model DeliveryStop {
