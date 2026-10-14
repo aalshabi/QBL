@@ -1,0 +1,34 @@
+{
+  "baseline": "03f2b4ec1a26ad41088b552105d70d267f775c62",
+  "date_riyadh": "2026-10-14",
+  "scope": "documentation consolidation only",
+  "issue": "https://github.com/aalshabi/QBL/issues/27",
+  "archives": [
+    {
+      "original_path": "LOGESTECHS_QBL_TASK.md",
+      "archive_path": "docs/project/archive/LOGESTECHS_QBL_TASK.md",
+      "sha256": "a5dd7464279bb188cb27d295a2502246d9917daec1978eca8d840ab047b1fabf",
+      "bytes": 26094,
+      "byte_identical": true
+    },
+    {
+      "original_path": "docs/logestechs/PROMPT_CLAUDE_COWORK.md",
+      "archive_path": "docs/project/archive/PROMPT_CLAUDE_COWORK.md",
+      "sha256": "0e33a1e0c9dbc701c1d080371cc8db30beb6742ef770e9087f603ef3cf7bfcd0",
+      "bytes": 5688,
+      "byte_identical": true
+    },
+    {
+      "original_path": "docs/logestechs/PROMPT_CLAUDE_IN_CHROME.md",
+      "archive_path": "docs/project/archive/PROMPT_CLAUDE_IN_CHROME.md",
+      "sha256": "14c2521a15ac8ebbe55f37191ae5d2834f20dc82aabc2e0ac73ac9cba144c100",
+      "bytes": 6292,
+      "byte_identical": true
+    }
+  ],
+  "runtime_code_changed": false,
+  "production_deployed": false,
+  "feature_branches_deleted": false,
+  "old_codex_chats_archived": false,
+  "windows_worktrees_accessed": false
+}
