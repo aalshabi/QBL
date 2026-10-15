@@ -1,6 +1,7 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 export const META_SIGNATURE_HEADER = "x-hub-signature-256";
+export const DIALOG_WEBHOOK_HEADER = "x-qbl-webhook-token";
 
 export function sha256(value: Buffer | string) {
   return createHash("sha256").update(value).digest("hex");
@@ -11,6 +12,13 @@ export function verifyMetaSignature(rawBody: Buffer, header: string | null, appS
   const supplied = Buffer.from(header.slice(7), "hex");
   const expected = createHmac("sha256", appSecret).update(rawBody).digest();
   return supplied.length === expected.length && timingSafeEqual(supplied, expected);
+}
+
+export function verifySharedSecret(header: string | null, expected: string) {
+  if (!header || expected.length < 32) return false;
+  const supplied = Buffer.from(header);
+  const wanted = Buffer.from(expected);
+  return supplied.length === wanted.length && timingSafeEqual(supplied, wanted);
 }
 
 export function safeText(text: string, max = 240) {

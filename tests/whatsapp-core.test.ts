@@ -7,6 +7,7 @@ import { verifyMetaSignature } from "@/lib/whatsapp/security";
 import { confirmationTemplate, DELIVERY_CONFIRMATION_COD_TEMPLATE, DELIVERY_CONFIRMATION_TEMPLATE } from "@/lib/whatsapp/templates";
 import { customerServiceWindowEnds } from "@/lib/whatsapp/manual-reply";
 import { shouldApplyMessageStatus } from "@/lib/whatsapp/webhook";
+import { retryDisposition } from "@/lib/whatsapp/outbox";
 
 test("normalizes Saudi mobile numbers and rejects unsupported numbers", () => {
   assert.equal(normalizeSaudiPhone("050 123 4567"), "+966501234567");
@@ -50,4 +51,9 @@ test("out-of-order callbacks cannot regress delivered or read messages", () => {
   assert.equal(shouldApplyMessageStatus("READ", "DELIVERED"), false);
   assert.equal(shouldApplyMessageStatus("SENT", "DELIVERED"), true);
   assert.equal(shouldApplyMessageStatus("READ", "FAILED"), false);
+});
+
+test("the eighth outbox attempt dead-letters instead of retrying forever", () => {
+  assert.equal(retryDisposition(7).status, "RETRY");
+  assert.equal(retryDisposition(8).status, "DEAD_LETTER");
 });

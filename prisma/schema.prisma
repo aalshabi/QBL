@@ -135,6 +135,27 @@ enum WhatsAppConfirmationStatus {
   OPTED_OUT
 }
 
+enum WhatsAppCommunicationStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  FAILED
+}
+
+enum WhatsAppOpsAlertKind {
+  DELIVERY_UNKNOWN
+  EARLY_WARNING
+  NO_RESPONSE
+  SEND_FAILED
+  NEEDS_REVIEW
+}
+
+enum WhatsAppOpsAlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
 enum WhatsAppMessageDirection {
   INBOUND
   OUTBOUND
@@ -174,6 +195,8 @@ enum AuditAction {
   POD_CAPTURED
   PASSWORD_CHANGED
   WHATSAPP_MANUAL_REPLY_QUEUED
+  WHATSAPP_OPS_ALERT_CREATED
+  WHATSAPP_OPS_REVIEWED
 }
 
 enum ProofType {
@@ -372,6 +395,7 @@ model DeliveryOrder {
   whatsappConfirmations WhatsAppConfirmation[]
   whatsappMessages      WhatsAppMessage[]
   whatsappOutbox        WhatsAppOutbox[]
+  whatsappOpsAlerts     WhatsAppOpsAlert[]
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
@@ -403,21 +427,52 @@ model WhatsAppConfirmation {
   version           Int                        @default(1)
   phoneE164         String
   status            WhatsAppConfirmationStatus @default(PENDING)
+  communicationStatus WhatsAppCommunicationStatus @default(QUEUED)
   requestedAt       DateTime?
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  earlyWarningAt    DateTime?
+  responseDeadlineAt DateTime?
   respondedAt       DateTime?
   requestedTimeText String?
   lastInboundAt     DateTime?
   manualReviewAt    DateTime?
   optedOutAt        DateTime?
+  opsReviewedAt     DateTime?
+  opsDecision       String?
+  opsReason         String?
+  courierIdSnapshot String?
   order             DeliveryOrder              @relation(fields: [orderId], references: [id], onDelete: Cascade)
   messages          WhatsAppMessage[]
   outbox            WhatsAppOutbox[]
+  opsAlerts         WhatsAppOpsAlert[]
   createdAt         DateTime                   @default(now())
   updatedAt         DateTime                   @updatedAt
 
   @@unique([orderId, version])
   @@index([phoneE164, status, createdAt])
   @@index([status, updatedAt])
+}
+
+model WhatsAppOpsAlert {
+  id                String                 @id @default(cuid())
+  confirmationId    String
+  orderId           String
+  kind              WhatsAppOpsAlertKind
+  status            WhatsAppOpsAlertStatus @default(OPEN)
+  dueAt             DateTime?
+  courierIdSnapshot String?
+  detailsHash       String
+  acknowledgedAt    DateTime?
+  resolvedAt        DateTime?
+  confirmation      WhatsAppConfirmation   @relation(fields: [confirmationId], references: [id], onDelete: Cascade)
+  order             DeliveryOrder          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  @@unique([confirmationId, kind])
+  @@index([status, createdAt])
+  @@index([orderId, createdAt])
 }
 
 model WhatsAppMessage {
