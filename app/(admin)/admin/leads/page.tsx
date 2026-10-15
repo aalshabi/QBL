@@ -6,7 +6,7 @@ import {
   COVERAGE_AREA_OPTIONS,
   DAILY_VOLUME_OPTIONS,
   PLATFORM_OPTIONS,
-  choiceLabel,
+  choiceDisplay,
 } from "@/lib/lead-schema";
 import { LeadStorageUnavailableError, listLeads, type LeadRecord } from "@/lib/leads";
 import { leadAlertConfigured, leadAlertRecipient } from "@/lib/notifications/lead-alert";
@@ -103,15 +103,15 @@ export default async function AdminLeadsPage() {
                         {lead.phone}
                       </a>
                     </TableCell>
-                    {/* الشرطة تعني «لم يُحدَّد» — الحقول اختيارية، والفراغ ليس عطلاً. */}
+                    {/* «—» تعني «لم يُحدَّد»؛ قيمة خارج القائمة تُعرض كما هي لا تُطوى فيها. */}
                     <TableCell className="whitespace-nowrap text-sm text-slate-600">
-                      {choiceLabel(DAILY_VOLUME_OPTIONS, lead.dailyVolume) || "—"}
+                      {choiceDisplay(DAILY_VOLUME_OPTIONS, lead.dailyVolume)}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-sm text-slate-600">
-                      {choiceLabel(PLATFORM_OPTIONS, lead.platform) || "—"}
+                      {choiceDisplay(PLATFORM_OPTIONS, lead.platform)}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-sm text-slate-600">
-                      {choiceLabel(COVERAGE_AREA_OPTIONS, lead.coverageArea) || "—"}
+                      {choiceDisplay(COVERAGE_AREA_OPTIONS, lead.coverageArea)}
                     </TableCell>
                     <TableCell className="max-w-80 truncate text-sm text-slate-600" title={lead.message}>
                       {lead.message}

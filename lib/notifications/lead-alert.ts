@@ -31,6 +31,19 @@ export function leadAlertConfigured(): boolean {
   );
 }
 
+/**
+ * تسطيح حقول السطر الواحد قبل إدراجها في نص البريد.
+ *
+ * نص البريد أسطر «مفتاح: قيمة»، والاسم والمنشأة والجوال حقول <input> يملأها
+ * زائر غير مصادَق عبر /api/quote. سطر جديد داخل أي منها يسمح له بتركيب كتلة
+ * «التأهيل:» كاذبة فوق الكتلة الحقيقية، فيقرأ فريق المبيعات من أعلى ويرى
+ * عميلاً بـ٣٠٠ طلب يومياً بينما الكتلة الحقيقية تحته تقول «لم يُحدَّد».
+ * لا سطر جديد مشروعاً في حقل <input>، فالتسطيح لا يفقد شيئاً.
+ */
+function oneLine(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
 /** حقول التأهيل تدخل البريد لأن قيمتها في أول مكالمة، لا في لوحة تُفتح لاحقاً. */
 function qualificationLines(lead: LeadAlertInput): string[] {
   const rows: [string, string][] = [
@@ -47,10 +60,10 @@ function body(lead: LeadAlertInput): string {
   return [
     `طلب عرض سعر جديد من ${CONTACT_DOMAIN}`,
     "",
-    `الاسم: ${lead.name}`,
-    `المنشأة: ${lead.company}`,
-    `البريد: ${lead.email}`,
-    `الجوال: ${lead.phone}`,
+    `الاسم: ${oneLine(lead.name)}`,
+    `المنشأة: ${oneLine(lead.company)}`,
+    `البريد: ${oneLine(lead.email)}`,
+    `الجوال: ${oneLine(lead.phone)}`,
     "",
     ...qualificationLines(lead),
     "",
@@ -87,7 +100,7 @@ export async function notifyNewLead(
         from: process.env.LEAD_ALERT_FROM?.trim() || `QBL <${CONTACT_EMAILS.info}>`,
         to: [to],
         reply_to: lead.email,
-        subject: `طلب عرض سعر — ${lead.company}`,
+        subject: `طلب عرض سعر — ${oneLine(lead.company)}`,
         text: body(lead),
       }),
     });

@@ -45,9 +45,20 @@ function optionalChoice(options: readonly ChoiceOption[]) {
   return z.enum(values).optional().default("");
 }
 
-/** التسمية العربية لقيمة مخزّنة، أو "" إذا لم تُختَر — للعرض فقط. */
+/** التسمية العربية لقيمة مخزّنة، أو "" إذا لم تُختَر أو لم تُعرَف — للعرض فقط. */
 export function choiceLabel(options: readonly ChoiceOption[], value: string): string {
   return options.find((option) => option.value === value)?.label ?? "";
+}
+
+/**
+ * عرض لوحة الإدارة. العمود نصّ حر في القاعدة لا enum، فالمخطط يحرس مسارَي
+ * الكتابة وحدهما؛ أي بذرة أو استيراد أو تعديل يدوي لاحق قد يكتب قيمة خارج
+ * القائمة. طيّ المجهول في «—» نفسها كان سيجعله مطابقاً لـ«الزائر لم يُجب»،
+ * فينكسر الانحراف بصمت أمام الشخص الوحيد القادر على ملاحظته.
+ */
+export function choiceDisplay(options: readonly ChoiceOption[], value: string): string {
+  if (!value) return "—";
+  return choiceLabel(options, value) || `قيمة غير معروفة: ${value}`;
 }
 
 /**
@@ -62,8 +73,10 @@ export function choiceLabel(options: readonly ChoiceOption[], value: string): st
  * الغياب يُخزَّن نصاً فارغاً لا null، لأن أعمدة القاعدة غير قابلة للإفراغ.
  */
 export const leadSchema = z.object({
-  name: z.string().trim().min(2),
-  company: z.string().trim().min(2),
+  // حدّ أعلى لحقلي السطر الواحد: كلاهما يدخل بريداً صادراً — والمنشأة تدخل
+  // سطر الموضوع — وبلا حدّ يحمل طلب واحد عشرات الكيلوبايتات إلى صندوق المبيعات.
+  name: z.string().trim().min(2).max(120),
+  company: z.string().trim().min(2).max(160),
   email: z.string().trim().email(),
   phone: z.string().trim().min(8),
   message: z.string().trim().max(2000).optional().default(""),

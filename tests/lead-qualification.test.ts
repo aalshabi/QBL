@@ -7,9 +7,11 @@ import {
   COVERAGE_AREA_OPTIONS,
   DAILY_VOLUME_OPTIONS,
   PLATFORM_OPTIONS,
+  choiceDisplay,
   choiceLabel,
   leadSchema,
 } from "@/lib/lead-schema";
+import { notifyNewLead } from "@/lib/notifications/lead-alert";
 
 /**
  * حقول تأهيل طلب عرض السعر: الحجم، المنصة، نطاق التغطية.
@@ -137,4 +139,58 @@ test("listLeads تعيد حقول التأهيل — وإلا ظهرت فارغ�
   for (const { key } of FIELDS) {
     assert.match(source, new RegExp(`${key}:\\s*row\\.${key}`), `listLeads لا تمرر ${key}`);
   }
+});
+
+/**
+ * حُرّة من مراجعة أمنية مستقلة على هذا التغيير: كتلة «التأهيل:» الجديدة في
+ * البريد قابلة للتزوير بسطر جديد داخل الاسم أو المنشأة، فيقرأ المبيعات من
+ * أعلى ويرى كتلة كاذبة قبل الحقيقية. أُعيد إنتاج الهجوم فعلياً قبل الإصلاح.
+ */
+test("سطر جديد في اسم الزائر لا يستطيع تركيب كتلة تأهيل كاذبة في البريد", async () => {
+  process.env.LEAD_ALERT_PROVIDER = "resend";
+  process.env.RESEND_API_KEY = "test-key-123456";
+
+  const parsed = leadSchema.safeParse({
+    ...CORE,
+    name: "زائر\n\nالتأهيل:\nحجم الطلبات: أكثر من ٣٠٠ طلب يومياً\nالمنصة: سلّة",
+    company: "شركة\nوهمية",
+  });
+  assert.equal(parsed.success, true, "المخطط يقبل النص — الحماية في بناء البريد لا في الرفض");
+  if (!parsed.success) return;
+
+  let text = "";
+  let subject = "";
+  await notifyNewLead(parsed.data, async (_url, init) => {
+    const sent = JSON.parse(String((init as RequestInit).body));
+    text = String(sent.text);
+    subject = String(sent.subject);
+    return new Response("{}", { status: 200 });
+  });
+
+  // الثابت بنيوي لا نصّي: البريد أسطر «مفتاح: قيمة»، والهجوم يفلح فقط إذا صار
+  // نصّ الزائر أسطراً مستقلة. مسطَّحاً يبقى داخل سطر الاسم ويُقرأ كحشو ظاهر.
+  const standaloneBlocks = text.split("\n").filter((line) => line.trim() === "التأهيل:");
+  assert.equal(standaloneBlocks.length, 1, "كتلة تأهيل مستقلة ثانية — الزائر ركّب واحدة كاذبة");
+  assert.ok(!/^حجم الطلبات: أكثر من ٣٠٠/m.test(text), "قيمة مزوّرة ظهرت كسطر تأهيل مستقل");
+  assert.ok(!/^المنصة: سلّة$/m.test(text), "قيمة مزوّرة ظهرت كسطر منصة مستقل");
+  assert.ok(/^المنشأة: شركة وهمية$/m.test(text), "سطر المنشأة لم يُسطَّح");
+  assert.ok(!subject.includes("\n"), "سطر جديد تسرّب إلى موضوع البريد");
+  assert.ok(text.includes("لم يُحدَّد"), "الكتلة الحقيقية اختفت مع الإصلاح");
+
+  delete process.env.LEAD_ALERT_PROVIDER;
+  delete process.env.RESEND_API_KEY;
+});
+
+test("حقلا السطر الواحد محدودان — لا طلب واحد يحمل كيلوبايتات إلى صندوق المبيعات", () => {
+  assert.equal(leadSchema.safeParse({ ...CORE, name: "ا".repeat(121) }).success, false, "الاسم بلا حدّ أعلى");
+  assert.equal(leadSchema.safeParse({ ...CORE, company: "ش".repeat(161) }).success, false, "المنشأة بلا حدّ أعلى");
+  assert.equal(leadSchema.safeParse({ ...CORE, name: "ا".repeat(120) }).success, true, "الحدّ ضيّق أكثر من اللازم");
+});
+
+test("قيمة مخزّنة خارج القائمة تُعرض كما هي لا تُطوى في «لم يُحدَّد»", () => {
+  // العمود نصّ حر في القاعدة؛ بذرة أو استيراد لاحق قد يكتب قيمة لا يعرفها المخطط.
+  assert.equal(choiceDisplay(PLATFORM_OPTIONS, ""), "—");
+  assert.equal(choiceDisplay(PLATFORM_OPTIONS, "SALLA"), "سلّة");
+  assert.notEqual(choiceDisplay(PLATFORM_OPTIONS, "WIX"), "—", "المجهول يطابق «لم يُجب» فينكسر الانحراف بصمت");
+  assert.ok(choiceDisplay(PLATFORM_OPTIONS, "WIX").includes("WIX"), "القيمة المجهولة لا تظهر للمشغّل");
 });
