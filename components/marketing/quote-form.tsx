@@ -3,6 +3,12 @@
 import { useActionState } from "react";
 import { CheckCircle2, Send } from "lucide-react";
 import { submitLead, type LeadResult } from "@/lib/actions";
+import {
+  COVERAGE_AREA_OPTIONS,
+  DAILY_VOLUME_OPTIONS,
+  PLATFORM_OPTIONS,
+  type ChoiceOption,
+} from "@/lib/lead-schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +18,44 @@ const INITIAL: LeadResult = { ok: false };
 
 async function action(_prev: LeadResult, formData: FormData): Promise<LeadResult> {
   return submitLead(formData);
+}
+
+/**
+ * حقل تأهيل اختياري. قائمة واحدة لا اختيار متعدد عن قصد: الإجراء الخادمي يقرأ
+ * `Object.fromEntries(formData)`، وهي تُبقي آخر قيمة فقط لمفتاح مكرر — فمجموعة
+ * خانات اختيار كانت ستفقد كل ما عدا الأخير بصمت.
+ *
+ * `name` هنا يجب أن يطابق مفتاح lib/lead-schema.ts حرفياً، وإلا سقط الحقل صامتاً.
+ */
+function ChoiceField({
+  id,
+  label,
+  options,
+}: {
+  id: string;
+  label: string;
+  options: readonly ChoiceOption[];
+}) {
+  return (
+    <div className="grid gap-2">
+      <Label htmlFor={id}>
+        {label} <span className="font-normal text-muted-foreground">(اختياري)</span>
+      </Label>
+      <select
+        id={id}
+        name={id}
+        defaultValue=""
+        className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <option value="">اختر…</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 }
 
 export function QuoteForm() {
@@ -51,6 +95,11 @@ export function QuoteForm() {
           <Input id="phone" name="phone" placeholder="05xxxxxxxx" required />
         </div>
       </div>
+      <div className="grid gap-5 sm:grid-cols-2">
+        <ChoiceField id="dailyVolume" label="حجم الطلبات المتوقع" options={DAILY_VOLUME_OPTIONS} />
+        <ChoiceField id="platform" label="منصة متجرك" options={PLATFORM_OPTIONS} />
+      </div>
+      <ChoiceField id="coverageArea" label="نطاق التغطية المطلوب" options={COVERAGE_AREA_OPTIONS} />
       <div className="grid gap-2">
         <Label htmlFor="message">
           ما الذي تحتاجه شركتك؟ <span className="font-normal text-muted-foreground">(اختياري)</span>

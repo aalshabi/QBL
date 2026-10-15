@@ -2,6 +2,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/admin/format";
 import { requireAdminPage } from "@/lib/admin/guard";
+import {
+  COVERAGE_AREA_OPTIONS,
+  DAILY_VOLUME_OPTIONS,
+  PLATFORM_OPTIONS,
+  choiceLabel,
+} from "@/lib/lead-schema";
 import { LeadStorageUnavailableError, listLeads, type LeadRecord } from "@/lib/leads";
 import { leadAlertConfigured, leadAlertRecipient } from "@/lib/notifications/lead-alert";
 
@@ -74,6 +80,9 @@ export default async function AdminLeadsPage() {
                   <TableHead className="text-start">الاسم</TableHead>
                   <TableHead className="text-start">البريد</TableHead>
                   <TableHead className="text-start">الجوال</TableHead>
+                  <TableHead className="text-start">الحجم</TableHead>
+                  <TableHead className="text-start">المنصة</TableHead>
+                  <TableHead className="text-start">التغطية</TableHead>
                   <TableHead className="text-start">الرسالة</TableHead>
                   <TableHead className="text-start">الحالة</TableHead>
                   <TableHead className="text-start">تاريخ الطلب</TableHead>
@@ -93,6 +102,16 @@ export default async function AdminLeadsPage() {
                       <a className="text-[#00A7B6] hover:underline" href={`tel:${lead.phone}`}>
                         {lead.phone}
                       </a>
+                    </TableCell>
+                    {/* الشرطة تعني «لم يُحدَّد» — الحقول اختيارية، والفراغ ليس عطلاً. */}
+                    <TableCell className="whitespace-nowrap text-sm text-slate-600">
+                      {choiceLabel(DAILY_VOLUME_OPTIONS, lead.dailyVolume) || "—"}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-sm text-slate-600">
+                      {choiceLabel(PLATFORM_OPTIONS, lead.platform) || "—"}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-sm text-slate-600">
+                      {choiceLabel(COVERAGE_AREA_OPTIONS, lead.coverageArea) || "—"}
                     </TableCell>
                     <TableCell className="max-w-80 truncate text-sm text-slate-600" title={lead.message}>
                       {lead.message}

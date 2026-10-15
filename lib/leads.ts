@@ -3,15 +3,12 @@
 // الطلب: مصفوفة الذاكرة تتبخر مع كل استدعاء serverless، فـ"النجاح" الصامت
 // يعني عميلاً ضائعاً والزائر يقرأ «تم استلام طلبك».
 
+import type { LeadInput } from "@/lib/lead-schema";
 import { getPrisma } from "@/lib/prisma";
 
-export type LeadInput = {
-  name: string;
-  company: string;
-  email: string;
-  phone: string;
-  message: string;
-};
+// النوع مشتق من المخطط لا مكرراً عنه: حقل يُضاف في lib/lead-schema.ts كان
+// يحتاج تعديلاً يدوياً هنا، وإغفاله يمرّ صامتاً إلى prisma.lead.create.
+export type { LeadInput };
 
 export type LeadRecord = LeadInput & {
   id: string;
@@ -78,6 +75,9 @@ export async function listLeads(limit = 100): Promise<LeadRecord[]> {
     email: row.email,
     phone: row.phone,
     message: row.message,
+    dailyVolume: row.dailyVolume,
+    platform: row.platform,
+    coverageArea: row.coverageArea,
     status: row.status,
     createdAt: row.createdAt.toISOString(),
   }));

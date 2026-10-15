@@ -586,12 +586,19 @@ enum LeadStatus {
 }
 
 model Lead {
-  id        String     @id @default(cuid())
-  name      String
-  company   String
-  email     String
-  phone     String
-  message   String
+  id      String @id @default(cuid())
+  name    String
+  company String
+  email   String
+  phone   String
+  message String
+
+  /// حقول التأهيل من نموذج الموقع. اختيارية، فالغياب "" لا null — نفس عقد
+  /// message، حتى لا يحتاج أي قارئ فحص null. القيم مقيَّدة في lib/lead-schema.ts.
+  dailyVolume  String @default("")
+  platform     String @default("")
+  coverageArea String @default("")
+
   status    LeadStatus @default(NEW)
   createdAt DateTime   @default(now())
 }

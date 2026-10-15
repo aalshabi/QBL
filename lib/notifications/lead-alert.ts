@@ -3,14 +3,16 @@
 // في السجل، ولا تُسجَّل "SENT" أبداً — لأن الادعاء الكاذب هنا يعني أن الطلب يضيع بصمت.
 
 import { CONTACT_DOMAIN, CONTACT_EMAILS } from "@/lib/contact";
+import {
+  COVERAGE_AREA_OPTIONS,
+  DAILY_VOLUME_OPTIONS,
+  PLATFORM_OPTIONS,
+  choiceLabel,
+  type LeadInput,
+} from "@/lib/lead-schema";
 
-export type LeadAlertInput = {
-  name: string;
-  company: string;
-  email: string;
-  phone: string;
-  message: string;
-};
+// مشتق من المخطط: حقل تأهيل جديد يظهر في البريد دون تعديل هنا.
+export type LeadAlertInput = LeadInput;
 
 export type LeadAlertResult =
   | { status: "SENT"; provider: string; to: string }
@@ -29,6 +31,18 @@ export function leadAlertConfigured(): boolean {
   );
 }
 
+/** حقول التأهيل تدخل البريد لأن قيمتها في أول مكالمة، لا في لوحة تُفتح لاحقاً. */
+function qualificationLines(lead: LeadAlertInput): string[] {
+  const rows: [string, string][] = [
+    ["حجم الطلبات", choiceLabel(DAILY_VOLUME_OPTIONS, lead.dailyVolume)],
+    ["المنصة", choiceLabel(PLATFORM_OPTIONS, lead.platform)],
+    ["نطاق التغطية", choiceLabel(COVERAGE_AREA_OPTIONS, lead.coverageArea)],
+  ];
+  // الحقل غير المُجاب عنه يُعلَن «لم يُحدَّد» لا يُحذف: الصمت في بريد مبيعات
+  // يُقرأ خطأً على أنه إغفال من النظام بدل اختيار من العميل.
+  return ["التأهيل:", ...rows.map(([label, value]) => `${label}: ${value || "لم يُحدَّد"}`)];
+}
+
 function body(lead: LeadAlertInput): string {
   return [
     `طلب عرض سعر جديد من ${CONTACT_DOMAIN}`,
@@ -37,6 +51,8 @@ function body(lead: LeadAlertInput): string {
     `المنشأة: ${lead.company}`,
     `البريد: ${lead.email}`,
     `الجوال: ${lead.phone}`,
+    "",
+    ...qualificationLines(lead),
     "",
     "الرسالة:",
     lead.message,

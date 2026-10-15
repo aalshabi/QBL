@@ -45,6 +45,9 @@ const lead = {
   email: "buyer@example.com",
   phone: "0555555555",
   message: "نحتاج توصيل مبرّد يومي داخل الرياض",
+  dailyVolume: "V51_100",
+  platform: "SALLA",
+  coverageArea: "RIYADH_ALL",
 };
 
 test("الإنتاج بلا DATABASE_URL يفشل بصوت عالٍ ولا يبتلع الطلب", async () => {
@@ -107,6 +110,13 @@ test("مع مزوّد مهيّأ يُرسل التنبيه ويُبلغ عن ا�
   assert.equal(seenBody.reply_to, lead.email);
   assert.ok(String(seenBody.text).includes(lead.phone));
 
+  // التأهيل يصل في نفس البريد: قيمته في أول مكالمة، لا في لوحة تُفتح لاحقاً.
+  const text = String(seenBody.text);
+  for (const label of ["٥١–١٠٠ طلب يومياً", "سلّة", "كل الرياض"]) {
+    assert.ok(text.includes(label), `بريد التنبيه بلا «${label}»`);
+  }
+  assert.ok(!text.includes("V51_100"), "البريد يعرض الثابت اللاتيني بدل التسمية العربية");
+
   const failed = await notifyNewLead(lead, async () => new Response("nope", { status: 401 }));
   assert.equal(failed.status, "FAILED");
   assert.equal(failed.status === "FAILED" ? failed.reason : "", "HTTP 401");
@@ -115,4 +125,21 @@ test("مع مزوّد مهيّأ يُرسل التنبيه ويُبلغ عن ا�
     throw new Error("network down");
   });
   assert.equal(threw.status, "FAILED");
+});
+
+test("الحقل غير المُجاب عنه يُعلَن «لم يُحدَّد» ولا يُحذف من البريد", async () => {
+  process.env.LEAD_ALERT_PROVIDER = "resend";
+  process.env.RESEND_API_KEY = "test-key-123456";
+
+  let text = "";
+  await notifyNewLead({ ...lead, dailyVolume: "", platform: "", coverageArea: "" }, async (_url, init) => {
+    text = String(JSON.parse(String((init as RequestInit).body)).text);
+    return new Response("{}", { status: 200 });
+  });
+
+  // الصمت في بريد مبيعات يُقرأ خطأً كإغفال من النظام بدل اختيار من العميل.
+  assert.equal((text.match(/لم يُحدَّد/g) ?? []).length, 3, "الحقول غير المُجاب عنها يجب أن تُعلَن الثلاثة");
+  for (const label of ["حجم الطلبات", "المنصة", "نطاق التغطية"]) {
+    assert.ok(text.includes(label), `بريد التنبيه بلا سطر «${label}»`);
+  }
 });
