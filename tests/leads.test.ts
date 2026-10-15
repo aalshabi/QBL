@@ -143,3 +143,22 @@ test("الحقل غير المُجاب عنه يُعلَن «لم يُحدَّد
     assert.ok(text.includes(label), `بريد التنبيه بلا سطر «${label}»`);
   }
 });
+
+/**
+ * مسار الكتابة. كان مغطى بفحص نصّي على listLeads وحدها، فحذف حقل من المحفوظ
+ * كان يمرّ. الرحلة كاملة: saveLead ثم listLeads، والقيم تعود كما دخلت.
+ */
+test("saveLead تحفظ حقول التأهيل وتعيدها listLeads كما هي", async () => {
+  delete process.env.DATABASE_URL;
+  setNodeEnv("development");
+
+  const saved = await saveLead(lead);
+  for (const key of ["dailyVolume", "platform", "coverageArea"] as const) {
+    assert.equal(saved[key], lead[key], `saveLead أسقطت ${key}`);
+  }
+
+  const [row] = await listLeads();
+  assert.equal(row.dailyVolume, "V51_100");
+  assert.equal(row.platform, "SALLA");
+  assert.equal(row.coverageArea, "RIYADH_ALL");
+});
