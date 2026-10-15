@@ -3,12 +3,15 @@
 import { useActionState } from "react";
 import { CheckCircle2, Send } from "lucide-react";
 import { submitLead, type LeadResult } from "@/lib/actions";
+// من lib/lead-options لا lib/lead-schema: هذا مكوّن عميل، والثاني يبني مخطط
+// zod في أعلى الوحدة فيجرّ مشغّله كاملاً إلى حزمة /quote بلا أن ينفّذه المتصفح.
 import {
   COVERAGE_AREA_OPTIONS,
   DAILY_VOLUME_OPTIONS,
   PLATFORM_OPTIONS,
   type ChoiceOption,
-} from "@/lib/lead-schema";
+  type QualificationField,
+} from "@/lib/lead-options";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,14 +28,15 @@ async function action(_prev: LeadResult, formData: FormData): Promise<LeadResult
  * `Object.fromEntries(formData)`، وهي تُبقي آخر قيمة فقط لمفتاح مكرر — فمجموعة
  * خانات اختيار كانت ستفقد كل ما عدا الأخير بصمت.
  *
- * `name` هنا يجب أن يطابق مفتاح lib/lead-schema.ts حرفياً، وإلا سقط الحقل صامتاً.
+ * `id` يصير سمة `name`، ونوعه QualificationField لا string: مفتاح مكتوب خطأً
+ * كان يُصرَّف بلا شكوى وتسقط إجابته صامتةً في Object.fromEntries.
  */
 function ChoiceField({
   id,
   label,
   options,
 }: {
-  id: string;
+  id: QualificationField;
   label: string;
   options: readonly ChoiceOption[];
 }) {

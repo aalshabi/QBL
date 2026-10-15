@@ -1,64 +1,39 @@
 import { z } from "zod";
+import {
+  COVERAGE_AREA_OPTIONS,
+  DAILY_VOLUME_OPTIONS,
+  PLATFORM_OPTIONS,
+  type ChoiceOption,
+} from "@/lib/lead-options";
+
+// القوائم والعرض في lib/lead-options.ts — وحدة بلا zod، حتى لا يجرّ النموذج
+// (مكوّن عميل) مشغّل zod إلى حزمة /quote. يُعاد تصديرها هنا للقارئ الخادمي.
+export {
+  COVERAGE_AREA_OPTIONS,
+  DAILY_VOLUME_OPTIONS,
+  PLATFORM_OPTIONS,
+  QUALIFICATION_FIELDS,
+  choiceDisplay,
+  choiceLabel,
+  type ChoiceOption,
+  type QualificationField,
+} from "@/lib/lead-options";
 
 /**
- * خيارات التأهيل — مصدر واحد يغذّي المخطط والنموذج وبريد التنبيه ولوحة الإدارة.
- * القيمة ثابتة لاتينية تُخزَّن في القاعدة؛ التسمية عربية تُعرض فقط. فصلهما يعني
- * أن تعديل الصياغة لاحقاً لا يُبطل الصفوف المحفوظة ولا يكسر أي تقرير.
- */
-export type ChoiceOption = { value: string; label: string };
-
-export const DAILY_VOLUME_OPTIONS = [
-  { value: "LT_20", label: "أقل من ٢٠ طلباً يومياً" },
-  { value: "V20_50", label: "٢٠–٥٠ طلباً يومياً" },
-  { value: "V51_100", label: "٥١–١٠٠ طلب يومياً" },
-  { value: "V101_300", label: "١٠١–٣٠٠ طلب يومياً" },
-  { value: "GT_300", label: "أكثر من ٣٠٠ طلب يومياً" },
-] as const satisfies readonly ChoiceOption[];
-
-export const PLATFORM_OPTIONS = [
-  { value: "SALLA", label: "سلّة" },
-  { value: "ZID", label: "زد" },
-  { value: "SHOPIFY", label: "Shopify" },
-  { value: "WOOCOMMERCE", label: "ووكومرس / ووردبريس" },
-  { value: "CUSTOM", label: "نظام خاص أو ERP" },
-  { value: "NONE", label: "بدون متجر إلكتروني" },
-] as const satisfies readonly ChoiceOption[];
-
-export const COVERAGE_AREA_OPTIONS = [
-  { value: "RIYADH_ALL", label: "كل الرياض" },
-  { value: "RIYADH_NORTH", label: "شمال الرياض" },
-  { value: "RIYADH_EAST", label: "شرق الرياض" },
-  { value: "RIYADH_WEST", label: "غرب الرياض" },
-  { value: "RIYADH_SOUTH", label: "جنوب الرياض" },
-  { value: "RIYADH_CENTER", label: "وسط الرياض" },
-] as const satisfies readonly ChoiceOption[];
-
-/**
- * حقل تأهيل اختياري مقيَّد بقائمته.
+ * حقل تأهيل اختياري مقيَّد بقائمته، ويتدهور بلطف.
  *
- * التقييد ليس تجميلاً: المسار `/api/quote` عام بلا مصادقة، فحقل نصّي حر إضافي
- * يعني عموداً يقبل أي شيء من أي مُرسِل. والقيمة الفارغة مقبولة صراحة لأن
- * `<select>` بلا اختيار يرسل "" لا غياباً.
+ * التقييد ليس تجميلاً: المسار /api/quote عام بلا مصادقة، فحقل نصّي حر إضافي
+ * يعني عموداً يقبل أي شيء من أي مُرسِل.
+ *
+ * و catch("") ليست تساهلاً: بدونها كانت قيمة واحدة غير معروفة في حقل
+ * **اختياري** تُسقط الطلب كله — أربعة حقول إلزامية صحيحة ورسالة العميل تُرمى،
+ * ويُعاد 422 بلا بيان أي حقل. ويكفي لذلك أن نسحب خياراً من القائمة بينما
+ * صفحة زائر مفتوحة بحزمة قديمة. فقدان إجابة اختيارية مقبول؛ فقدان عميل لا.
+ * المخزَّن يبقى مقيَّداً: لا شيء يصل العمود إلا "" أو قيمة من القائمة.
  */
 function optionalChoice(options: readonly ChoiceOption[]) {
   const values = ["", ...options.map((option) => option.value)] as [string, ...string[]];
-  return z.enum(values).optional().default("");
-}
-
-/** التسمية العربية لقيمة مخزّنة، أو "" إذا لم تُختَر أو لم تُعرَف — للعرض فقط. */
-export function choiceLabel(options: readonly ChoiceOption[], value: string): string {
-  return options.find((option) => option.value === value)?.label ?? "";
-}
-
-/**
- * عرض لوحة الإدارة. العمود نصّ حر في القاعدة لا enum، فالمخطط يحرس مسارَي
- * الكتابة وحدهما؛ أي بذرة أو استيراد أو تعديل يدوي لاحق قد يكتب قيمة خارج
- * القائمة. طيّ المجهول في «—» نفسها كان سيجعله مطابقاً لـ«الزائر لم يُجب»،
- * فينكسر الانحراف بصمت أمام الشخص الوحيد القادر على ملاحظته.
- */
-export function choiceDisplay(options: readonly ChoiceOption[], value: string): string {
-  if (!value) return "—";
-  return choiceLabel(options, value) || `قيمة غير معروفة: ${value}`;
+  return z.enum(values).optional().default("").catch("");
 }
 
 /**

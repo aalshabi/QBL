@@ -7,6 +7,7 @@ import {
   COVERAGE_AREA_OPTIONS,
   DAILY_VOLUME_OPTIONS,
   PLATFORM_OPTIONS,
+  QUALIFICATION_FIELDS,
   choiceDisplay,
   choiceLabel,
   leadSchema,
@@ -61,11 +62,18 @@ test("كل قيمة معروفة في كل قائمة تُقبل", () => {
   }
 });
 
-test("قيمة خارج القائمة تُرفض — المسار عام ولا يقبل نصاً حراً", () => {
+/**
+ * مقايضة محسومة عن قصد: الرفض الصارم لقيمة خارج القائمة كان يُسقط الطلب كله،
+ * وهو ثمن باهظ لحقل اختياري. البديل المختار: تُسقَط الإجابة وحدها ويُحفظ
+ * العميل، مع بقاء العمود مقيَّداً. من يعيد الرفض الصارم يعيد فقدان العملاء —
+ * والاختباران التاليان يحرسان الطرفين.
+ */
+test("قيمة خارج القائمة لا تُخزَّن أبداً — المسار عام ولا يقبل نصاً حراً", () => {
   for (const { key } of FIELDS) {
     for (const bogus of ["ANYTHING", "<script>", "x".repeat(500)]) {
       const parsed = leadSchema.safeParse({ ...CORE, [key]: bogus });
-      assert.equal(parsed.success, false, `${key}="${bogus.slice(0, 12)}" كان يجب أن يُرفض`);
+      assert.equal(parsed.success, true, `${key} أسقط الطلب كله بدل الإجابة وحدها`);
+      assert.equal(parsed.success && parsed.data[key], "", `${key}="${bogus.slice(0, 12)}" وصل العمود كما هو`);
     }
   }
 });
@@ -193,4 +201,53 @@ test("قيمة مخزّنة خارج القائمة تُعرض كما هي لا 
   assert.equal(choiceDisplay(PLATFORM_OPTIONS, "SALLA"), "سلّة");
   assert.notEqual(choiceDisplay(PLATFORM_OPTIONS, "WIX"), "—", "المجهول يطابق «لم يُجب» فينكسر الانحراف بصمت");
   assert.ok(choiceDisplay(PLATFORM_OPTIONS, "WIX").includes("WIX"), "القيمة المجهولة لا تظهر للمشغّل");
+});
+
+/**
+ * حُرّة من مراجعة مستقلة: قيمة غير معروفة في حقل **اختياري** كانت تُسقط الطلب
+ * كله — أربعة حقول إلزامية صحيحة ورسالة العميل تُرمى مقابل إجابة ثانوية.
+ */
+test("قيمة غير معروفة تُسقط الإجابة لا العميل", () => {
+  for (const key of QUALIFICATION_FIELDS) {
+    for (const bogus of ["RETIRED_OPTION", "<script>", "x".repeat(500), null, 42]) {
+      const parsed = leadSchema.safeParse({ ...CORE, [key]: bogus });
+      assert.equal(parsed.success, true, `${key}=${String(bogus).slice(0, 12)} أسقط الطلب كله`);
+      if (!parsed.success) continue;
+      assert.equal(parsed.data[key], "", `${key} يجب أن يتدهور إلى "" لا أن يمرّ كما هو`);
+      assert.equal(parsed.data.name, CORE.name, "الحقول الإلزامية ضاعت مع الإجابة الساقطة");
+    }
+  }
+});
+
+test("لا شيء يصل العمود إلا \"\" أو قيمة من القائمة", () => {
+  for (const { key, options } of FIELDS) {
+    const allowed = new Set(["", ...options.map((option) => option.value)]);
+    for (const input of ["WIX", "salla", " SALLA", "SALLA\n", ""]) {
+      const parsed = leadSchema.safeParse({ ...CORE, [key]: input });
+      assert.equal(parsed.success, true);
+      if (!parsed.success) continue;
+      assert.ok(allowed.has(parsed.data[key]), `${key} خزّن قيمة خارج القائمة: ${parsed.data[key]}`);
+    }
+  }
+});
+
+/**
+ * حُرّة من مراجعة مستقلة: النموذج مكوّن عميل، واستيراده من lib/lead-schema كان
+ * يجرّ مشغّل zod كاملاً (~١٦ كيلوبايت مضغوطة) إلى حزمة /quote — أهم صفحة تحويل —
+ * بلا أن ينفّذه المتصفح، لأن التحقق كله خادمي.
+ */
+test("النموذج لا يستورد وحدة المخطط — zod لا يُشحن إلى حزمة العميل", () => {
+  const source = read("components/marketing/quote-form.tsx");
+  assert.ok(source.includes('from "@/lib/lead-options"'), "النموذج لا يقرأ القوائم من الوحدة الخفيفة");
+  assert.ok(!source.includes('from "@/lib/lead-schema"'), "النموذج يستورد وحدة المخطط فيجرّ zod معه");
+  assert.ok(!/\bfrom "zod"/.test(source), "النموذج يستورد zod مباشرة");
+
+  const options = read("lib/lead-options.ts");
+  assert.ok(!/\bfrom "zod"/.test(options), "lib/lead-options.ts استورد zod — الفصل بلا معنى");
+});
+
+test("كل حقل تأهيل مُعلَن في QUALIFICATION_FIELDS — المخطط والنموذج يقرآن منه", () => {
+  assert.deepEqual([...QUALIFICATION_FIELDS], FIELDS.map((field) => field.key));
+  const source = read("components/marketing/quote-form.tsx");
+  assert.match(source, /id: QualificationField/, "id في ChoiceField ما زال string فيمرّ المفتاح المكتوب خطأً");
 });
