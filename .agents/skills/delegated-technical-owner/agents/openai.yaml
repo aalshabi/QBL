@@ -1,0 +1,6 @@
+interface:
+  display_name: "Delegated Technical Owner"
+  short_description: "Own a task end to end, verified"
+  default_prompt: "Use $delegated-technical-owner to implement, test, review and ship this change end to end."
+policy:
+  allow_implicit_invocation: true
