@@ -166,7 +166,7 @@ function ScreenStartRoute() {
           </div>
           <ul className="mt-2 grid gap-2">
             <PickupItem code="QBL-1042" addr="مستودع المالقا" zone="مبرد" />
-            <PickupItem code="QBL-1047" addr="مزرعة الخرج" zone="مجمد" />
+            <PickupItem code="QBL-1047" addr="مركز تجهيز العناية" zone="حساس للحرارة" />
           </ul>
         </div>
 
@@ -180,7 +180,7 @@ function ScreenStartRoute() {
           </div>
           <ul className="mt-2 grid gap-2">
             <DeliveryItem code="QBL-1042" addr="فرع حطين" eta="10:30" />
-            <DeliveryItem code="QBL-1043" addr="صيدلية الياسمين" eta="11:00" warn />
+            <DeliveryItem code="QBL-1043" addr="متجر الياسمين للعناية" eta="11:00" warn />
             <DeliveryItem code="QBL-1047" addr="مستودع التوزيع" eta="11:45" />
           </ul>
         </div>
@@ -209,7 +209,7 @@ function ScreenDelivery() {
       <div className="space-y-3 overflow-y-auto px-4 py-4">
         <div className="rounded-md border border-muted p-3">
           <p className="text-[11px] font-bold text-slatebrand">المستلم</p>
-          <p className="mt-0.5 text-sm font-bold text-primary">مطعم حطين — أحمد العتيبي</p>
+          <p className="mt-0.5 text-sm font-bold text-primary">متجر حطين للعناية — أحمد العتيبي</p>
           <p className="mt-1 font-latin text-[11px] text-slatebrand ltr">+966 55 000 1234</p>
         </div>
 

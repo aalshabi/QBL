@@ -83,8 +83,8 @@ export default function ClientDashboardPage() {
           {/* New order form */}
           <Card title="إنشاء طلب جديد" subtitle="جميع الحقول التشغيلية الأساسية لطلب مبرّد">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <Field label="نوع المنتج" placeholder="مثال: ألبان طازجة" />
-              <Field label="منطقة الحرارة" select options={["مبرد (2°–8°)", "مجمد (-22° إلى -18°)", "حساس للحرارة (15°–25°)"]} />
+              <Field label="نوع المنتج" placeholder="مثال: مستحضرات عناية بالبشرة" />
+              <Field label="منطقة الحرارة" select options={["مبرد (2°–8°)", "درجة محيطة مضبوطة (20°–25°)", "حساس للحرارة (15°–25°)"]} />
               <Field label="نطاق الحرارة المطلوب (°م)" placeholder="2 إلى 6" />
               <Field label="نقطة الاستلام" placeholder="عنوان الاستلام" />
               <Field label="نقطة التسليم" placeholder="عنوان المستلم" />
